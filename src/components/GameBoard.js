@@ -177,6 +177,14 @@ const GameBoard = ({
       const playerChanged = activePlayerId !== lastTurnInfo.playerId;
       const roundChanged = currentRound !== lastTurnInfo.round;
       
+      console.log('🔔 Turn announcement check:', {
+        activePlayerId,
+        lastPlayerId: lastTurnInfo.playerId,
+        playerChanged,
+        roundChanged,
+        showRoundAnnouncement
+      });
+      
       // Show announcement when player changes, but limit to once per turn change
       // Reset timer on every turn change (both player and AI)
       if (playerChanged || roundChanged) {
@@ -186,10 +194,12 @@ const GameBoard = ({
         // Don't show turn announcement if round announcement is showing
         // The round announcement completion handler will trigger turn announcement
         if (showRoundAnnouncement) {
+          console.log('⏸️ Delaying turn announcement - round announcement active');
           return;
         }
         
         // Show turn announcement immediately if no round announcement
+        console.log('📢 Showing turn announcement for:', activePlayerId === currentPlayerId ? 'Player' : 'AI');
         setShowTurnAnnouncement(true);
         
         // Play turn sound
