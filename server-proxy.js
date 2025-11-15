@@ -252,10 +252,36 @@ function handleCommandMock(command) {
         
         // Check if player has no cards - skip their turn
         if (player && player.active && player.hand.length === 0) {
+          console.log('Player has no cards in hand');
           player.active = false;
           
-          // Activate AI immediately
+          // Check if AI also has no cards - game over
           const aiPlayer = chooseRoom.players.find(p => p.isAI);
+          if (!aiPlayer || aiPlayer.hand.length === 0) {
+            console.log('Both players out of cards - ending game');
+            chooseRoom.gameOver = true;
+            chooseRoom.roundsPlayed++;
+            
+            // Calculate total strength from all played cards
+            const player1TotalStrength = (chooseRoom.players[0].playedCards || []).reduce((sum, card) => 
+              sum + (card.modifiedStrength || card.strength || 0), 0);
+            const player2TotalStrength = (chooseRoom.players[1].playedCards || []).reduce((sum, card) => 
+              sum + (card.modifiedStrength || card.strength || 0), 0);
+            
+            console.log('Final total strengths:', { player1: player1TotalStrength, player2: player2TotalStrength });
+            
+            if (player1TotalStrength > player2TotalStrength) {
+              chooseRoom.winner = chooseRoom.players[0].name;
+            } else if (player2TotalStrength > player1TotalStrength) {
+              chooseRoom.winner = chooseRoom.players[1].name;
+            } else {
+              chooseRoom.winner = 'Tie';
+            }
+            
+            return { type: 'CARD_PLAY_FAILED', reason: 'GAME_OVER', winner: chooseRoom.winner };
+          }
+          
+          // Activate AI immediately if AI has cards
           if (aiPlayer && aiPlayer.hand.length > 0) {
             setTimeout(() => {
               aiPlayer.active = true;

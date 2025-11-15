@@ -1,0 +1,299 @@
+/* ========================================
+   ACCESSIBILITY STYLES
+   Colorblind modes, high contrast, text scaling
+======================================== */
+
+/* Root variables for accessibility */
+:root {
+  --text-scale: 1;
+  --contrast-bg: transparent;
+  --contrast-fg: inherit;
+  --contrast-border: inherit;
+  --contrast-accent: inherit;
+  
+  /* Element colors (can be overridden by colorblind modes) */
+  --element-fire-color: #ff4444;
+  --element-ice-color: #44ccff;
+  --element-water-color: #4444ff;
+  --element-electricity-color: #ffff00;
+  --element-earth-color: #8b4513;
+  --element-power-color: #ff00ff;
+  --element-light-color: #ffeb3b;
+  --element-dark-color: #9c27b0;
+  --element-neutral-color: #9e9e9e;
+  --element-technology-color: #00ffff;
+  --element-meteor-color: #ff6600;
+}
+
+/* Text scaling */
+body {
+  font-size: calc(16px * var(--text-scale));
+}
+
+/* Scale all text elements */
+h1 { font-size: calc(2.5em * var(--text-scale)); }
+h2 { font-size: calc(2em * var(--text-scale)); }
+h3 { font-size: calc(1.75em * var(--text-scale)); }
+h4 { font-size: calc(1.5em * var(--text-scale)); }
+h5 { font-size: calc(1.25em * var(--text-scale)); }
+h6 { font-size: calc(1em * var(--text-scale)); }
+
+p, span, div, label, button, input, select, textarea {
+  font-size: calc(1em * var(--text-scale));
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.high-contrast * {
+  border-color: var(--contrast-border) !important;
+}
+
+.high-contrast .card {
+  background: #000000 !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 0 2px #000000, 0 0 0 5px #ffffff !important;
+}
+
+.high-contrast .card-strength,
+.high-contrast .strength-large {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  text-shadow: none !important;
+}
+
+.high-contrast .element-name,
+.high-contrast .card-tier {
+  background: #000000 !important;
+  color: #ffff00 !important;
+  border: 1px solid #ffff00 !important;
+}
+
+.high-contrast .game-board {
+  background: #000000 !important;
+}
+
+.high-contrast .arena {
+  background: #000000 !important;
+  border: 4px solid #ffffff !important;
+}
+
+.high-contrast button {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 3px solid #ffffff !important;
+}
+
+.high-contrast button:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast .score-tracker {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .round-announcement,
+.high-contrast .turn-announcement {
+  background: rgba(0, 0, 0, 0.98) !important;
+  border: 4px solid #ffffff !important;
+}
+
+.high-contrast .game-over-overlay {
+  background: rgba(0, 0, 0, 0.98) !important;
+}
+
+.high-contrast .settings-container,
+.high-contrast .tutorial-container,
+.high-contrast .statistics-container {
+  background: #000000 !important;
+  border: 3px solid #ffffff !important;
+}
+
+/* Element icon overlays for colorblind accessibility */
+.card .element-label-overlay {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ffffff;
+  z-index: 20;
+  pointer-events: none;
+  text-shadow: none;
+}
+
+.high-contrast .element-label-overlay {
+  background: #000000;
+  border: 2px solid #ffff00;
+  color: #ffff00;
+}
+
+/* Colorblind-friendly patterns for card backgrounds */
+.card[data-colorblind="true"] {
+  position: relative;
+}
+
+.card[data-colorblind="true"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.1;
+  border-radius: 10px;
+}
+
+/* Different patterns for different elements */
+.card[data-element="FIRE"][data-colorblind="true"]::after {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 5px,
+    currentColor 5px,
+    currentColor 10px
+  );
+}
+
+.card[data-element="ICE"][data-colorblind="true"]::after {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    currentColor 5px,
+    currentColor 10px
+  );
+}
+
+.card[data-element="WATER"][data-colorblind="true"]::after {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 5px,
+    currentColor 5px,
+    currentColor 10px
+  );
+}
+
+.card[data-element="ELECTRICITY"][data-colorblind="true"]::after {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 5px,
+    currentColor 5px,
+    currentColor 10px
+  );
+}
+
+.card[data-element="EARTH"][data-colorblind="true"]::after {
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 45deg,
+    currentColor 45deg 90deg
+  );
+}
+
+/* Focus indicators for keyboard navigation */
+:focus-visible {
+  outline: 3px solid #4ecdc4 !important;
+  outline-offset: 2px !important;
+}
+
+.high-contrast :focus-visible {
+  outline: 4px solid #ffff00 !important;
+  outline-offset: 3px !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Large text mode adjustments */
+[data-text-size="large"],
+[data-text-size="xl"] {
+  line-height: 1.6;
+}
+
+[data-text-size="large"] .card,
+[data-text-size="xl"] .card {
+  padding: 12px;
+}
+
+[data-text-size="xl"] .card {
+  padding: 14px;
+}
+
+/* Improve button accessibility */
+button:focus-visible,
+.card.playable:focus-visible {
+  outline: 3px solid #4ecdc4;
+  outline-offset: 3px;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Ensure sufficient color contrast in all modes */
+.high-contrast .tooltip-header,
+.high-contrast .tooltip-ability,
+.high-contrast .tooltip-stats {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+/* Mobile accessibility improvements */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  button,
+  .card.playable,
+  .toggle-switch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved spacing for larger text */
+  [data-text-size="large"] .card,
+  [data-text-size="xl"] .card {
+    margin: 8px;
+  }
+}
+
+/* Print styles for accessibility */
+@media print {
+  .high-contrast {
+    filter: none;
+  }
+  
+  .card {
+    border: 2px solid #000000 !important;
+    break-inside: avoid;
+  }
+}

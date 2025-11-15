@@ -1,47 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Card.css';
+import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 
 const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    colorblindMode: 'none',
+    showElementIcons: true,
+    highContrast: false
+  });
+
+  // Load accessibility settings
+  useEffect(() => {
+    const loadSettings = () => {
+      const colorblindMode = localStorage.getItem('colorblindMode') || 'none';
+      const showElementIcons = localStorage.getItem('showElementIcons') !== 'false';
+      const highContrast = localStorage.getItem('highContrast') === 'true';
+      setAccessibilitySettings({ colorblindMode, showElementIcons, highContrast });
+    };
+    
+    loadSettings();
+    
+    // Listen for settings changes
+    const handleSettingsChange = () => loadSettings();
+    window.addEventListener('storage', handleSettingsChange);
+    window.addEventListener('settingsUpdated', handleSettingsChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleSettingsChange);
+      window.removeEventListener('settingsUpdated', handleSettingsChange);
+    };
+  }, []);
 
   // Guard against undefined card
   if (!card) {
     return null;
   }
 
-  const getElementColor = (element) => {
-    const colors = {
-      'FIRE': '#ff4444',
-      'ICE': '#44ccff',
-      'WATER': '#4444ff',
-      'ELECTRICITY': '#ffff00',
-      'EARTH': '#8b4513',
-      'POWER': '#ff00ff',
-      'LIGHT': '#ffeb3b',
-      'DARK': '#9c27b0',
-      'NEUTRAL': '#9e9e9e',
-      'TECHNOLOGY': '#00ffff',
-      'METEOR': '#ff6600'
-    };
-    return colors[element] || '#666';
+  const getElementColorLocal = (element) => {
+    return getElementColor(element, accessibilitySettings.colorblindMode);
   };
 
   const getElementIcon = (element) => {
-    const icons = {
-      'FIRE': '🔥',
-      'ICE': '❄️',
-      'WATER': '💧',
-      'ELECTRICITY': '⚡',
-      'EARTH': '🌍',
-      'POWER': '⭐',
-      'LIGHT': '☀️',
-      'DARK': '🌙',
-      'NEUTRAL': '🔮',
-      'TECHNOLOGY': '🤖',
-      'METEOR': '☄️'
-    };
-    return icons[element] || '?';
+    return getElementDisplay(element, accessibilitySettings.showElementIcons);
   };
 
   const getTierColor = (tier) => {
@@ -101,15 +103,26 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
       className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''}`}
       onClick={handleClick}
       style={{ 
-        borderColor: getElementColor(card.element),
-        borderWidth: getRarityBorder()
+        borderColor: getElementColorLocal(card.element),
+        borderWidth: getRarityBorder(),
+        '--element-color': getElementColorLocal(card.element)
       }}
       data-key={keyboardKey || ''}
+      data-element={card.element}
+      data-colorblind={accessibilitySettings.colorblindMode !== 'none' ? 'true' : 'false'}
+      role="button"
+      tabIndex={isPlayable ? 0 : -1}
+      aria-label={`${card.element} card with strength ${card.modifiedStrength || card.strength}`}
     >
       {card.isLegendary && <div className="legendary-glow"></div>}
+      {accessibilitySettings.colorblindMode !== 'none' && (
+        <div className="element-label-overlay">
+          {ELEMENT_LABELS[card.element] || '???'}
+        </div>
+      )}
       
       <div className="card-header">
-        <div className="card-element" style={{ color: getElementColor(card.element) }}>
+        <div className="card-element" style={{ color: getElementColorLocal(card.element) }}>
           {getElementIcon(card.element)}
         </div>
         <div className="card-strength" style={{ 
@@ -123,7 +136,7 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
       </div>
       
       <div className="card-center">
-        <span className="element-icon-large" style={{ color: getElementColor(card.element) }}>
+        <span className="element-icon-large" style={{ color: getElementColorLocal(card.element) }}>
           {getElementIcon(card.element)}
         </span>
         <div className="strength-large">{card.modifiedStrength || card.strength}</div>

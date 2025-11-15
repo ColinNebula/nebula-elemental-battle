@@ -3,7 +3,21 @@ import { useState, useEffect, useRef } from 'react';
 import Card from './Card';
 import PauseMenu from './PauseMenu';
 import RoundAnnouncement from './RoundAnnouncement';
-import { createParticles, createDamageNumber, triggerScreenShake, createVictoryCelebration } from '../utils/animations';
+import StatusEffects from './StatusEffects';
+import { 
+  createParticles, 
+  createDamageNumber, 
+  triggerScreenShake, 
+  createVictoryCelebration,
+  createCardDrawAnimation,
+  createVictoryPose,
+  createEnvironmentalEffect,
+  removeEnvironmentalEffect,
+  createPhaseTransition,
+  createShuffleAnimation,
+  createCardFlipAnimation,
+  createComboMultiplierAnimation
+} from '../utils/animations';
 import soundManager from '../utils/sounds';
 import { getCurrentThemes, HAND_THEMES, ARENA_THEMES } from '../utils/themes';
 import './GameBoard.css';
@@ -47,6 +61,7 @@ const GameBoard = ({
   const [arenaTheme, setArenaTheme] = useState('cosmic');
   const [showInitialArena, setShowInitialArena] = useState(false);
   const hasShownInitialArenaRef = useRef(false);
+  const [sortBy, setSortBy] = useState('none'); // 'none', 'element', 'strength', 'rarity'
 
   // Load hand theme from localStorage and listen for changes
   useEffect(() => {
@@ -123,6 +138,12 @@ const GameBoard = ({
           soundManager.playElementSound(cardPlay.card.element);
           soundManager.playSound('cardFlip');
           
+          // Card flip animation
+          const cardElements = gameBoardRef.current.querySelectorAll('.played-card');
+          if (cardElements[currentPlayedCount - 1 + idx]) {
+            createCardFlipAnimation(cardElements[currentPlayedCount - 1 + idx]);
+          }
+          
           // Particle effects
           createParticles(cardPlay.card.element, x, y, gameBoardRef.current);
           
@@ -147,6 +168,27 @@ const GameBoard = ({
       setLastPlayedCards(gameState.playedCards);
     }
   }, [gameState?.playedCards?.length, gameBoardRef]);
+
+  // Auto-skip turn if player has no cards
+  useEffect(() => {
+    if (!gameState?.gameStarted || gameState?.gameOver || !humanPlayer?.active) {
+      return;
+    }
+
+    // If it's player's turn and they have no cards, automatically skip
+    if (humanPlayer.hand?.length === 0 && !gameState?.battlePhase) {
+      console.log('🔄 Player has no cards - auto-skipping turn');
+      
+      // Small delay so the UI can show the state
+      const skipTimer = setTimeout(() => {
+        if (onForfeit) {
+          onForfeit(); // This will skip the turn without showing forfeit announcement
+        }
+      }, 1500);
+      
+      return () => clearTimeout(skipTimer);
+    }
+  }, [humanPlayer?.active, humanPlayer?.hand?.length, gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, onForfeit]);
 
   // Story mode defeat countdown
   useEffect(() => {
@@ -268,6 +310,17 @@ const GameBoard = ({
       hasShownInitialArenaRef.current = true;
       setShowInitialArena(true);
       
+      // Shuffle animation at game start
+      if (gameBoardRef.current) {
+        const deckElements = gameBoardRef.current.querySelectorAll('.reserve-deck-stack, .vertical-card-stack');
+        deckElements.forEach(deck => {
+          createShuffleAnimation(deck);
+        });
+        
+        // Phase transition for game start
+        createPhaseTransition('Battle Begin!', gameBoardRef.current);
+      }
+      
       // After 8 seconds, hide initial arena and allow round announcements
       const timer = setTimeout(() => {
         setShowInitialArena(false);
@@ -295,14 +348,46 @@ const GameBoard = ({
         setCurrentRoundNumber(roundToDisplay);
         setShowRoundAnnouncement(true);
         soundManager.playSound('yourTurn');
+        
+        // Add phase transition animation
+        if (gameBoardRef.current) {
+          createPhaseTransition(`Round ${roundToDisplay}`, gameBoardRef.current);
+        }
+        
+        // Add environmental effects based on arena theme
+        if (gameBoardRef.current) {
+          // Clear previous environmental effect
+          removeEnvironmentalEffect(gameBoardRef.current);
+          
+          // Add new environmental effect based on arena theme or dominant element
+          const effects = ['rain', 'snow', 'leaves', 'embers'];
+          const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+          
+          // Match environmental effect to arena theme if possible
+          let effect = randomEffect;
+          if (arenaTheme.includes('ice') || arenaTheme.includes('frost')) {
+            effect = 'snow';
+          } else if (arenaTheme.includes('fire') || arenaTheme.includes('flame')) {
+            effect = 'embers';
+          } else if (arenaTheme.includes('forest') || arenaTheme.includes('nature')) {
+            effect = 'leaves';
+          } else if (arenaTheme.includes('water') || arenaTheme.includes('ocean')) {
+            effect = 'rain';
+          }
+          
+          createEnvironmentalEffect(effect, gameBoardRef.current);
+        }
       }
     }
     
     // Reset when game ends
     if (gameState?.gameOver) {
       lastAnnouncedRoundRef.current = 0;
+      if (gameBoardRef.current) {
+        removeEnvironmentalEffect(gameBoardRef.current);
+      }
     }
-  }, [gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showInitialArena]);
+  }, [gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showInitialArena, arenaTheme]);
 
   // Background music management
   useEffect(() => {
@@ -448,6 +533,48 @@ const GameBoard = ({
       return () => clearTimeout(timer);
     }
   }, [gameState?.lastMatchBonus]);
+
+  // Victory pose for winning cards
+  useEffect(() => {
+    if (!gameState?.playedCards || gameState.playedCards.length < 2) return;
+    if (!gameBoardRef.current) return;
+    
+    // Check if both players have played cards this round
+    const humanCard = humanPlayer?.playedCards?.[humanPlayer.playedCards.length - 1];
+    const aiCard = aiPlayer?.playedCards?.[aiPlayer.playedCards.length - 1];
+    
+    if (humanCard && aiCard) {
+      // Determine winner
+      const humanPower = humanCard.modifiedStrength || humanCard.strength;
+      const aiPower = aiCard.modifiedStrength || aiCard.strength;
+      
+      if (humanPower !== aiPower) {
+        // Find the winning card element
+        const isHumanWinner = humanPower > aiPower;
+        const winningCardElements = gameBoardRef.current.querySelectorAll(
+          isHumanWinner ? '.player-row .played-card-wrapper' : '.ai-row .played-card-wrapper'
+        );
+        
+        if (winningCardElements.length > 0) {
+          const lastCard = winningCardElements[winningCardElements.length - 1];
+          setTimeout(() => {
+            if (lastCard) {
+              createVictoryPose(lastCard);
+              
+              // Add combo multiplier if match bonus
+              if (gameState?.lastMatchBonus) {
+                const rect = lastCard.getBoundingClientRect();
+                const parentRect = gameBoardRef.current.getBoundingClientRect();
+                const x = rect.left - parentRect.left + rect.width / 2;
+                const y = rect.top - parentRect.top;
+                createComboMultiplierAnimation('MATCH!', x, y, gameBoardRef.current);
+              }
+            }
+          }, 500);
+        }
+      }
+    }
+  }, [gameState?.playedCards?.length, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState?.lastMatchBonus]);
 
   // Display meteor damage events
   useEffect(() => {
@@ -651,6 +778,48 @@ const GameBoard = ({
     if (onQuit) {
       onQuit();
     }
+  };
+
+  // Sort hand cards
+  const getSortedHand = (hand) => {
+    if (!hand || hand.length === 0) return [];
+    
+    const sortedWithIndices = hand.map((card, originalIndex) => ({
+      card,
+      originalIndex
+    }));
+    
+    switch (sortBy) {
+      case 'element':
+        const elementOrder = ['FIRE', 'ICE', 'WATER', 'ELECTRICITY', 'EARTH', 'POWER', 'LIGHT', 'DARK', 'NEUTRAL', 'TECHNOLOGY', 'METEOR'];
+        sortedWithIndices.sort((a, b) => {
+          const indexA = elementOrder.indexOf(a.card.element);
+          const indexB = elementOrder.indexOf(b.card.element);
+          return indexA - indexB;
+        });
+        break;
+      case 'strength':
+        sortedWithIndices.sort((a, b) => 
+          (b.card.modifiedStrength || b.card.strength) - (a.card.modifiedStrength || a.card.strength)
+        );
+        break;
+      case 'rarity':
+        const rarityOrder = { 'LEGENDARY': 0, 'RARE': 1, 'UNCOMMON': 2, 'COMMON': 3 };
+        sortedWithIndices.sort((a, b) => {
+          const tierA = rarityOrder[a.card.tier || 'COMMON'];
+          const tierB = rarityOrder[b.card.tier || 'COMMON'];
+          return tierA - tierB;
+        });
+        break;
+      default:
+        return sortedWithIndices;
+    }
+    
+    return sortedWithIndices;
+  };
+
+  const handleSortChange = (newSort) => {
+    setSortBy(prevSort => prevSort === newSort ? 'none' : newSort);
   };
 
   if (!gameState) {
@@ -941,34 +1110,11 @@ const GameBoard = ({
               </p>
               {/* AI Status Effects Display */}
               {gameState.statusEffects?.ai?.length > 0 && (
-                <div className="status-effects-display">
-                  <h4>🎭 Active Effects</h4>
-                  {gameState.statusEffects.ai.map((effect, idx) => (
-                    <div key={idx} className={`status-effect ${['STRENGTH_BOOST', 'SHIELD', 'REGENERATION', 'PIERCING', 'CRITICAL_HIT', 'ELEMENT_MASTERY', 'DRAW_POWER', 'TURN_EXTENSION', 'DOUBLE_STRIKE'].includes(effect.type) ? 'buff' : 'debuff'}`}>
-                      <span className="status-icon">
-                        {effect.type === 'STRENGTH_BOOST' && '💪'}
-                        {effect.type === 'SHIELD' && '🛡️'}
-                        {effect.type === 'REGENERATION' && '💚'}
-                        {effect.type === 'PIERCING' && '🗡️'}
-                        {effect.type === 'CRITICAL_HIT' && '💥'}
-                        {effect.type === 'WEAKNESS' && '😵'}
-                        {effect.type === 'BURN' && '🔥'}
-                        {effect.type === 'FREEZE' && '🧊'}
-                        {effect.type === 'POISON' && '☠️'}
-                        {effect.type === 'CURSE' && '👹'}
-                        {effect.type === 'CONFUSION' && '😵‍💫'}
-                        {effect.type === 'SILENCE' && '🔇'}
-                        {effect.type === 'FATIGUE' && '😴'}
-                        {effect.type === 'VULNERABILITY' && '🎯'}
-                      </span>
-                      <span className="status-name">{effect.type.replace(/_/g, ' ')}</span>
-                      <span className="status-value">
-                        {effect.value > 1 && `${effect.value}`}
-                        {effect.turnsRemaining > 0 && ` (${effect.turnsRemaining})`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <StatusEffects 
+                  effects={gameState.statusEffects.ai}
+                  playerName={aiPlayer.name}
+                  availableEffects={gameState.availableStatusEffects || {}}
+                />
               )}
               {aiPlayer.fatigueDamage > 0 && (
                 <div className="fatigue-indicator">
@@ -1003,34 +1149,11 @@ const GameBoard = ({
               <p>Score: {humanPlayer.score}</p>
               {/* Status Effects Display */}
               {gameState.statusEffects?.player?.length > 0 && (
-                <div className="status-effects-display">
-                  <h4>🎭 Active Effects</h4>
-                  {gameState.statusEffects.player.map((effect, idx) => (
-                    <div key={idx} className={`status-effect ${effect.type.toLowerCase().includes('buff') || ['STRENGTH_BOOST', 'SHIELD', 'REGENERATION', 'PIERCING', 'CRITICAL_HIT'].includes(effect.type) ? 'buff' : 'debuff'}`}>
-                      <span className="status-icon">
-                        {effect.type === 'STRENGTH_BOOST' && '💪'}
-                        {effect.type === 'SHIELD' && '🛡️'}
-                        {effect.type === 'REGENERATION' && '💚'}
-                        {effect.type === 'PIERCING' && '🗡️'}
-                        {effect.type === 'CRITICAL_HIT' && '💥'}
-                        {effect.type === 'WEAKNESS' && '😵'}
-                        {effect.type === 'BURN' && '🔥'}
-                        {effect.type === 'FREEZE' && '🧊'}
-                        {effect.type === 'POISON' && '☠️'}
-                        {effect.type === 'CURSE' && '👹'}
-                        {effect.type === 'CONFUSION' && '😵‍💫'}
-                        {effect.type === 'SILENCE' && '🔇'}
-                        {effect.type === 'FATIGUE' && '😴'}
-                        {effect.type === 'VULNERABILITY' && '🎯'}
-                      </span>
-                      <span className="status-name">{effect.type.replace(/_/g, ' ')}</span>
-                      <span className="status-value">
-                        {effect.value > 1 && `${effect.value}`}
-                        {effect.turnsRemaining > 0 && ` (${effect.turnsRemaining})`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <StatusEffects 
+                  effects={gameState.statusEffects.player}
+                  playerName={humanPlayer.name}
+                  availableEffects={gameState.availableStatusEffects || {}}
+                />
               )}
               {humanPlayer.fatigueDamage > 0 && (
                 <div className="fatigue-indicator warning">
@@ -1219,21 +1342,20 @@ const GameBoard = ({
       {/* Current Player's Hand (Bottom) */}
       {humanPlayer && gameState.gameStarted && !gameState.gameOver && (
         <div className="hand-container">
-          <div className="hand" style={{
+          <div className={`hand ${isMyTurn ? 'your-turn' : ''}`} style={{
             background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
             boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`
           }}>
-            {humanPlayer.hand?.map((card, index) => (
+            {getSortedHand(humanPlayer.hand).map((item, displayIndex) => (
               <Card
-                key={index}
-                card={card}
-                onClick={() => handleCardClick(index)}
+                key={`${item.card.element}-${item.card.strength}-${item.originalIndex}`}
+                card={item.card}
+                onClick={() => handleCardClick(item.originalIndex)}
                 isPlayable={isMyTurn && !gameState?.pendingAbility}
-                keyboardKey={settings?.keyboardEnabled ? String(index + 1) : null}
+                keyboardKey={settings?.keyboardEnabled ? String(displayIndex + 1) : null}
               />
             ))}
           </div>
-          <h3 className="hand-label">Your Hand</h3>
         </div>
       )}
 
