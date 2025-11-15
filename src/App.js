@@ -369,16 +369,16 @@ function App() {
   };
 
   const handleQuit = () => {
-    // Return to splash screen
+    // Return to main menu
     setInGame(false);
-    setShowMainMenu(false);
     setShowStoryMode(false);
     setShowLobby(false);
     setStoryModeStage(null);
     setGameState(null);
     setRoomId(null);
-    setIsReturningToSplash(true);
-    setShowSplash(true);
+    setShowSplash(false);
+    setIsReturningToSplash(false);
+    setShowMainMenu(true);
   };
 
   const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS') => {
@@ -561,17 +561,33 @@ function App() {
     if (window.gameStateInterval) {
       clearInterval(window.gameStateInterval);
     }
-    // Reset to lobby or story mode depending on context
-    setInGame(false);
-    setRoomId(null);
-    setGameState(null);
-    setGameStartTime(null);
-    setLastRoundWinner(null);
     
-    // If we were in story mode, return to story mode screen
+    // If we were in story mode, mark stage as completed and return to story mode screen
     if (storyModeStage) {
+      setInGame(false);
+      setRoomId(null);
+      setGameState(null);
+      setGameStartTime(null);
+      setLastRoundWinner(null);
       setStoryModeStage(null);
       setShowStoryMode(true);
+    } else {
+      // For regular quick play, restart the game with the same opponent
+      if (currentOpponent) {
+        setGameState(null);
+        setGameStartTime(null);
+        setLastRoundWinner(null);
+        // Start a new game immediately
+        handleStartGame(currentOpponent);
+      } else {
+        // No opponent set, go back to main menu
+        setInGame(false);
+        setRoomId(null);
+        setGameState(null);
+        setGameStartTime(null);
+        setLastRoundWinner(null);
+        setShowMainMenu(true);
+      }
     }
   };
 
@@ -764,7 +780,7 @@ function App() {
         </>
       ) : null}
       {/* Donation Banner - Only show on main menu */}
-      {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && (
+      {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && !showStoryMode && !showCredits && !showLobby && (
         <DonationBanner 
           onClose={() => setShowDonationBanner(false)}
         />

@@ -21,25 +21,16 @@ const DonationBanner = ({ onClose }) => {
 
   const loadDonationInfo = async () => {
     try {
-      if (process.env.REACT_APP_ENABLE_DONATIONS !== 'true') {
-        setIsVisible(false);
-        return;
-      }
-
-      // Try to load from API first, fallback to env vars
-      let donationData;
-      try {
-        const response = await fetch('/api/donations');
-        donationData = await response.json();
-      } catch (error) {
-        // Fallback to environment variables
-        const donationLinks = JSON.parse(process.env.REACT_APP_DONATION_LINKS || '{}');
-        donationData = {
-          enabled: true,
-          links: donationLinks,
-          message: 'Support Nebula 3D Dev - Your contributions help keep this project alive!'
-        };
-      }
+      // Always show donation banner with default config
+      const donationData = {
+        enabled: true,
+        links: {
+          paypal: 'https://paypal.me/yourpaypal',
+          kofi: 'https://ko-fi.com/yourkofi',
+          github: 'https://github.com/sponsors/yourgithub'
+        },
+        message: 'Support Nebula 3D Dev - Your contributions help keep this project alive!'
+      };
 
       setDonationInfo(donationData);
     } catch (error) {

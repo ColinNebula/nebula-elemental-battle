@@ -432,8 +432,8 @@ class GameClient {
             });
             
             // AI plays after delay (give player time to see their card)
-            setTimeout(() => {
-              console.log('⏰ AI activation timeout triggered (400ms after player card)');
+            const aiActivationTimeout = setTimeout(() => {
+              console.log('⏰ AI activation timeout triggered (6000ms after player card)');
               console.log('🔍 Checking AI availability:', {
                 aiExists: !!ai,
                 aiHandLength: ai?.hand?.length,
@@ -454,9 +454,10 @@ class GameClient {
                 ai.active = true;
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
                 console.log('📤 AI activation notified');
+                console.log('⏱️ About to create AI card selection timeout (2000ms)...');
                 
-                setTimeout(() => {
-                  console.log('⏰ AI card selection timeout fired (500ms)');
+                const aiCardSelectionTimeout = setTimeout(() => {
+                  console.log('⏰ AI card selection timeout fired (2000ms)');
                   try {
                     console.log('🔵 AI card selection timeout started (500ms delay)');
                     // Re-check AI has cards before attempting to play
@@ -625,10 +626,16 @@ class GameClient {
                   console.log('📢 AI card added to played cards, notifying listeners...');
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
                   console.log('✅ Listeners notified, starting battle resolution timer (6000ms - 6 seconds)...');
+                  console.log('⏱️ About to create setTimeout for battle resolution...');
                   
                   // Resolve battle with advanced mechanics (6 second delay to view AI card)
-                  setTimeout(() => {
+                  const battleTimeout = setTimeout(() => {
                     console.log('⏰ Battle timeout triggered after 6 seconds');
+                    console.log('📊 Battle timeout state check:', {
+                      playerCard: !!player.chosenCard,
+                      aiCard: !!ai.chosenCard,
+                      battlePhase: chooseRoom.battlePhase
+                    });
                     try {
                       console.log('⚔️ Starting battle resolution...');
                       
@@ -663,24 +670,44 @@ class GameClient {
                     player1Strength = this.applyStatusModifiersToCard(chooseRoom, player1Card, player);
                     player2Strength = this.applyStatusModifiersToCard(chooseRoom, player2Card, ai);
                     
-                    // Element matching bonus (same element as last played)
-                    if (player.lastPlayedElement === player1Card.element) {
+                    // Element matching bonus - check for 2, 3, or 4 of the same element in played cards
+                    const player1ElementCounts = {};
+                    player.playedCards.forEach(card => {
+                      if (card && card.element) {
+                        player1ElementCounts[card.element] = (player1ElementCounts[card.element] || 0) + 1;
+                      }
+                    });
+                    
+                    const player2ElementCounts = {};
+                    ai.playedCards.forEach(card => {
+                      if (card && card.element) {
+                        player2ElementCounts[card.element] = (player2ElementCounts[card.element] || 0) + 1;
+                      }
+                    });
+                    
+                    // Apply match bonus if player has 2, 3, or 4 of the same element
+                    const player1Count = player1ElementCounts[player1Card.element] || 0;
+                    if (player1Count >= 2 && player1Count <= 4) {
                       player1Strength *= 2;
                       chooseRoom.lastMatchBonus = {
                         element: player1Card.element,
                         player: player.name,
+                        count: player1Count,
                         timestamp: Date.now()
                       };
-                      console.log('🎯 Player element match bonus! Double strength!');
+                      console.log(`🎯 Player element match bonus! ${player1Count}x ${player1Card.element} cards - Double strength!`);
                     }
-                    if (ai.lastPlayedElement === player2Card.element) {
+                    
+                    const player2Count = player2ElementCounts[player2Card.element] || 0;
+                    if (player2Count >= 2 && player2Count <= 4) {
                       player2Strength *= 2;
                       chooseRoom.lastMatchBonus = {
                         element: player2Card.element,
                         player: ai.name,
+                        count: player2Count,
                         timestamp: Date.now()
                       };
-                      console.log('🤖 AI element match bonus! Double strength!');
+                      console.log(`🤖 AI element match bonus! ${player2Count}x ${player2Card.element} cards - Double strength!`);
                     }
                     
                     // Element counter bonuses
@@ -805,20 +832,46 @@ class GameClient {
                     
                     console.log('🔄 Checking game over conditions...');
                     
-                    // Check game over
-                    if (chooseRoom.currentRound >= chooseRoom.maxRounds || (player.hand.length === 0 && ai.hand.length === 0)) {
+                    // Check game over - ONLY when all cards are played from both hand and deck
+                    const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                    const aiHasNoCards = (ai.hand.length === 0 && (!ai.deck || ai.deck.length === 0));
+                    
+                    if (playerHasNoCards && aiHasNoCards) {
                       chooseRoom.gameOver = true;
-                      chooseRoom.winner = player.score > ai.score ? player.name : (ai.score > player.score ? ai.name : 'Tie');
-                      console.log('🏁 Game over! Winner:', chooseRoom.winner);
+                      
+                      // Calculate total strength from all played cards
+                      const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      
+                      console.log('📊 Final strengths:', {
+                        playerTotal: playerTotalStrength,
+                        aiTotal: aiTotalStrength,
+                        playerScore: player.score,
+                        aiScore: ai.score
+                      });
+                      
+                      // Determine winner by total strength
+                      if (playerTotalStrength > aiTotalStrength) {
+                        chooseRoom.winner = player.name;
+                      } else if (aiTotalStrength > playerTotalStrength) {
+                        chooseRoom.winner = ai.name;
+                      } else {
+                        chooseRoom.winner = 'Tie';
+                      }
+                      
+                      console.log('🏁 Game over! All cards played. Winner:', chooseRoom.winner);
                     } else {
                       console.log('▶️ Setting up next round...', {
                         currentRound: chooseRoom.currentRound,
                         maxRounds: chooseRoom.maxRounds,
                         deferredAbility: chooseRoom.deferredAbility
                       });
+                      console.log('⏱️ About to create next round timeout (6000ms)...');
                       
                       // Next round timeout (6 seconds for round announcement)
-                      setTimeout(() => {
+                      const nextRoundTimeout = setTimeout(() => {
                         console.log('🔄 Next round timeout triggered - clearing cards and resetting turn');
                         console.log('📊 Pre-reset state:', {
                           round: chooseRoom.currentRound,
@@ -913,14 +966,14 @@ class GameClient {
                   chooseRoom.battlePhase = false;
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
                 }
-              }, 500); // 500ms for AI to "think" before selecting card
+              }, 2000); // 2000ms for AI to "think" before selecting card
               } else {
                 console.log('❌ AI has no cards or missing!', {
                   aiExists: !!ai,
                   aiHandLength: ai?.hand?.length
                 });
               }
-            }, 400);
+            }, 6000); // 6 seconds delay after player plays
             
             return { type: 'CARD_CHOSEN', success: true };
           } else {
@@ -1644,33 +1697,45 @@ class GameClient {
       room.meteorAttacks.player1 = (room.meteorAttacks.player1 || 0) + 1;
       const meteorDamage = room.meteorAttacks.player1;
       
-      // Attack opponent's EARTH cards by reducing their strength
-      if (player2.hand && Array.isArray(player2.hand)) {
-        const earthCards = player2.hand.filter(c => c && c.element === 'EARTH' && typeof c.strength === 'number');
-        const cardsToRemove = [];
+      // Track meteor damage events for visual feedback
+      if (!room.meteorDamageEvents) room.meteorDamageEvents = [];
+      
+      // Attack opponent's EARTH cards in arena (playedCards) by reducing their strength
+      if (player2.playedCards && Array.isArray(player2.playedCards)) {
+        const earthCards = player2.playedCards.filter(c => c && c.element === 'EARTH' && typeof c.strength === 'number');
+        const damagedCards = [];
         
         if (earthCards.length > 0) {
-          earthCards.forEach(card => {
+          earthCards.forEach((card, index) => {
             if (!card || typeof card.strength !== 'number') return;
             
-            if (card.strength > 1) {
-              card.strength -= 1; // Reduce strength by 1
-            } else {
-              // If strength is 1 or less, mark for removal
-              cardsToRemove.push(card);
+            const originalStrength = card.strength;
+            const currentStrength = card.modifiedStrength || card.strength;
+            
+            if (currentStrength > 0) {
+              // Reduce modified strength if it exists, otherwise reduce base strength
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 1);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 1);
+              }
+              card.meteorDamaged = true; // Mark for visual effect
+              card.meteorDamage = (card.meteorDamage || 0) + 1; // Track total meteor damage
+              damagedCards.push({ cardIndex: player2.playedCards.indexOf(card), damage: 1, destroyed: false });
             }
           });
           
-          // Remove marked cards
-          cardsToRemove.forEach(card => {
-            const cardIndex = player2.hand.indexOf(card);
-            if (cardIndex > -1) {
-              player2.hand.splice(cardIndex, 1);
-              player2.cardCount = Math.max(0, player2.cardCount - 1);
-            }
+          // Add meteor damage event for UI to display
+          room.meteorDamageEvents.push({
+            timestamp: Date.now(),
+            targetPlayer: player2.id,
+            playerName: player2.name,
+            damagedCards: damagedCards,
+            totalCards: earthCards.length,
+            cardsDestroyed: 0 // Cards in arena can't be destroyed, just weakened
           });
           
-          console.log(`☄️ METEOR: Attacked ${earthCards.length} EARTH cards (-1 strength each, ${cardsToRemove.length} destroyed)`);
+          console.log(`☄️ METEOR: Attacked ${earthCards.length} EARTH cards in arena (-1 strength each)`);
         }
       }
       
@@ -1684,33 +1749,45 @@ class GameClient {
       room.meteorAttacks.player2 = (room.meteorAttacks.player2 || 0) + 1;
       const meteorDamage = room.meteorAttacks.player2;
       
-      // Attack opponent's EARTH cards by reducing their strength
-      if (player1.hand && Array.isArray(player1.hand)) {
-        const earthCards = player1.hand.filter(c => c && c.element === 'EARTH' && typeof c.strength === 'number');
-        const cardsToRemove = [];
+      // Track meteor damage events for visual feedback
+      if (!room.meteorDamageEvents) room.meteorDamageEvents = [];
+      
+      // Attack opponent's EARTH cards in arena (playedCards) by reducing their strength
+      if (player1.playedCards && Array.isArray(player1.playedCards)) {
+        const earthCards = player1.playedCards.filter(c => c && c.element === 'EARTH' && typeof c.strength === 'number');
+        const damagedCards = [];
         
         if (earthCards.length > 0) {
-          earthCards.forEach(card => {
+          earthCards.forEach((card, index) => {
             if (!card || typeof card.strength !== 'number') return;
             
-            if (card.strength > 1) {
-              card.strength -= 1; // Reduce strength by 1
-            } else {
-              // If strength is 1 or less, mark for removal
-              cardsToRemove.push(card);
+            const originalStrength = card.strength;
+            const currentStrength = card.modifiedStrength || card.strength;
+            
+            if (currentStrength > 0) {
+              // Reduce modified strength if it exists, otherwise reduce base strength
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 1);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 1);
+              }
+              card.meteorDamaged = true; // Mark for visual effect
+              card.meteorDamage = (card.meteorDamage || 0) + 1; // Track total meteor damage
+              damagedCards.push({ cardIndex: player1.playedCards.indexOf(card), damage: 1, destroyed: false });
             }
           });
           
-          // Remove marked cards
-          cardsToRemove.forEach(card => {
-            const cardIndex = player1.hand.indexOf(card);
-            if (cardIndex > -1) {
-              player1.hand.splice(cardIndex, 1);
-              player1.cardCount = Math.max(0, player1.cardCount - 1);
-            }
+          // Add meteor damage event for UI to display
+          room.meteorDamageEvents.push({
+            timestamp: Date.now(),
+            targetPlayer: player1.id,
+            playerName: player1.name,
+            damagedCards: damagedCards,
+            totalCards: earthCards.length,
+            cardsDestroyed: 0 // Cards in arena can't be destroyed, just weakened
           });
           
-          console.log(`☄️ METEOR: AI attacked ${earthCards.length} EARTH cards (-1 strength each, ${cardsToRemove.length} destroyed)`);
+          console.log(`☄️ METEOR: AI attacked ${earthCards.length} EARTH cards in arena (-1 strength each)`);
         }
       }
       
@@ -1802,7 +1879,10 @@ class GameClient {
     
     // Also emit the gameState event for game updates
     if (type === 'GAME_UPDATE' && data) {
-      this.emit('gameState', data);
+      // Create a deep copy to force React re-render and ensure nested changes are detected
+      const updatedState = JSON.parse(JSON.stringify(data));
+      console.log('🔄 Emitting gameState with new reference', { gameOver: updatedState.gameOver, winner: updatedState.winner });
+      this.emit('gameState', updatedState);
     }
   }
 
