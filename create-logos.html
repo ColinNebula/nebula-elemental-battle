@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        canvas {
+            border: 2px solid #333;
+            margin: 10px 0;
+            display: block;
+            background: white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .preview {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Elemental Battle Logo Generator</h1>
+        <p>This will generate logo images for the game. Click the buttons below to download each size.</p>
+        
+        <div class="preview">
+            <h3>Preview</h3>
+            <canvas id="preview" width="512" height="512"></canvas>
+        </div>
+
+        <div>
+            <button onclick="downloadLogo(512, 'logo512.png')">Download 512x512</button>
+            <button onclick="downloadLogo(192, 'logo192.png')">Download 192x192</button>
+            <button onclick="downloadLogo(64, 'favicon.ico')">Download Favicon (64x64)</button>
+        </div>
+    </div>
+
+    <script>
+        function drawLogo(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            const center = size / 2;
+            const scale = size / 512;
+            
+            // Background gradient
+            const bgGradient = ctx.createLinearGradient(0, 0, size, size);
+            bgGradient.addColorStop(0, '#0f0c29');
+            bgGradient.addColorStop(0.5, '#302b63');
+            bgGradient.addColorStop(1, '#24243e');
+            
+            ctx.fillStyle = bgGradient;
+            ctx.beginPath();
+            ctx.arc(center, center, size/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Outer glow
+            const glowGradient = ctx.createRadialGradient(center, center, 0, center, center, 220 * scale);
+            glowGradient.addColorStop(0, 'rgba(255, 215, 0, 0.2)');
+            glowGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(center, center, 220 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw cards function
+            function drawCard(x, y, rotation, gradient, emoji) {
+                ctx.save();
+                ctx.translate(x * scale, y * scale);
+                ctx.rotate(rotation * Math.PI / 180);
+                
+                // Card shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 15 * scale;
+                ctx.shadowOffsetX = 5 * scale;
+                ctx.shadowOffsetY = 5 * scale;
+                
+                // Card body
+                const cardWidth = 100 * scale;
+                const cardHeight = 140 * scale;
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.roundRect(-cardWidth/2, -cardHeight/2, cardWidth, cardHeight, 8 * scale);
+                ctx.fill();
+                
+                ctx.shadowColor = 'transparent';
+                
+                // Card border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2 * scale;
+                ctx.beginPath();
+                ctx.roundRect(-cardWidth/2 + 5 * scale, -cardHeight/2 + 5 * scale, 
+                             cardWidth - 10 * scale, cardHeight - 10 * scale, 6 * scale);
+                ctx.stroke();
+                
+                // Emoji
+                ctx.font = `${60 * scale}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(emoji, 0, 0);
+                
+                ctx.restore();
+            }
+            
+            // Card gradients
+            const cardGrad1 = ctx.createLinearGradient(0, 0, 100 * scale, 100 * scale);
+            cardGrad1.addColorStop(0, '#ff6b6b');
+            cardGrad1.addColorStop(1, '#ee5a6f');
+            
+            const cardGrad2 = ctx.createLinearGradient(0, 0, 100 * scale, 100 * scale);
+            cardGrad2.addColorStop(0, '#4ecdc4');
+            cardGrad2.addColorStop(1, '#44a08d');
+            
+            const cardGrad3 = ctx.createLinearGradient(0, 0, 100 * scale, 100 * scale);
+            cardGrad3.addColorStop(0, '#a770ef');
+            cardGrad3.addColorStop(1, '#cf8bf3');
+            
+            // Draw three cards
+            drawCard(150, 256, -15, cardGrad1, '🔥');
+            drawCard(256, 220, 0, cardGrad2, '⚡');
+            drawCard(362, 256, 15, cardGrad3, '❄️');
+            
+            // Central circle
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
+            ctx.lineWidth = 4 * scale;
+            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+            ctx.shadowBlur = 10 * scale;
+            ctx.beginPath();
+            ctx.arc(center, 340 * scale, 60 * scale, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.shadowColor = 'transparent';
+            ctx.lineWidth = 2 * scale;
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+            ctx.beginPath();
+            ctx.arc(center, 340 * scale, 45 * scale, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Text
+            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+            ctx.shadowBlur = 8 * scale;
+            ctx.fillStyle = '#ffd700';
+            ctx.font = `bold ${24 * scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ELEMENTAL', center, 310 * scale);
+            
+            ctx.font = `bold ${32 * scale}px Arial`;
+            ctx.fillText('BATTLE', center, 360 * scale);
+            
+            // Stars
+            ctx.shadowBlur = 5 * scale;
+            function drawStar(x, y, radius) {
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(x * scale, y * scale, radius * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            drawStar(180, 140, 3);
+            drawStar(220, 120, 2);
+            drawStar(332, 140, 3);
+            drawStar(292, 120, 2);
+            drawStar(256, 100, 4);
+        }
+        
+        // Draw preview
+        drawLogo(document.getElementById('preview'), 512);
+        
+        function downloadLogo(size, filename) {
+            const canvas = document.createElement('canvas');
+            drawLogo(canvas, size);
+            
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>

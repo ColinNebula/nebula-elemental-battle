@@ -1,0 +1,339 @@
+.round-announcement {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.round-announcement-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  height: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+}
+
+.round-background-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.round-circle-1, .round-circle-2, .round-circle-3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 3px solid;
+  transform: translate(-50%, -50%);
+}
+
+.round-circle-1 {
+  width: 200px;
+  height: 200px;
+  border-color: rgba(78, 205, 196, 0.8);
+  animation: roundPulse 2s infinite ease-in-out;
+}
+
+.round-circle-2 {
+  width: 300px;
+  height: 300px;
+  border-color: rgba(255, 235, 59, 0.6);
+  animation: roundPulse 2s infinite ease-in-out 0.3s;
+}
+
+.round-circle-3 {
+  width: 400px;
+  height: 400px;
+  border-color: rgba(255, 107, 107, 0.4);
+  animation: roundPulse 2s infinite ease-in-out 0.6s;
+}
+
+@keyframes roundPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.4;
+  }
+}
+
+.round-text-container {
+  text-align: center;
+  z-index: 10;
+  position: relative;
+}
+
+.round-label {
+  font-size: 32px;
+  font-weight: 700;
+  color: #4ecdc4;
+  text-shadow: 0 0 20px rgba(78, 205, 196, 0.8),
+               0 0 40px rgba(78, 205, 196, 0.4);
+  margin-bottom: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.round-number {
+  font-size: 120px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+               0 0 60px rgba(78, 205, 196, 0.6),
+               4px 4px 8px rgba(0, 0, 0, 0.8);
+  margin: 20px 0;
+  line-height: 1;
+}
+
+.round-subtitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffeb3b;
+  text-shadow: 0 0 15px rgba(255, 235, 59, 0.8),
+               2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin-top: 10px;
+  letter-spacing: 2px;
+}
+
+.round-decorative-elements {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.round-star {
+  position: absolute;
+  font-size: 30px;
+  color: #ffeb3b;
+  text-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+  animation: starTwinkle 1.5s infinite ease-in-out;
+}
+
+.star-1 {
+  top: 10%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.star-2 {
+  top: 20%;
+  right: 10%;
+  animation-delay: 0.3s;
+}
+
+.star-3 {
+  bottom: 20%;
+  left: 10%;
+  animation-delay: 0.6s;
+}
+
+.star-4 {
+  bottom: 15%;
+  right: 15%;
+  animation-delay: 0.9s;
+}
+
+.round-lightning {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 40px;
+  color: #ffeb3b;
+  text-shadow: 0 0 25px rgba(255, 235, 59, 1);
+  animation: lightningFlash 2s infinite ease-in-out;
+}
+
+.round-swords {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 40px;
+  color: #ff6b6b;
+  text-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
+  animation: swordsCross 1.8s infinite ease-in-out;
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes lightningFlash {
+  0%, 90%, 100% {
+    opacity: 1;
+  }
+  10%, 80% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes swordsCross {
+  0%, 100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-50%) rotate(-10deg);
+  }
+  75% {
+    transform: translateX(-50%) rotate(10deg);
+  }
+}
+
+/* Animation phases */
+.round-announcement.entrance {
+  animation: announceEntrance 0.8s ease-out forwards;
+}
+
+.round-announcement.entrance .round-text-container {
+  animation: textSlideIn 0.8s ease-out forwards;
+}
+
+.round-announcement.display {
+  animation: announceDisplay 1.4s ease-in-out forwards;
+}
+
+.round-announcement.exit {
+  animation: announceExit 0.8s ease-in forwards;
+}
+
+@keyframes announceEntrance {
+  0% {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+  }
+}
+
+@keyframes textSlideIn {
+  0% {
+    transform: scale(0.3) translateY(-100px);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1) translateY(10px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes announceDisplay {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes announceExit {
+  0% {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+  }
+  100% {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+}
+
+.round-announcement.exit .round-text-container {
+  animation: textSlideOut 0.8s ease-in forwards;
+}
+
+@keyframes textSlideOut {
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.3) translateY(100px);
+    opacity: 0;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .round-label {
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  
+  .round-number {
+    font-size: 80px;
+  }
+  
+  .round-subtitle {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+  
+  .round-star {
+    font-size: 20px;
+  }
+  
+  .round-lightning,
+  .round-swords {
+    font-size: 30px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .round-circle-1,
+  .round-circle-2,
+  .round-circle-3 {
+    animation: none;
+  }
+  
+  .round-star,
+  .round-lightning,
+  .round-swords {
+    animation: none;
+  }
+  
+  .round-announcement.entrance,
+  .round-announcement.display,
+  .round-announcement.exit {
+    animation: none;
+  }
+  
+  .round-announcement.entrance .round-text-container,
+  .round-announcement.exit .round-text-container {
+    animation: none;
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}

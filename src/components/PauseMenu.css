@@ -1,0 +1,133 @@
+.pause-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pause-menu {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #0f3460;
+  border-radius: 20px;
+  padding: 40px 60px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 40px rgba(15, 52, 96, 0.3);
+  text-align: center;
+  animation: slideDown 0.3s ease-out;
+  min-width: 400px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pause-menu h2 {
+  color: #e94560;
+  font-size: 36px;
+  margin: 0 0 30px 0;
+  text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+  font-weight: 700;
+}
+
+.pause-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.pause-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: 600;
+  border: 2px solid;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.resume-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  border-color: #66bb6a;
+  color: white;
+}
+
+.resume-btn:hover {
+  background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+  transform: translateY(-2px);
+}
+
+.forfeit-btn {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  border-color: #ffa726;
+  color: white;
+}
+
+.forfeit-btn:hover {
+  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+  box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.quit-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  border-color: #e57373;
+  color: white;
+}
+
+.quit-btn:hover {
+  background: linear-gradient(135deg, #e57373 0%, #f44336 100%);
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+  transform: translateY(-2px);
+}
+
+.pause-menu-hint {
+  color: #aaa;
+  font-size: 14px;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pause-menu {
+    min-width: 300px;
+    padding: 30px 40px;
+  }
+
+  .pause-menu h2 {
+    font-size: 28px;
+  }
+
+  .pause-btn {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+}

@@ -1,0 +1,195 @@
+.credits-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.credits-container {
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(135deg, rgba(44, 44, 84, 0.98) 0%, rgba(26, 26, 66, 0.98) 100%);
+  border: 3px solid rgba(255, 215, 0, 0.6);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+              0 0 100px rgba(255, 215, 0, 0.3);
+  animation: creditsSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes creditsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.credits-content {
+  text-align: center;
+  color: #fff;
+}
+
+.credits-title {
+  font-size: 48px;
+  font-weight: 900;
+  color: #ffd700;
+  margin: 0 0 40px 0;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.8),
+               0 4px 8px rgba(0, 0, 0, 0.8);
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8),
+                 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+  50% {
+    text-shadow: 0 0 50px rgba(255, 215, 0, 1),
+                 0 0 80px rgba(255, 215, 0, 0.6),
+                 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.credits-section {
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.credits-section h2 {
+  font-size: 28px;
+  color: #4caf50;
+  margin: 0 0 15px 0;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+}
+
+.credits-name {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  margin: 10px 0;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.credits-company {
+  font-size: 24px;
+  color: #64b5f6;
+  margin: 5px 0;
+  font-style: italic;
+  text-shadow: 0 0 15px rgba(100, 181, 246, 0.5);
+}
+
+.credits-message {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin: 15px 0;
+}
+
+.support-section {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(33, 150, 243, 0.2) 100%);
+  border: 2px solid rgba(76, 175, 80, 0.4);
+}
+
+.support-section h2 {
+  font-size: 32px;
+  animation: supportGlow 2s ease-in-out infinite;
+}
+
+@keyframes supportGlow {
+  0%, 100% {
+    color: #4caf50;
+    text-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+  }
+  50% {
+    color: #64b5f6;
+    text-shadow: 0 0 30px rgba(100, 181, 246, 0.8);
+  }
+}
+
+.donate-button {
+  margin-top: 20px;
+  padding: 15px 40px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.5),
+              0 0 30px rgba(33, 150, 243, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.donate-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 25px rgba(76, 175, 80, 0.7),
+              0 0 50px rgba(33, 150, 243, 0.5);
+  background: linear-gradient(135deg, #66bb6a 0%, #42a5f5 100%);
+}
+
+.donate-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.credits-footer {
+  font-size: 20px;
+  color: #ffd700;
+  margin: 20px 0;
+  font-weight: 600;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.close-credits-button {
+  margin-top: 40px;
+  padding: 15px 50px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a2e;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.close-credits-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 25px rgba(255, 215, 0, 0.7);
+  background: linear-gradient(135deg, #ffe54e 0%, #fff176 100%);
+}
+
+.close-credits-button:active {
+  transform: translateY(-1px) scale(1.02);
+}

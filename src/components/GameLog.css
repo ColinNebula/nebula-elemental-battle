@@ -1,0 +1,133 @@
+.game-log {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(44, 44, 84, 0.98) 100%);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  z-index: 90;
+  backdrop-filter: blur(10px);
+}
+
+.game-log h3 {
+  margin: 0 0 12px 0;
+  color: #4caf50;
+  font-size: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+  padding-bottom: 8px;
+}
+
+.log-entries {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-entries::-webkit-scrollbar {
+  width: 6px;
+}
+
+.log-entries::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.log-entries::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 3px;
+}
+
+.log-empty {
+  color: #888;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.log-entry {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px;
+  border-left: 3px solid #4caf50;
+  transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-3px);
+}
+
+.log-round {
+  font-size: 11px;
+  color: #ffd700;
+  font-weight: bold;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.log-cards {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.log-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.log-card.player1 {
+  border: 1px solid #2196f3;
+}
+
+.log-card.player2 {
+  border: 1px solid #f44336;
+}
+
+.log-element {
+  font-size: 16px;
+}
+
+.log-strength {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.log-vs {
+  font-size: 10px;
+  font-weight: bold;
+  color: #888;
+}
+
+.log-result {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.log-result.winner {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.log-result.tie {
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.2);
+}

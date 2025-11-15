@@ -1,38 +1,331 @@
+/* CSS Variables for Theming */
+:root {
+  --theme-primary: #4a90e2;
+  --theme-secondary: #50c878;
+  --theme-accent: #ff6b6b;
+  --theme-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --theme-card-border: #3a7bd5;
+  --theme-text-color: #ffffff;
+  
+  --hand-card-back: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  --hand-background: rgba(0, 0, 0, 0.3);
+  --hand-glow-effect: none;
+}
+
 .App {
-  text-align: center;
+  min-height: 100vh;
+  position: relative;
+  background: var(--theme-background);
+  color: var(--theme-text-color);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.modal-content {
+  position: relative;
+  background: transparent;
+  border-radius: 15px;
+  padding: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.modal-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  border: 2px solid #fff;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  z-index: 10001;
+}
+
+.modal-close:hover {
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+}
+
+.top-menu {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.menu-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a6b5 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.menu-button:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+  background: linear-gradient(135deg, #5eddd4 0%, #54b6c5 100%);
+}
+
+.menu-button:active {
+  transform: translateY(-1px) scale(1.05);
+}
+
+.connecting {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.connecting h2 {
+  margin-bottom: 10px;
 }
 
-@keyframes App-logo-spin {
+.connecting p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  border: 2px solid white;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+}
+
+.modal-close:hover {
+  transform: scale(1.1) rotate(90deg);
+  background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+}
+
+/* ========================================
+   MOBILE & TABLET RESPONSIVE STYLES
+======================================== */
+
+/* Tablets and smaller devices */
+@media (max-width: 1024px) {
+  .top-menu {
+    top: 10px;
+    right: 10px;
+    gap: 8px;
+  }
+  
+  .menu-button {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+  }
+  
+  .modal-content {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+  .top-menu {
+    top: 8px;
+    right: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 16px);
+    justify-content: flex-end;
+  }
+  
+  .menu-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .menu-button:hover {
+    transform: scale(1.05);
+  }
+  
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    max-height: none;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-close {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+    top: -10px;
+    right: -10px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .App {
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+  
+  .top-menu {
+    top: 5px;
+    right: 5px;
+    gap: 4px;
+  }
+  
+  .menu-button {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-width: 1px;
+  }
+  
+  .modal-content {
+    border-radius: 10px;
+  }
+  
+  .modal-close {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    top: -8px;
+    right: -8px;
+  }
+  
+  .connecting h2 {
+    font-size: 20px;
+    padding: 0 20px;
+    text-align: center;
+  }
+  
+  .connecting p {
+    font-size: 12px;
+    padding: 0 20px;
+    text-align: center;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-overlay {
+    align-items: flex-start;
+  }
+  
+  .modal-content {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .top-menu {
+    top: 5px;
+    right: 5px;
   }
 }

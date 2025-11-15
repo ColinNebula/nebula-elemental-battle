@@ -1,18 +1,133 @@
-# Getting Started with Create React App
+# 🎮 Nebula Elemental Battle
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> **A sophisticated multiplayer card battle game with AI opponents, story mode, and elemental strategy**
 
-## Available Scripts
+*Created by **Developer Colin Nebula** for **Nebula 3D Dev***
 
-In the project directory, you can run:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Security](https://img.shields.io/badge/Security-Hardened-brightgreen.svg)](#security)
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### C++ Backend
+- Game room management (create/join rooms)
+- Standard 52-card deck with shuffle
+- Turn-based multiplayer (2-4 players)
+- TCP server with multi-threading
+- Game state validation
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### React Frontend
+- Lobby system for room management
+- Real-time game board
+- Visual card components
+- Player status display
+- Responsive UI
+
+## Getting Started
+
+### Quick Start (No C++ Required)
+
+```bash
+npm install
+npm run dev
+```
+
+This runs in **mock mode** - test the game immediately without building C++!
+- React app: http://localhost:3000
+- Proxy server: http://localhost:3001
+
+To use the actual C++ game server:
+
+#### Windows
+```powershell
+cd server
+mkdir build
+cd build
+cmake ..
+cmake --build .
+.\Debug\card_game_server.exe
+```
+
+#### Linux/Mac
+```bash
+cd server
+mkdir build
+cd build
+cmake ..
+make
+./card_game_server
+```
+
+Then run:
+```bash
+npm run dev
+```
+
+The proxy server will automatically detect and use the C++ server on port 8080.
+
+1. Start the C++ server
+2. Launch React app in browser
+3. Enter your name and create/join a room
+4. Wait for 2-4 players
+5. Host starts the game
+6. Play cards when it's your turn
+
+## Game Protocol
+
+Commands the C++ server accepts:
+- `CREATE_ROOM` - Create new game room
+- `JOIN_ROOM <roomId> <playerId> <playerName>` - Join room
+- `START_GAME <roomId>` - Start game (deals 5 cards)
+- `PLAY_CARD <roomId> <playerId> <cardIndex>` - Play a card
+- `GET_STATE <roomId>` - Get game state (JSON)
+
+## Project Structure
+
+```
+nebula/
+├── server/              # C++ backend
+│   ├── card_game.h      # Game logic header
+│   ├── card_game.cpp    # Game implementation
+## Troubleshooting
+
+**Server won't start:**
+- Check if port 8080 is in use
+- Verify firewall settings (Windows)
+
+**React can't connect:**
+- Ensure C++ server is running
+- Check connection address in App.js
+
+**Build errors:**
+- Verify CMake and C++ compiler installation
+- Ensure C++17 support enabled
+
+## Learn More
+
+- [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React documentation](https://reactjs.org/)
+- [CMake documentation](https://cmake.org/documentation/)
+```bash
+cd server
+mkdir build
+cd build
+cmake ..
+make
+./card_game_server
+```
+
+Server runs on port **8080**.
+
+### Run React Frontend
+
+```bash
+npm install
+npm start
+```
+
+App opens at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
 

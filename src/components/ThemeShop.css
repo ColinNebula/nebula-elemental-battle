@@ -1,0 +1,353 @@
+/* Theme Shop Styles */
+.theme-shop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.theme-shop-container {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid #3498db;
+}
+
+.theme-shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #3498db;
+}
+
+.theme-shop-header h2 {
+  color: #ecf0f1;
+  margin: 0;
+  font-size: 1.8em;
+}
+
+.coin-display {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+  padding: 8px 15px;
+  border-radius: 25px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.coin-icon {
+  font-size: 1.2em;
+  margin-right: 5px;
+}
+
+.coin-count {
+  font-weight: bold;
+  color: white;
+  font-size: 1.1em;
+}
+
+.close-btn {
+  background: #e74c3c;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: white;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+.notification {
+  background: linear-gradient(45deg, #27ae60, #2ecc71);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.theme-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #34495e;
+  color: #bdc3c7;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+}
+
+.tab-btn:hover {
+  background: #3498db;
+  color: white;
+}
+
+.tab-btn.active {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.theme-card {
+  background: #34495e;
+  border-radius: 15px;
+  padding: 20px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.theme-card:hover {
+  border-color: #3498db;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+}
+
+.theme-card.active {
+  border-color: #27ae60;
+  box-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+}
+
+.theme-preview {
+  height: 120px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-elements {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+  padding: 10px;
+}
+
+.preview-card {
+  width: 60px;
+  height: 80px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.preview-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.hand-theme-preview {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  background: #2c3e50;
+}
+
+.preview-hand {
+  display: flex;
+  gap: 5px;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.preview-hand-card {
+  width: 50px;
+  height: 70px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  margin-left: -10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-hand-card:first-child {
+  margin-left: 0;
+}
+
+.theme-info {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.theme-info h3 {
+  color: #ecf0f1;
+  margin: 0 0 8px 0;
+  font-size: 1.2em;
+}
+
+.theme-cost {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(45deg, #f39c12, #e67e22);
+  padding: 4px 10px;
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.theme-cost .coin-icon {
+  font-size: 1em;
+  margin-right: 4px;
+}
+
+.theme-actions {
+  text-align: center;
+}
+
+.apply-btn, .purchase-btn, .free-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+  width: 100%;
+}
+
+.apply-btn {
+  background: linear-gradient(45deg, #27ae60, #2ecc71);
+  color: white;
+}
+
+.apply-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #229954, #27ae60);
+  transform: translateY(-2px);
+}
+
+.apply-btn.active {
+  background: #95a5a6;
+  color: #ecf0f1;
+  cursor: not-allowed;
+}
+
+.purchase-btn {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+}
+
+.purchase-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #2980b9, #2471a3);
+  transform: translateY(-2px);
+}
+
+.purchase-btn.disabled {
+  background: #7f8c8d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.free-btn {
+  background: linear-gradient(45deg, #9b59b6, #8e44ad);
+  color: white;
+}
+
+.free-btn:hover {
+  background: linear-gradient(45deg, #8e44ad, #7d3c98);
+  transform: translateY(-2px);
+}
+
+.coin-info {
+  background: rgba(52, 152, 219, 0.1);
+  border: 2px solid #3498db;
+  border-radius: 15px;
+  padding: 20px;
+  color: #ecf0f1;
+}
+
+.coin-info p {
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+}
+
+.coin-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.coin-info li {
+  margin: 5px 0;
+  font-size: 0.95em;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .theme-shop-container {
+    margin: 10px;
+    padding: 20px;
+  }
+  
+  .themes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .theme-shop-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .theme-tabs {
+    flex-direction: column;
+  }
+  
+  .preview-hand-card {
+    width: 40px;
+    height: 55px;
+    font-size: 1.2em;
+  }
+}

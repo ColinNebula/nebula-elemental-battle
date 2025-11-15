@@ -1,8 +1,26 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// Mock security utils to prevent errors in test environment
+jest.mock('./utils/security', () => ({
+  default: {
+    initialize: jest.fn(),
+    validateInput: jest.fn(() => true),
+    processCommand: jest.fn((cmd) => cmd),
+    logSecurityEvent: jest.fn(),
+  }
+}));
+
+// Mock InstallPrompt component
+jest.mock('./components/InstallPrompt', () => {
+  return function InstallPrompt() {
+    return <div data-testid="install-prompt">Install Prompt</div>;
+  };
+});
+
+test('renders nebula game app', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // Look for main menu or game title instead of "learn react"
+  const gameElement = screen.getByTestId('app-container');
+  expect(gameElement).toBeInTheDocument();
 });
