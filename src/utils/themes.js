@@ -293,6 +293,100 @@ export const HAND_THEMES = {
   }
 };
 
+// Arena/Battlefield Themes
+export const ARENA_THEMES = {
+  cosmic: {
+    name: 'Cosmic Battlefield',
+    cost: 0,
+    background: 'radial-gradient(ellipse at center, rgba(30, 30, 60, 0.95) 0%, rgba(10, 10, 30, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(138, 43, 226, 0.1) 0%, transparent 50%, rgba(0, 191, 255, 0.1) 100%)',
+    borderGlow: '0 0 40px rgba(138, 43, 226, 0.6), inset 0 0 40px rgba(0, 191, 255, 0.3)',
+    particles: 'rgba(255, 255, 255, 0.8)',
+    premium: false
+  },
+  volcano: {
+    name: 'Volcanic Arena',
+    cost: 75,
+    background: 'radial-gradient(ellipse at center, rgba(50, 20, 10, 0.95) 0%, rgba(20, 10, 5, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(255, 69, 0, 0.2) 0%, transparent 50%, rgba(255, 140, 0, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(255, 69, 0, 0.8), inset 0 0 40px rgba(255, 140, 0, 0.4)',
+    particles: 'rgba(255, 140, 0, 0.9)',
+    premium: true
+  },
+  ice: {
+    name: 'Frozen Tundra',
+    cost: 75,
+    background: 'radial-gradient(ellipse at center, rgba(20, 40, 60, 0.95) 0%, rgba(10, 20, 35, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(173, 216, 230, 0.2) 0%, transparent 50%, rgba(135, 206, 250, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(0, 191, 255, 0.8), inset 0 0 40px rgba(173, 216, 230, 0.4)',
+    particles: 'rgba(173, 216, 230, 0.9)',
+    premium: true
+  },
+  forest: {
+    name: 'Enchanted Forest',
+    cost: 80,
+    background: 'radial-gradient(ellipse at center, rgba(20, 40, 20, 0.95) 0%, rgba(10, 25, 10, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(34, 139, 34, 0.2) 0%, transparent 50%, rgba(50, 205, 50, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(34, 139, 34, 0.8), inset 0 0 40px rgba(50, 205, 50, 0.4)',
+    particles: 'rgba(144, 238, 144, 0.9)',
+    premium: true
+  },
+  desert: {
+    name: 'Desert Wasteland',
+    cost: 70,
+    background: 'radial-gradient(ellipse at center, rgba(60, 50, 30, 0.95) 0%, rgba(40, 35, 20, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(244, 164, 96, 0.2) 0%, transparent 50%, rgba(210, 180, 140, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(244, 164, 96, 0.7), inset 0 0 40px rgba(210, 180, 140, 0.3)',
+    particles: 'rgba(244, 164, 96, 0.8)',
+    premium: true
+  },
+  ocean: {
+    name: 'Ocean Depths',
+    cost: 85,
+    background: 'radial-gradient(ellipse at center, rgba(10, 30, 50, 0.95) 0%, rgba(5, 15, 30, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(0, 119, 190, 0.2) 0%, transparent 50%, rgba(0, 150, 199, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(0, 119, 190, 0.8), inset 0 0 40px rgba(0, 191, 255, 0.4)',
+    particles: 'rgba(64, 224, 208, 0.9)',
+    premium: true
+  },
+  electric: {
+    name: 'Lightning Storm',
+    cost: 90,
+    background: 'radial-gradient(ellipse at center, rgba(30, 30, 50, 0.95) 0%, rgba(15, 15, 30, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(255, 255, 0, 0.15) 0%, transparent 50%, rgba(138, 43, 226, 0.1) 100%)',
+    borderGlow: '0 0 50px rgba(255, 255, 0, 0.9), inset 0 0 40px rgba(138, 43, 226, 0.5)',
+    particles: 'rgba(255, 255, 0, 1)',
+    premium: true
+  },
+  shadow: {
+    name: 'Shadow Realm',
+    cost: 95,
+    background: 'radial-gradient(ellipse at center, rgba(15, 15, 20, 0.98) 0%, rgba(5, 5, 10, 1) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(75, 0, 130, 0.2) 0%, transparent 50%, rgba(138, 43, 226, 0.15) 100%)',
+    borderGlow: '0 0 40px rgba(75, 0, 130, 0.9), inset 0 0 40px rgba(138, 43, 226, 0.5)',
+    particles: 'rgba(138, 43, 226, 0.9)',
+    premium: true
+  },
+  celestial: {
+    name: 'Celestial Palace',
+    cost: 100,
+    background: 'radial-gradient(ellipse at center, rgba(255, 250, 240, 0.15) 0%, rgba(255, 228, 196, 0.1) 50%, rgba(30, 30, 60, 0.95) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(255, 215, 0, 0.15) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)',
+    borderGlow: '0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 50px rgba(255, 255, 255, 0.5)',
+    particles: 'rgba(255, 215, 0, 1)',
+    premium: true
+  },
+  inferno: {
+    name: 'Demonic Inferno',
+    cost: 110,
+    background: 'radial-gradient(ellipse at center, rgba(60, 10, 10, 0.95) 0%, rgba(30, 5, 5, 0.98) 100%)',
+    overlay: 'linear-gradient(180deg, rgba(220, 20, 60, 0.25) 0%, transparent 50%, rgba(255, 69, 0, 0.2) 100%)',
+    borderGlow: '0 0 50px rgba(220, 20, 60, 0.9), inset 0 0 50px rgba(255, 69, 0, 0.6)',
+    particles: 'rgba(220, 20, 60, 1)',
+    premium: true
+  }
+};
+
 // Get current themes
 export const getCurrentThemes = () => {
   const stored = localStorage.getItem(THEMES_KEY);
@@ -300,7 +394,8 @@ export const getCurrentThemes = () => {
     return {
       colorTheme: 'classic',
       handTheme: 'standard',
-      ownedThemes: ['classic', 'standard'],
+      arenaTheme: 'cosmic',
+      ownedThemes: ['classic', 'standard', 'cosmic'],
       coins: 0
     };
   }
@@ -344,17 +439,28 @@ export const applyTheme = (themeType, themeId, currentThemes) => {
     return { success: false, message: 'Theme not owned' };
   }
   
+  const themeKey = themeType === 'color' ? 'colorTheme' : 
+                   themeType === 'hand' ? 'handTheme' : 
+                   themeType === 'arena' ? 'arenaTheme' : 'colorTheme';
+  
   const updatedThemes = {
     ...currentThemes,
-    [themeType === 'color' ? 'colorTheme' : 'handTheme']: themeId
+    [themeKey]: themeId
   };
   
   saveThemes(updatedThemes);
   
-  // Apply CSS variables for color theme
+  // Apply CSS variables for theme
   if (themeType === 'color') {
     applyColorTheme(themeId);
+  } else if (themeType === 'hand') {
+    applyHandTheme(themeId);
+  } else if (themeType === 'arena') {
+    applyArenaTheme(themeId);
   }
+  
+  // Dispatch custom event to notify components of theme change
+  window.dispatchEvent(new CustomEvent('themeUpdated', { detail: { themeType, themeId } }));
   
   return { success: true, updatedThemes };
 };
@@ -382,6 +488,18 @@ export const applyHandTheme = (themeId) => {
   root.style.setProperty('--hand-card-back', theme.cardBack);
   root.style.setProperty('--hand-background', theme.handBackground);
   root.style.setProperty('--hand-glow-effect', theme.glowEffect);
+};
+
+// Apply arena theme
+export const applyArenaTheme = (themeId) => {
+  const theme = ARENA_THEMES[themeId];
+  if (!theme) return;
+  
+  const root = document.documentElement;
+  root.style.setProperty('--arena-background', theme.background);
+  root.style.setProperty('--arena-overlay', theme.overlay);
+  root.style.setProperty('--arena-border-glow', theme.borderGlow);
+  root.style.setProperty('--arena-particles', theme.particles);
 };
 
 // Award coins for winning

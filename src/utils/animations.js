@@ -47,10 +47,21 @@ export const createParticles = (element, x, y, container) => {
   return particles;
 };
 
-export const createDamageNumber = (strength, x, y, container, isWinner, isTie) => {
+export const createDamageNumber = (strength, x, y, container, isWinner, isTie, isMeteorDamage = false) => {
   const damageNum = document.createElement('div');
-  damageNum.className = `damage-number ${isTie ? 'tie' : isWinner ? 'winner' : 'loser'}`;
-  damageNum.textContent = strength;
+  
+  if (isMeteorDamage) {
+    damageNum.className = 'damage-number meteor-damage';
+    damageNum.textContent = strength;
+    damageNum.style.fontSize = '32px';
+    damageNum.style.fontWeight = '900';
+    damageNum.style.color = '#ff6600';
+    damageNum.style.textShadow = '0 0 10px #ff3300, 0 0 20px #ff6600, 2px 2px 4px rgba(0,0,0,0.8)';
+  } else {
+    damageNum.className = `damage-number ${isTie ? 'tie' : isWinner ? 'winner' : 'loser'}`;
+    damageNum.textContent = strength;
+  }
+  
   damageNum.style.left = `${x}px`;
   damageNum.style.top = `${y}px`;
   
@@ -58,7 +69,7 @@ export const createDamageNumber = (strength, x, y, container, isWinner, isTie) =
 
   setTimeout(() => {
     damageNum.remove();
-  }, 1000);
+  }, isMeteorDamage ? 2000 : 1000);
 
   return damageNum;
 };

@@ -5,6 +5,7 @@ import PauseMenu from './PauseMenu';
 import RoundAnnouncement from './RoundAnnouncement';
 import { createParticles, createDamageNumber, triggerScreenShake, createVictoryCelebration } from '../utils/animations';
 import soundManager from '../utils/sounds';
+import { getCurrentThemes, HAND_THEMES, ARENA_THEMES } from '../utils/themes';
 import './GameBoard.css';
 
 const GameBoard = ({ 
@@ -38,6 +39,43 @@ const GameBoard = ({
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [currentRoundNumber, setCurrentRoundNumber] = useState(1);
   const lastAnnouncedRoundRef = useRef(0);
+  const [meteorDamageDisplay, setMeteorDamageDisplay] = useState([]);
+  const handCardRefs = useRef({});
+  const [showMeteorStrike, setShowMeteorStrike] = useState(false);
+  const [meteorStrikeInfo, setMeteorStrikeInfo] = useState(null);
+  const [handTheme, setHandTheme] = useState('standard');
+  const [arenaTheme, setArenaTheme] = useState('cosmic');
+  const [showInitialArena, setShowInitialArena] = useState(false);
+  const hasShownInitialArenaRef = useRef(false);
+
+  // Load hand theme from localStorage and listen for changes
+  useEffect(() => {
+    const loadHandTheme = () => {
+      const themes = getCurrentThemes();
+      setHandTheme(themes.handTheme || 'standard');
+      setArenaTheme(themes.arenaTheme || 'cosmic');
+    };
+    
+    loadHandTheme();
+    
+    // Listen for storage changes (theme updates)
+    const handleStorageChange = (e) => {
+      if (e.key === 'playerThemes') {
+        loadHandTheme();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom theme update event
+    const handleThemeUpdate = () => loadHandTheme();
+    window.addEventListener('themeUpdated', handleThemeUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('themeUpdated', handleThemeUpdate);
+    };
+  }, []);
 
   // Calculate total strength from played cards
   const calculateTotalStrength = (player) => {
@@ -224,13 +262,34 @@ const GameBoard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.players, gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showRoundAnnouncement]);
 
+  // Initial Arena Display - Show arena for 8 seconds after game starts
+  useEffect(() => {
+    if (gameState?.gameStarted && !gameState?.gameOver && !hasShownInitialArenaRef.current) {
+      hasShownInitialArenaRef.current = true;
+      setShowInitialArena(true);
+      
+      // After 8 seconds, hide initial arena and allow round announcements
+      const timer = setTimeout(() => {
+        setShowInitialArena(false);
+      }, 8000);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // Reset when game ends
+    if (gameState?.gameOver) {
+      hasShownInitialArenaRef.current = false;
+      setShowInitialArena(false);
+    }
+  }, [gameState?.gameStarted, gameState?.gameOver]);
+
   // Round Announcement Logic
   useEffect(() => {
     const currentRound = gameState?.currentRound || 0;
     const roundToDisplay = currentRound + 1;
     
-    // Only show if: game started, not over, and this round hasn't been announced yet
-    if (gameState?.gameStarted && !gameState?.gameOver) {
+    // Only show if: game started, not over, initial arena shown, and this round hasn't been announced yet
+    if (gameState?.gameStarted && !gameState?.gameOver && !showInitialArena) {
       if (roundToDisplay !== lastAnnouncedRoundRef.current) {
         lastAnnouncedRoundRef.current = roundToDisplay;
         setCurrentRoundNumber(roundToDisplay);
@@ -243,18 +302,20 @@ const GameBoard = ({
     if (gameState?.gameOver) {
       lastAnnouncedRoundRef.current = 0;
     }
-  }, [gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver]);
+  }, [gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showInitialArena]);
 
   // Background music management
   useEffect(() => {
     if (gameState?.gameStarted && !gameState?.gameOver) {
-      // Determine music intensity based on game state
-      const currentRound = gameState?.currentRound || 0;
-      const maxRounds = gameState?.maxRounds || 5;
+      // Determine music intensity based on cards remaining
+      const humanCardsLeft = (humanPlayer?.hand?.length || 0) + (humanPlayer?.deck?.length || 0);
+      const aiCardsLeft = (aiPlayer?.hand?.length || 0) + (aiPlayer?.deck?.length || 0);
+      const totalCardsLeft = humanCardsLeft + aiCardsLeft;
       
-      if (currentRound >= maxRounds - 1) {
+      // Start intense music when few cards remain
+      if (totalCardsLeft <= 4) {
         soundManager.playMusic('intense');
-      } else if (currentRound >= Math.floor(maxRounds / 2)) {
+      } else if (totalCardsLeft <= 10) {
         soundManager.playMusic('battle');
       } else {
         soundManager.playMusic('calm');
@@ -266,7 +327,7 @@ const GameBoard = ({
         soundManager.stopMusic();
       }
     };
-  }, [gameState?.gameStarted, gameState?.gameOver, gameState?.currentRound]);
+  }, [gameState?.gameStarted, gameState?.gameOver, humanPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.hand?.length, aiPlayer?.deck?.length]);
 
   // Handle round announcement completion
   const handleRoundAnnouncementComplete = () => {
@@ -315,20 +376,33 @@ const GameBoard = ({
       
       setTurnTimer((prev) => {
         if (prev <= 1) {
-          // Forfeit turn when timer reaches 0
-          console.log('Turn timer expired - forfeiting turn');
+          // Check if player has no cards left
+          const hasCards = currentPlayer?.hand?.length > 0;
           
-          // Show forfeit announcement
-          setShowForfeitAnnouncement(true);
-          setTimeout(() => {
-            setShowForfeitAnnouncement(false);
-          }, 2000);
-          
-          // Play timeout sound
-          soundManager.playSound('defeat');
-          
-          if (onForfeit) {
-            onForfeit();
+          if (!hasCards) {
+            // Player has no cards - automatically skip turn without forfeit
+            console.log('Turn timer expired - player has no cards, skipping turn');
+            
+            // Just let the turn pass naturally without forfeit announcement
+            if (onForfeit) {
+              onForfeit();
+            }
+          } else {
+            // Player has cards but didn't play - this is a forfeit
+            console.log('Turn timer expired - forfeiting turn');
+            
+            // Show forfeit announcement
+            setShowForfeitAnnouncement(true);
+            setTimeout(() => {
+              setShowForfeitAnnouncement(false);
+            }, 2000);
+            
+            // Play timeout sound
+            soundManager.playSound('defeat');
+            
+            if (onForfeit) {
+              onForfeit();
+            }
           }
           return 30;
         }
@@ -374,6 +448,59 @@ const GameBoard = ({
       return () => clearTimeout(timer);
     }
   }, [gameState?.lastMatchBonus]);
+
+  // Display meteor damage events
+  useEffect(() => {
+    if (!gameState?.meteorDamageEvents || gameState.meteorDamageEvents.length === 0) return;
+    
+    const latestEvent = gameState.meteorDamageEvents[gameState.meteorDamageEvents.length - 1];
+    
+    // Check if this is a new event
+    if (latestEvent && latestEvent.timestamp) {
+      const isNewEvent = !meteorDamageDisplay.find(e => e.timestamp === latestEvent.timestamp);
+      
+      if (isNewEvent && latestEvent.damagedCards && latestEvent.damagedCards.length > 0) {
+        // Show meteor strike announcement
+        setMeteorStrikeInfo({
+          cardsHit: latestEvent.totalCards,
+          cardsDestroyed: latestEvent.cardsDestroyed,
+          targetName: latestEvent.playerName
+        });
+        setShowMeteorStrike(true);
+        
+        setTimeout(() => {
+          setShowMeteorStrike(false);
+        }, 1500);
+        
+        // Add visual damage indicators
+        latestEvent.damagedCards.forEach((damageInfo, idx) => {
+          setTimeout(() => {
+            // Create floating -1 damage number for each card
+            if (gameBoardRef.current) {
+              const rect = gameBoardRef.current.getBoundingClientRect();
+              const x = rect.width / 2 + (idx - latestEvent.damagedCards.length / 2) * 120;
+              const y = latestEvent.targetPlayer === currentPlayerId ? rect.height - 200 : 200;
+              
+              createDamageNumber(-1, x, y, gameBoardRef.current, false, false, true);
+              
+              // Play meteor sound
+              if (idx === 0) {
+                soundManager.playSound('defeat');
+              }
+            }
+          }, idx * 150);
+        });
+        
+        // Update display state
+        setMeteorDamageDisplay(prev => [...prev, latestEvent]);
+        
+        // Clear old events after 5 seconds
+        setTimeout(() => {
+          setMeteorDamageDisplay(prev => prev.filter(e => e.timestamp !== latestEvent.timestamp));
+        }, 5000);
+      }
+    }
+  }, [gameState?.meteorDamageEvents, currentPlayerId]);
 
   // Show AI card preview when they play
   useEffect(() => {
@@ -586,6 +713,12 @@ const GameBoard = ({
                 <>{gameState.winner} WINS!</>
               )}
             </h2>
+            <div className="total-strength-display">
+              <span className="strength-label">Total Strength:</span>
+              <span className="strength-values">
+                {humanTotalStrength} vs {aiTotalStrength}
+              </span>
+            </div>
             <div className="final-scores">
               <div className="final-score-item">
                 <span className="player-name">{humanPlayer?.name}</span>
@@ -622,6 +755,21 @@ const GameBoard = ({
               <div className="ai-thinking">AI is thinking...</div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Meteor Strike Announcement */}
+      {showMeteorStrike && meteorStrikeInfo && (
+        <div className="meteor-strike-overlay">
+          <div className="meteor-strike-text">
+            ☄️ METEOR STRIKE! ☄️<br/>
+            <span style={{ fontSize: '32px', display: 'block', marginTop: '10px' }}>
+              {meteorStrikeInfo.cardsHit} EARTH {meteorStrikeInfo.cardsHit === 1 ? 'CARD' : 'CARDS'} HIT!
+              {meteorStrikeInfo.cardsDestroyed > 0 && (
+                <span style={{ color: '#ff3300' }}> ({meteorStrikeInfo.cardsDestroyed} DESTROYED)</span>
+              )}
+            </span>
+          </div>
         </div>
       )}
       
@@ -1002,10 +1150,33 @@ const GameBoard = ({
 
       {/* Center Battle Area - Cards Played */}
       {gameState.gameStarted && (
-        <div className="center-battle-area">
+        <div className="center-battle-area" style={{
+          background: ARENA_THEMES[arenaTheme]?.background || ARENA_THEMES.cosmic.background,
+          boxShadow: ARENA_THEMES[arenaTheme]?.borderGlow || ARENA_THEMES.cosmic.borderGlow
+        }}>
+          {/* Arena overlay effect */}
+          <div className="arena-overlay" style={{
+            background: ARENA_THEMES[arenaTheme]?.overlay || ARENA_THEMES.cosmic.overlay
+          }}></div>
+          
+          {/* Floating particles */}
+          <div className="arena-particles">
+            {[...Array(15)].map((_, i) => (
+              <div 
+                key={i} 
+                className="arena-particle"
+                style={{
+                  background: ARENA_THEMES[arenaTheme]?.particles || ARENA_THEMES.cosmic.particles,
+                  animationDelay: `${i * 0.5}s`,
+                  left: `${Math.random() * 100}%`
+                }}
+              />
+            ))}
+          </div>
+          
           {/* Floating Turn Timer - Hidden (removed from display) */}
           
-          <h3>Battle Arena - All Played Cards</h3>
+          <h3 className="arena-title">⚔️ Battle Arena ⚔️</h3>
           
           {/* AI's Played Cards - Top */}
           <div className="battle-card-row ai-row">
@@ -1048,7 +1219,10 @@ const GameBoard = ({
       {/* Current Player's Hand (Bottom) */}
       {humanPlayer && gameState.gameStarted && !gameState.gameOver && (
         <div className="hand-container">
-          <div className="hand">
+          <div className="hand" style={{
+            background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
+            boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`
+          }}>
             {humanPlayer.hand?.map((card, index) => (
               <Card
                 key={index}

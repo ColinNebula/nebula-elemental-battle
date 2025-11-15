@@ -295,10 +295,18 @@ function handleCommandMock(command) {
                 const bothOutOfCards = chooseRoom.players.every(p => p.hand.length === 0);
                 if (bothOutOfCards) {
                   chooseRoom.gameOver = true;
-                  if (chooseRoom.players[0].score > chooseRoom.players[1].score) {
+                  // Calculate total strength from all played cards
+                  const player1TotalStrength = (chooseRoom.players[0].playedCards || []).reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  const player2TotalStrength = (chooseRoom.players[1].playedCards || []).reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  
+                  if (player1TotalStrength > player2TotalStrength) {
                     chooseRoom.winner = chooseRoom.players[0].name;
+                  } else if (player2TotalStrength > player1TotalStrength) {
+                    chooseRoom.winner = chooseRoom.players[1].name;
                   } else {
-                    chooseRoom.winner = chooseRoom.players[1].name; // AI wins on tie or AI lead
+                    chooseRoom.winner = 'Tie';
                   }
                 } else {
                   setTimeout(() => {
@@ -314,10 +322,18 @@ function handleCommandMock(command) {
             const bothOutOfCards = player.hand.length === 0 && (!aiPlayer || aiPlayer.hand.length === 0);
             if (bothOutOfCards) {
               chooseRoom.gameOver = true;
-              if (chooseRoom.players[0].score > chooseRoom.players[1].score) {
+              // Calculate total strength from all played cards
+              const player1TotalStrength = (chooseRoom.players[0].playedCards || []).reduce((sum, card) => 
+                sum + (card.modifiedStrength || card.strength || 0), 0);
+              const player2TotalStrength = (chooseRoom.players[1].playedCards || []).reduce((sum, card) => 
+                sum + (card.modifiedStrength || card.strength || 0), 0);
+              
+              if (player1TotalStrength > player2TotalStrength) {
                 chooseRoom.winner = chooseRoom.players[0].name;
+              } else if (player2TotalStrength > player1TotalStrength) {
+                chooseRoom.winner = chooseRoom.players[1].name;
               } else {
-                chooseRoom.winner = chooseRoom.players[1].name; // AI wins on tie or AI lead
+                chooseRoom.winner = 'Tie';
               }
             }
           }
@@ -439,10 +455,18 @@ function handleCommandMock(command) {
                     const bothOutOfCards = chooseRoom.players.every(p => p.hand.length === 0);
                     if (bothOutOfCards) {
                       chooseRoom.gameOver = true;
-                      if (chooseRoom.players[0].score > chooseRoom.players[1].score) {
+                      // Calculate total strength from all played cards
+                      const player1TotalStrength = (chooseRoom.players[0].playedCards || []).reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      const player2TotalStrength = (chooseRoom.players[1].playedCards || []).reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      
+                      if (player1TotalStrength > player2TotalStrength) {
                         chooseRoom.winner = chooseRoom.players[0].name;
+                      } else if (player2TotalStrength > player1TotalStrength) {
+                        chooseRoom.winner = chooseRoom.players[1].name;
                       } else {
-                        chooseRoom.winner = chooseRoom.players[1].name; // AI wins on tie or AI lead
+                        chooseRoom.winner = 'Tie';
                       }
                     } else {
                       setTimeout(() => {
@@ -902,8 +926,11 @@ function handleCommandMock(command) {
                     // Keep chosen cards visible, don't clear them
                     chooseRoom.roundsPlayed++;
                     
-                    // Check if both players are out of cards
-                    const bothOutOfCards = chooseRoom.players.every(p => p.hand.length === 0);
+                    // Check if both players are out of cards (hand AND deck)
+                    const player1HasNoCards = chooseRoom.players[0].hand.length === 0 && (!chooseRoom.players[0].deck || chooseRoom.players[0].deck.length === 0);
+                    const player2HasNoCards = chooseRoom.players[1].hand.length === 0 && (!chooseRoom.players[1].deck || chooseRoom.players[1].deck.length === 0);
+                    const bothOutOfCards = player1HasNoCards && player2HasNoCards;
+                    
                     if (bothOutOfCards) {
                       chooseRoom.gameOver = true;
                       // Determine winner based on score - AI wins on ties
@@ -912,6 +939,7 @@ function handleCommandMock(command) {
                       } else {
                         chooseRoom.winner = chooseRoom.players[1].name; // AI wins on tie or AI lead
                       }
+                      console.log('🏁 Game over! All cards played from hand and deck. Winner:', chooseRoom.winner);
                     } else {
                       // Start next round after 5 seconds (time to see results and match bonus)
                       // Don't clear chosenCard - keep it visible, it's already in playedCards
@@ -1042,8 +1070,11 @@ function handleCommandMock(command) {
                 forfeitRoom.players[1].score++;
                 forfeitRoom.roundsPlayed++;
                 
-                // Check if both players are out of cards
-                const bothOutOfCards = forfeitRoom.players.every(p => p.hand.length === 0);
+                // Check if both players are out of cards (hand AND deck)
+                const player1HasNoCards = forfeitRoom.players[0].hand.length === 0 && (!forfeitRoom.players[0].deck || forfeitRoom.players[0].deck.length === 0);
+                const player2HasNoCards = forfeitRoom.players[1].hand.length === 0 && (!forfeitRoom.players[1].deck || forfeitRoom.players[1].deck.length === 0);
+                const bothOutOfCards = player1HasNoCards && player2HasNoCards;
+                
                 if (bothOutOfCards) {
                   forfeitRoom.gameOver = true;
                   if (forfeitRoom.players[0].score > forfeitRoom.players[1].score) {
@@ -1051,6 +1082,7 @@ function handleCommandMock(command) {
                   } else {
                     forfeitRoom.winner = forfeitRoom.players[1].name; // AI wins on tie or AI lead
                   }
+                  console.log('🏁 Game over after forfeit! All cards played. Winner:', forfeitRoom.winner);
                 } else {
                   setTimeout(() => {
                     // Activate next turn
@@ -1059,14 +1091,21 @@ function handleCommandMock(command) {
                 }
               }, 500);
             }, 5000);
-          } else if (!aiPlayer || aiPlayer.hand.length === 0) {
-            // Both players out of cards, end game
+          } else if (!aiPlayer || (aiPlayer.hand.length === 0 && (!aiPlayer.deck || aiPlayer.deck.length === 0))) {
+            // Both players out of cards (hand AND deck), end game
             forfeitRoom.roundsPlayed++;
-            forfeitRoom.gameOver = true;
-            if (forfeitRoom.players[0].score > forfeitRoom.players[1].score) {
-              forfeitRoom.winner = forfeitRoom.players[0].name;
-            } else {
-              forfeitRoom.winner = forfeitRoom.players[1].name; // AI wins on tie or AI lead
+            
+            const player1HasNoCards = forfeitRoom.players[0].hand.length === 0 && (!forfeitRoom.players[0].deck || forfeitRoom.players[0].deck.length === 0);
+            const player2HasNoCards = forfeitRoom.players[1].hand.length === 0 && (!forfeitRoom.players[1].deck || forfeitRoom.players[1].deck.length === 0);
+            
+            if (player1HasNoCards && player2HasNoCards) {
+              forfeitRoom.gameOver = true;
+              if (forfeitRoom.players[0].score > forfeitRoom.players[1].score) {
+                forfeitRoom.winner = forfeitRoom.players[0].name;
+              } else {
+                forfeitRoom.winner = forfeitRoom.players[1].name; // AI wins on tie or AI lead
+              }
+              console.log('🏁 Game over! All cards exhausted. Winner:', forfeitRoom.winner);
             }
           }
           

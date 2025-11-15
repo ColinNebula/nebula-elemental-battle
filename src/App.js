@@ -369,16 +369,16 @@ function App() {
   };
 
   const handleQuit = () => {
-    // Return to splash screen
+    // Return to main menu
     setInGame(false);
-    setShowMainMenu(false);
     setShowStoryMode(false);
     setShowLobby(false);
     setStoryModeStage(null);
     setGameState(null);
     setRoomId(null);
-    setIsReturningToSplash(true);
-    setShowSplash(true);
+    setShowSplash(false);
+    setIsReturningToSplash(false);
+    setShowMainMenu(true);
   };
 
   const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS') => {
@@ -780,7 +780,7 @@ function App() {
         </>
       ) : null}
       {/* Donation Banner - Only show on main menu */}
-      {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && (
+      {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && !showStoryMode && !showCredits && !showLobby && (
         <DonationBanner 
           onClose={() => setShowDonationBanner(false)}
         />
