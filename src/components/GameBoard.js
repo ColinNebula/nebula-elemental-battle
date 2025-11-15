@@ -148,6 +148,9 @@ const GameBoard = ({
   useEffect(() => {
     if (gameState?.gameOver && gameBoardRef.current) {
       setTimeout(() => {
+        // Check if ref is still valid after timeout
+        if (!gameBoardRef.current) return;
+        
         const winner = gameState.winner === 'Tie' ? 'tie' : gameState.winner;
         
         // Play victory or defeat sound
@@ -367,7 +370,7 @@ const GameBoard = ({
       setShowMatchBonus(true);
       const timer = setTimeout(() => {
         setShowMatchBonus(false);
-      }, 600);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [gameState?.lastMatchBonus]);
@@ -434,40 +437,51 @@ const GameBoard = ({
     // Detect stuck states
     const isStuck = 
       // Both players inactive
-      (humanPlayer && aiPlayer && !humanPlayer.active && !aiPlayer.active && !gameState.battlePhase) ||
+      (humanPlayer && aiPlayer && !humanPlayer.active && !aiPlayer.active && !gameState.battlePhase && !gameState.pendingAbility) ||
       // Battle phase but cards missing
-      (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard)) ||
-      // No active player and not in battle
-      (!gameState.battlePhase && !humanPlayer?.active && !aiPlayer?.active);
+      (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard));
 
-    if (isStuck && !gameState.pendingAbility) {
+    if (isStuck) {
       console.warn('⚠️ STUCK DETECTOR: Game appears stuck!', {
         battlePhase: gameState.battlePhase,
         playerActive: humanPlayer?.active,
         aiActive: aiPlayer?.active,
         playerChosen: !!humanPlayer?.chosenCard,
         aiChosen: !!aiPlayer?.chosenCard,
-        pendingAbility: !!gameState.pendingAbility
+        pendingAbility: !!gameState.pendingAbility,
+        currentRound: gameState.currentRound
       });
 
-      // Wait 3 seconds before attempting recovery
+      // Wait 2 seconds before attempting recovery
       const recoveryTimer = setTimeout(() => {
         console.log('🔧 Attempting to recover stuck game...');
-        // Force player to be active if both are inactive
-        if (!humanPlayer?.active && !aiPlayer?.active && !gameState.battlePhase) {
-          console.log('🔧 Forcing player to be active');
-          // This will trigger a re-render with player active
-          if (onPlayCard) {
-            // Just trigger a state update by calling game state refresh
-            // This is a fallback - ideally the game logic should prevent this
+        
+        // If battle phase but missing cards, reset to player turn
+        if (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard)) {
+          console.log('🔧 Battle phase stuck - resetting to player turn');
+          // Force a card play to reset state
+          if (humanPlayer?.hand?.length > 0) {
+            const randomIndex = Math.floor(Math.random() * humanPlayer.hand.length);
+            onPlayCard(randomIndex, humanPlayer.id);
           }
         }
-      }, 3000);
-
+        // If both players inactive, activate player
+        else if (!humanPlayer?.active && !aiPlayer?.active && !gameState.battlePhase && !gameState.pendingAbility) {
+          console.log('🔧 Both players inactive - forcing player active');
+          // Trigger a draw action to reset state
+          if (humanPlayer?.deck?.length > 0 && onDrawFromReserve) {
+            onDrawFromReserve();
+          } else if (humanPlayer?.hand?.length > 0) {
+            // Force player to play a card
+            const randomIndex = Math.floor(Math.random() * humanPlayer.hand.length);
+            onPlayCard(randomIndex, humanPlayer.id);
+          }
+        }
+      }, 2000);
+      
       return () => clearTimeout(recoveryTimer);
     }
-  }, [gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, gameState?.pendingAbility,
-      humanPlayer?.active, aiPlayer?.active, humanPlayer?.chosenCard, aiPlayer?.chosenCard]);
+  }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve]);
 
   const handleCardClick = (cardIndex) => {
     if (isMyTurn && onPlayCard && !gameState?.gameOver && !isPaused && !gameState?.pendingAbility) {
@@ -634,8 +648,13 @@ const GameBoard = ({
           gameState.lastMatchBonus.player === currentPlayer?.name ? 'player-side' : 'opponent-side'
         }`}>
           <div className={`element-particles ${gameState.lastMatchBonus.element.toLowerCase()}-particles`}>
-            {Array(20).fill(null).map((_, i) => (
+            {Array(40).fill(null).map((_, i) => (
               <div key={i} className="particle"></div>
+            ))}
+          </div>
+          <div className="match-starburst">
+            {Array(12).fill(null).map((_, i) => (
+              <div key={i} className="star-ray" style={{ '--rotation': `${i * 30}deg` }}></div>
             ))}
           </div>
           <h1 className="match-bonus-text">

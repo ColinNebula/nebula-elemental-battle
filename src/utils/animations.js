@@ -1,7 +1,7 @@
 // Animation utilities for game effects
 
 export const createParticles = (element, x, y, container) => {
-  const particleCount = 12;
+  const particleCount = 20; // Increased from 12
   const particles = [];
   
   const elementEmojis = {
@@ -24,15 +24,24 @@ export const createParticles = (element, x, y, container) => {
     particle.textContent = emoji;
     particle.style.left = `${x}px`;
     particle.style.top = `${y}px`;
-    particle.style.setProperty('--tx', `${(Math.random() - 0.5) * 200}px`);
-    particle.style.animationDelay = `${Math.random() * 0.3}s`;
+    
+    // More varied and dynamic particle trajectories
+    const angle = (i / particleCount) * Math.PI * 2;
+    const distance = 150 + Math.random() * 100;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    particle.style.setProperty('--tx', `${tx}px`);
+    particle.style.setProperty('--ty', `${ty}px`);
+    particle.style.animationDelay = `${Math.random() * 0.2}s`;
+    particle.style.fontSize = `${16 + Math.random() * 12}px`; // Varied sizes
     
     container.appendChild(particle);
     particles.push(particle);
 
     setTimeout(() => {
       particle.remove();
-    }, 1800);
+    }, 2500); // Increased from 1800
   }
 
   return particles;
@@ -64,6 +73,12 @@ export const triggerScreenShake = (element, minStrength = 10) => {
 };
 
 export const createVictoryCelebration = (winner, container) => {
+  // Guard against null container
+  if (!container) {
+    console.warn('Victory celebration: container is null');
+    return null;
+  }
+  
   // Create victory overlay
   const celebration = document.createElement('div');
   celebration.className = 'victory-celebration';

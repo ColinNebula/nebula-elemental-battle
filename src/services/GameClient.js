@@ -432,8 +432,8 @@ class GameClient {
             });
             
             // AI plays after delay (give player time to see their card)
-            setTimeout(() => {
-              console.log('⏰ AI activation timeout triggered (400ms after player card)');
+            const aiActivationTimeout = setTimeout(() => {
+              console.log('⏰ AI activation timeout triggered (6000ms after player card)');
               console.log('🔍 Checking AI availability:', {
                 aiExists: !!ai,
                 aiHandLength: ai?.hand?.length,
@@ -454,9 +454,10 @@ class GameClient {
                 ai.active = true;
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
                 console.log('📤 AI activation notified');
+                console.log('⏱️ About to create AI card selection timeout (2000ms)...');
                 
-                setTimeout(() => {
-                  console.log('⏰ AI card selection timeout fired (500ms)');
+                const aiCardSelectionTimeout = setTimeout(() => {
+                  console.log('⏰ AI card selection timeout fired (2000ms)');
                   try {
                     console.log('🔵 AI card selection timeout started (500ms delay)');
                     // Re-check AI has cards before attempting to play
@@ -625,10 +626,16 @@ class GameClient {
                   console.log('📢 AI card added to played cards, notifying listeners...');
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
                   console.log('✅ Listeners notified, starting battle resolution timer (6000ms - 6 seconds)...');
+                  console.log('⏱️ About to create setTimeout for battle resolution...');
                   
                   // Resolve battle with advanced mechanics (6 second delay to view AI card)
-                  setTimeout(() => {
+                  const battleTimeout = setTimeout(() => {
                     console.log('⏰ Battle timeout triggered after 6 seconds');
+                    console.log('📊 Battle timeout state check:', {
+                      playerCard: !!player.chosenCard,
+                      aiCard: !!ai.chosenCard,
+                      battlePhase: chooseRoom.battlePhase
+                    });
                     try {
                       console.log('⚔️ Starting battle resolution...');
                       
@@ -816,9 +823,10 @@ class GameClient {
                         maxRounds: chooseRoom.maxRounds,
                         deferredAbility: chooseRoom.deferredAbility
                       });
+                      console.log('⏱️ About to create next round timeout (6000ms)...');
                       
                       // Next round timeout (6 seconds for round announcement)
-                      setTimeout(() => {
+                      const nextRoundTimeout = setTimeout(() => {
                         console.log('🔄 Next round timeout triggered - clearing cards and resetting turn');
                         console.log('📊 Pre-reset state:', {
                           round: chooseRoom.currentRound,
@@ -913,14 +921,14 @@ class GameClient {
                   chooseRoom.battlePhase = false;
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
                 }
-              }, 500); // 500ms for AI to "think" before selecting card
+              }, 2000); // 2000ms for AI to "think" before selecting card
               } else {
                 console.log('❌ AI has no cards or missing!', {
                   aiExists: !!ai,
                   aiHandLength: ai?.hand?.length
                 });
               }
-            }, 400);
+            }, 6000); // 6 seconds delay after player plays
             
             return { type: 'CARD_CHOSEN', success: true };
           } else {
@@ -1802,7 +1810,10 @@ class GameClient {
     
     // Also emit the gameState event for game updates
     if (type === 'GAME_UPDATE' && data) {
-      this.emit('gameState', data);
+      // Create a deep copy to force React re-render and ensure nested changes are detected
+      const updatedState = JSON.parse(JSON.stringify(data));
+      console.log('🔄 Emitting gameState with new reference', { gameOver: updatedState.gameOver, winner: updatedState.winner });
+      this.emit('gameState', updatedState);
     }
   }
 
