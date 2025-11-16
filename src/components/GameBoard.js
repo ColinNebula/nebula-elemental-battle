@@ -43,13 +43,16 @@ const GameBoard = ({
   const [showMatchBonus, setShowMatchBonus] = useState(false);
   const [cardPreview, setCardPreview] = useState(null);
   const [lastTurnInfo, setLastTurnInfo] = useState({ playerId: null, round: -1 });
-  const [turnTimer, setTurnTimer] = useState(30);
+  const [turnTimer, setTurnTimer] = useState(20);
   const gameBoardRef = useRef(null);
   const [lastPlayedCards, setLastPlayedCards] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [showForfeitAnnouncement, setShowForfeitAnnouncement] = useState(false);
   const [defeatCountdown, setDefeatCountdown] = useState(null);
   const [fadeOut, setFadeOut] = useState(false);
+  const [hasAutoSkipped, setHasAutoSkipped] = useState(false);
+  const [leftSidebarVisible, setLeftSidebarVisible] = useState(false);
+  const [rightSidebarVisible, setRightSidebarVisible] = useState(false);
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [currentRoundNumber, setCurrentRoundNumber] = useState(1);
   const lastAnnouncedRoundRef = useRef(0);
@@ -172,12 +175,17 @@ const GameBoard = ({
   // Auto-skip turn if player has no cards
   useEffect(() => {
     if (!gameState?.gameStarted || gameState?.gameOver || !humanPlayer?.active) {
+      // Reset auto-skip flag when it's not player's turn
+      if (!humanPlayer?.active) {
+        setHasAutoSkipped(false);
+      }
       return;
     }
 
-    // If it's player's turn and they have no cards, automatically skip
-    if (humanPlayer.hand?.length === 0 && !gameState?.battlePhase) {
+    // If it's player's turn and they have no cards, automatically skip (only once)
+    if (humanPlayer.hand?.length === 0 && !gameState?.battlePhase && !hasAutoSkipped) {
       console.log('🔄 Player has no cards - auto-skipping turn');
+      setHasAutoSkipped(true);
       
       // Small delay so the UI can show the state
       const skipTimer = setTimeout(() => {
@@ -188,7 +196,7 @@ const GameBoard = ({
       
       return () => clearTimeout(skipTimer);
     }
-  }, [humanPlayer?.active, humanPlayer?.hand?.length, gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, onForfeit]);
+  }, [humanPlayer?.active, humanPlayer?.hand?.length, gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, onForfeit, hasAutoSkipped]);
 
   // Story mode defeat countdown
   useEffect(() => {
@@ -272,7 +280,7 @@ const GameBoard = ({
       // Reset timer on every turn change (both player and AI)
       if (playerChanged || roundChanged) {
         setLastTurnInfo({ playerId: activePlayerId, round: currentRound });
-        setTurnTimer(30); // Always reset timer on turn change
+        setTurnTimer(20); // Always reset timer on turn change
         
         // Don't show turn announcement if round announcement is showing
         // The round announcement completion handler will trigger turn announcement
@@ -1098,7 +1106,14 @@ const GameBoard = ({
       )}
 
       {/* Left Sidebar - Both Players */}
-      <div className="left-sidebar">
+      <div className={`left-sidebar ${leftSidebarVisible ? 'visible' : ''}`}>
+        <button 
+          className="sidebar-toggle left-toggle"
+          onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
+          aria-label="Toggle player stats"
+        >
+          {leftSidebarVisible ? '◀' : '▶'}
+        </button>
         <div className="sidebar-content">
           <h3>Player 2 (AI)</h3>
           {aiPlayer && (
@@ -1193,7 +1208,14 @@ const GameBoard = ({
       </div>
 
       {/* Right Sidebar - Card Decks */}
-      <div className="right-sidebar">
+      <div className={`right-sidebar ${rightSidebarVisible ? 'visible' : ''}`}>
+        <button 
+          className="sidebar-toggle right-toggle"
+          onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
+          aria-label="Toggle card decks"
+        >
+          {rightSidebarVisible ? '▶' : '◀'}
+        </button>
         <div className="sidebar-content">
           <h3>Player 2 Cards</h3>
           {aiPlayer && gameState.gameStarted && (

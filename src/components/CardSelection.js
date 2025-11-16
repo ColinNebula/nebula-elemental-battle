@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from './Card';
 import './CardSelection.css';
 
 const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
   const [selectedIndices, setSelectedIndices] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(20);
 
   const toggleCard = (index) => {
     if (selectedIndices.includes(index)) {
@@ -19,6 +20,21 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
     }
   };
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      // Time's up - start with whatever cards are selected
+      onConfirmSelection(selectedIndices);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, selectedIndices, onConfirmSelection]);
+
   return (
     <div className="card-selection-overlay">
       <div className="card-selection-container">
@@ -33,9 +49,14 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
         <p className="selection-info">
           Choose 5 cards from your hand. The remaining 5 will be kept in reserve.
         </p>
-        <p className="selection-count">
-          Selected: {selectedIndices.length} / 5
-        </p>
+        <div className="selection-stats">
+          <p className="selection-count">
+            Selected: {selectedIndices.length} / 5
+          </p>
+          <div className={`selection-timer ${timeLeft <= 5 ? 'low-time' : timeLeft <= 10 ? 'warning-time' : ''}`}>
+            ⏱️ Time Left: <span className="timer-value">{timeLeft}s</span>
+          </div>
+        </div>
         
         <div className="card-selection-grid">
           {hand.map((card, index) => (
@@ -57,8 +78,13 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
           onClick={handleConfirm}
           disabled={selectedIndices.length !== 5}
         >
-          Confirm Selection
+          {selectedIndices.length === 5 ? 'Confirm Selection' : `Select ${5 - selectedIndices.length} More Card${5 - selectedIndices.length !== 1 ? 's' : ''}`}
         </button>
+        {timeLeft <= 5 && selectedIndices.length > 0 && selectedIndices.length < 5 && (
+          <p className="time-warning">
+            ⚠️ Starting soon with {selectedIndices.length} card{selectedIndices.length !== 1 ? 's' : ''}!
+          </p>
+        )}
       </div>
     </div>
   );

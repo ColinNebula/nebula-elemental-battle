@@ -382,7 +382,40 @@ class GameClient {
               console.log(`✅ Player drew card, now has ${player.hand.length} in hand`);
               this.notifyListeners('GAME_UPDATE', chooseRoom);
             } else {
-              console.log('⚠️ Player has no cards to play, skipping turn');
+              console.log('⚠️ Player has no cards to play, checking game over...');
+              
+              // Check if AI also has no cards - if so, end game
+              const aiHasNoCards = (ai.hand.length === 0 && (!ai.deck || ai.deck.length === 0));
+              if (aiHasNoCards) {
+                chooseRoom.gameOver = true;
+                
+                // Calculate total strength from all played cards
+                const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                
+                console.log('📊 Final strengths:', {
+                  playerTotal: playerTotalStrength,
+                  aiTotal: aiTotalStrength,
+                  playerScore: player.score,
+                  aiScore: ai.score
+                });
+                
+                // Determine winner by total strength
+                if (playerTotalStrength > aiTotalStrength) {
+                  chooseRoom.winner = player.name;
+                } else if (aiTotalStrength > playerTotalStrength) {
+                  chooseRoom.winner = ai.name;
+                } else {
+                  chooseRoom.winner = 'Tie';
+                }
+                
+                console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                this.notifyListeners('GAME_UPDATE', chooseRoom);
+                return { type: 'GAME_OVER', winner: chooseRoom.winner };
+              }
+              
               player.active = false;
               ai.active = true;
               this.notifyListeners('GAME_UPDATE', chooseRoom);
@@ -488,10 +521,46 @@ class GameClient {
                         ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
                         console.log(`✅ AI drew card, now has ${ai.hand.length} in hand`);
                       } else {
-                        console.error('❌ AI has no cards in hand or deck, skipping turn');
+                        console.log('🚫 AI has no cards in hand or deck, skipping turn...');
+                        
+                        // Check if player also has no cards - if so, end game
+                        const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                        if (playerHasNoCards) {
+                          chooseRoom.gameOver = true;
+                          
+                          // Calculate total strength from all played cards
+                          const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          
+                          console.log('📊 Final strengths:', {
+                            playerTotal: playerTotalStrength,
+                            aiTotal: aiTotalStrength,
+                            playerScore: player.score,
+                            aiScore: ai.score
+                          });
+                          
+                          // Determine winner by total strength
+                          if (playerTotalStrength > aiTotalStrength) {
+                            chooseRoom.winner = player.name;
+                          } else if (aiTotalStrength > playerTotalStrength) {
+                            chooseRoom.winner = ai.name;
+                          } else {
+                            chooseRoom.winner = 'Tie';
+                          }
+                          
+                          console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                          this.notifyListeners('GAME_UPDATE', chooseRoom);
+                          return;
+                        }
+                        
+                        // AI has no cards but player does - skip AI turn
+                        console.log('⏭️ AI skipping turn (no cards), switching to player');
                         player.active = true;
                         ai.active = false;
                         chooseRoom.battlePhase = false;
+                        chooseRoom.currentRound++;
                         this.notifyListeners('GAME_UPDATE', chooseRoom);
                         return;
                       }
@@ -889,6 +958,11 @@ class GameClient {
                       }
                       
                       console.log('🏁 Game over! All cards played. Winner:', chooseRoom.winner);
+                      
+                      // Immediately notify listeners of game over
+                      console.log('📤 Notifying listeners of GAME OVER immediately...');
+                      this.notifyListeners('GAME_UPDATE', chooseRoom);
+                      console.log('✅ Game over notification sent');
                     } else {
                       console.log('▶️ Setting up next round...', {
                         currentRound: chooseRoom.currentRound,
@@ -995,10 +1069,43 @@ class GameClient {
                 }
               }, 2000); // 2000ms for AI to "think" before selecting card
               } else {
-                console.log('❌ AI has no cards or missing!', {
+                console.log('⏭️ AI has no cards, skipping turn...', {
                   aiExists: !!ai,
-                  aiHandLength: ai?.hand?.length
+                  aiHandLength: ai?.hand?.length,
+                  aiDeckLength: ai?.deck?.length || 0
                 });
+                
+                // Check if player also has no cards - if so, end game
+                const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                if (playerHasNoCards) {
+                  chooseRoom.gameOver = true;
+                  
+                  // Calculate total strength from all played cards
+                  const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  
+                  // Determine winner by total strength
+                  if (playerTotalStrength > aiTotalStrength) {
+                    chooseRoom.winner = player.name;
+                  } else if (aiTotalStrength > playerTotalStrength) {
+                    chooseRoom.winner = ai.name;
+                  } else {
+                    chooseRoom.winner = 'Tie';
+                  }
+                  
+                  console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                  this.notifyListeners('GAME_UPDATE', chooseRoom);
+                } else {
+                  // AI has no cards but player does - skip AI turn
+                  console.log('⏭️ Skipping AI turn, returning control to player');
+                  player.active = true;
+                  ai.active = false;
+                  chooseRoom.battlePhase = false;
+                  chooseRoom.currentRound++;
+                  this.notifyListeners('GAME_UPDATE', chooseRoom);
+                }
               }
             }, 6000); // 6 seconds delay after player plays
             
@@ -1788,8 +1895,8 @@ class GameClient {
     
     // TECHNOLOGY: Shield EARTH cards from attacks and protect from METEOR
     if (player1Card.element === 'TECHNOLOGY' && !player1Silenced) {
-      // Apply strong shield buff
-      this.applyStatusEffect(room, player1, 'SHIELD', 5, 5);
+      // Apply shield buff
+      this.applyStatusEffect(room, player1, 'SHIELD', 3, 3);
       this.applyStatusEffect(room, player2, 'SILENCE', 1, 2);
       
       // Protect all EARTH cards in hand by boosting their strength
@@ -1797,12 +1904,12 @@ class GameClient {
         const earthCards = player1.hand.filter(c => c && c.element === 'EARTH');
         earthCards.forEach(card => {
           if (card) {
-            card.modifiedStrength = (card.modifiedStrength || card.strength) + 3;
+            card.modifiedStrength = (card.modifiedStrength || card.strength) + 2;
           }
         });
         
         if (earthCards.length > 0) {
-          console.log(`🔧 TECHNOLOGY: Protected ${earthCards.length} EARTH cards (+3 strength each)`);
+          console.log(`🔧 TECHNOLOGY: Protected ${earthCards.length} EARTH cards (+2 strength each)`);
         }
       }
       
@@ -1816,8 +1923,8 @@ class GameClient {
     }
     
     if (player2Card.element === 'TECHNOLOGY' && !player2Silenced) {
-      // Apply strong shield buff
-      this.applyStatusEffect(room, player2, 'SHIELD', 5, 5);
+      // Apply shield buff
+      this.applyStatusEffect(room, player2, 'SHIELD', 3, 3);
       this.applyStatusEffect(room, player1, 'SILENCE', 1, 2);
       
       // Protect all EARTH cards in hand by boosting their strength
@@ -1825,12 +1932,12 @@ class GameClient {
         const earthCards = player2.hand.filter(c => c && c.element === 'EARTH');
         earthCards.forEach(card => {
           if (card) {
-            card.modifiedStrength = (card.modifiedStrength || card.strength) + 3;
+            card.modifiedStrength = (card.modifiedStrength || card.strength) + 2;
           }
         });
         
         if (earthCards.length > 0) {
-          console.log(`🔧 TECHNOLOGY: AI protected ${earthCards.length} EARTH cards (+3 strength each)`);
+          console.log(`🔧 TECHNOLOGY: AI protected ${earthCards.length} EARTH cards (+2 strength each)`);
         }
       }
       
