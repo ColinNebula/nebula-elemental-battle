@@ -139,25 +139,74 @@ config/local.json
 *.rar
 *.7z
 
-# Large assets (keep in repo but could be moved to CDN)
-# Uncomment if images are too large:
-# *.png
-# *.jpg
-# *.jpeg
-# !logo*.png
-# !favicon.ico
+# Large assets and media files
+# Images larger than 1MB should be in CDN or external storage
+*.mp4
+*.mov
+*.avi
+*.webm
+*.mp3
+*.wav
+*.flac
+*.ogg
+
+# Large document files
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
 
 # Backup and temporary server files
 *-server.js
 !server/
+!basic-server.js
+!secure-server.js
 error.log
+*.log.*
+logs/
 
-# Documentation that might contain sensitive info
-# (keep main README.md)
+# Generated documentation
+docs/generated/
 
-# Package lock (optional - uncomment for cleaner diffs)
+# Local development files
+.env
+.env.local
+.env.*.local
+*.local
+
+# Package lock (keep for reproducible builds)
 # package-lock.json
 
 # OS and editor specific
 .vscode/settings.json
 .vscode/launch.json
+.vscode/*.log
+
+# Test and benchmark results
+benchmark-results/
+performance-reports/
+
+# Certificate and key files
+*.key
+*.cert
+*.csr
+*.pem
+*.p12
+*.pfx
+certs/
+keys/
+
+# Large node_modules cache
+.npm/
+.yarn/
+.pnp.*
+
+# Build size reports
+build-report.html
+bundle-analysis.json
+
+# Development databases
+*.db-journal
+*.db-wal
+*.db-shm

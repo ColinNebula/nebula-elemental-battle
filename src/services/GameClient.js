@@ -339,12 +339,13 @@ class GameClient {
           
           // If AI goes first, trigger AI move after a delay
           if (!coinResult && ai && ai.hand.length > 0) {
-            console.log('🤖 AI won coin toss, will play first card...');
+            console.log('🤖 AI won coin toss, will play first card after intro sequence...');
             // Immediately notify listeners with AI active state
             this.notifyListeners('GAME_UPDATE', coinRoom);
+            // Wait 15 seconds for: 6s arena + 2s battle begin + 3s delay + 3s round announcement + 1s buffer
             setTimeout(() => {
               this.triggerAIFirstMove(coinRoomId);
-            }, 2000);
+            }, 15000);
           } else {
             console.log('👤 Player won coin toss, player goes first');
             // Notify listeners with player active state
@@ -510,6 +511,12 @@ class GameClient {
                 const aiCardSelectionTimeout = setTimeout(() => {
                   console.log('⏰ AI card selection timeout fired (2000ms)');
                   try {
+                    // Check if game is already over before processing AI turn
+                    if (chooseRoom.gameOver) {
+                      console.log('🛑 Game already over, skipping AI turn');
+                      return;
+                    }
+                    
                     console.log('🔵 AI card selection timeout started (500ms delay)');
                     // Re-check AI has cards before attempting to play
                     if (!ai.hand || ai.hand.length === 0) {
@@ -727,6 +734,13 @@ class GameClient {
                   // Resolve battle with advanced mechanics (6 second delay to view AI card)
                   const battleTimeout = setTimeout(() => {
                     console.log('⏰ Battle timeout triggered after 6 seconds');
+                    
+                    // Check if game is already over before processing battle
+                    if (chooseRoom.gameOver) {
+                      console.log('🛑 Game already over, skipping battle resolution');
+                      return;
+                    }
+                    
                     console.log('📊 Battle timeout state check:', {
                       playerCard: !!player.chosenCard,
                       aiCard: !!ai.chosenCard,
@@ -963,6 +977,9 @@ class GameClient {
                       console.log('📤 Notifying listeners of GAME OVER immediately...');
                       this.notifyListeners('GAME_UPDATE', chooseRoom);
                       console.log('✅ Game over notification sent');
+                      
+                      // Don't proceed with battle result notification - game is over
+                      return;
                     } else {
                       console.log('▶️ Setting up next round...', {
                         currentRound: chooseRoom.currentRound,
@@ -974,6 +991,13 @@ class GameClient {
                       // Next round timeout (6 seconds for round announcement)
                       const nextRoundTimeout = setTimeout(() => {
                         console.log('🔄 Next round timeout triggered - clearing cards and resetting turn');
+                        
+                        // Check if game is already over before starting next round
+                        if (chooseRoom.gameOver) {
+                          console.log('🛑 Game already over, skipping next round setup');
+                          return;
+                        }
+                        
                         console.log('📊 Pre-reset state:', {
                           round: chooseRoom.currentRound,
                           playerActive: player.active,
@@ -1023,6 +1047,41 @@ class GameClient {
                           player.active = false;
                           ai.active = false;
                           console.log('⏸️ Waiting for EARTH ability resolution before continuing');
+                        }
+                        
+                        // Check if both players are out of cards before starting next round
+                        const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                        const aiHasNoCards = (ai.hand.length === 0 && (!ai.deck || ai.deck.length === 0));
+                        
+                        if (playerHasNoCards && aiHasNoCards) {
+                          chooseRoom.gameOver = true;
+                          
+                          // Calculate total strength from all played cards
+                          const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          
+                          console.log('📊 Final strengths:', {
+                            playerTotal: playerTotalStrength,
+                            aiTotal: aiTotalStrength,
+                            playerScore: player.score,
+                            aiScore: ai.score
+                          });
+                          
+                          // Determine winner by total strength
+                          if (playerTotalStrength > aiTotalStrength) {
+                            chooseRoom.winner = player.name;
+                          } else if (aiTotalStrength > playerTotalStrength) {
+                            chooseRoom.winner = ai.name;
+                          } else {
+                            chooseRoom.winner = 'Tie';
+                          }
+                          
+                          console.log('🏁 Game over! Both players out of cards at start of round. Winner:', chooseRoom.winner);
+                          this.notifyListeners('GAME_UPDATE', chooseRoom);
+                          console.log('✅ Game over notification sent');
+                          return;
                         }
                         
                         console.log('➡️ Next round starting (Round ' + chooseRoom.currentRound + ')...', { 

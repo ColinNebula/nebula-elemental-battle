@@ -312,7 +312,7 @@ const GameBoard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.players, gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showRoundAnnouncement]);
 
-  // Initial Arena Display - Show arena for 8 seconds after game starts
+  // Initial Arena Display - Show arena for 6 seconds, then "Battle Begin!", then round announcements
   useEffect(() => {
     if (gameState?.gameStarted && !gameState?.gameOver && !hasShownInitialArenaRef.current) {
       hasShownInitialArenaRef.current = true;
@@ -324,17 +324,24 @@ const GameBoard = ({
         deckElements.forEach(deck => {
           createShuffleAnimation(deck);
         });
-        
-        // Phase transition for game start
-        createPhaseTransition('Battle Begin!', gameBoardRef.current);
       }
       
-      // After 8 seconds, hide initial arena and allow round announcements
-      const timer = setTimeout(() => {
-        setShowInitialArena(false);
-      }, 8000);
+      // After 6 seconds, show "Battle Begin!" phase transition
+      const battleBeginTimer = setTimeout(() => {
+        if (gameBoardRef.current) {
+          createPhaseTransition('Battle Begin!', gameBoardRef.current);
+        }
+      }, 6000);
       
-      return () => clearTimeout(timer);
+      // After 11 seconds total (6s arena + 2s battle begin + 3s delay), hide initial arena and allow round announcements
+      const arenaTimer = setTimeout(() => {
+        setShowInitialArena(false);
+      }, 11000);
+      
+      return () => {
+        clearTimeout(battleBeginTimer);
+        clearTimeout(arenaTimer);
+      };
     }
     
     // Reset when game ends
@@ -352,20 +359,22 @@ const GameBoard = ({
     // Only show if: game started, not over, initial arena shown, and this round hasn't been announced yet
     if (gameState?.gameStarted && !gameState?.gameOver && !showInitialArena) {
       if (roundToDisplay !== lastAnnouncedRoundRef.current) {
-        lastAnnouncedRoundRef.current = roundToDisplay;
-        setCurrentRoundNumber(roundToDisplay);
-        setShowRoundAnnouncement(true);
-        soundManager.playSound('yourTurn');
-        
-        // Add phase transition animation
-        if (gameBoardRef.current) {
-          createPhaseTransition(`Round ${roundToDisplay}`, gameBoardRef.current);
-        }
-        
-        // Add environmental effects based on arena theme
-        if (gameBoardRef.current) {
-          // Clear previous environmental effect
-          removeEnvironmentalEffect(gameBoardRef.current);
+        // Add a small delay to ensure "Battle Begin!" has fully completed
+        const roundAnnouncementTimer = setTimeout(() => {
+          lastAnnouncedRoundRef.current = roundToDisplay;
+          setCurrentRoundNumber(roundToDisplay);
+          setShowRoundAnnouncement(true);
+          soundManager.playSound('yourTurn');
+          
+          // Add phase transition animation
+          if (gameBoardRef.current) {
+            createPhaseTransition(`Round ${roundToDisplay}`, gameBoardRef.current);
+          }
+          
+          // Add environmental effects based on arena theme
+          if (gameBoardRef.current) {
+            // Clear previous environmental effect
+            removeEnvironmentalEffect(gameBoardRef.current);
           
           // Add new environmental effect based on arena theme or dominant element
           const effects = ['rain', 'snow', 'leaves', 'embers'];
@@ -385,6 +394,9 @@ const GameBoard = ({
           
           createEnvironmentalEffect(effect, gameBoardRef.current);
         }
+        }, 500); // Small delay to ensure "Battle Begin!" has completed
+        
+        return () => clearTimeout(roundAnnouncementTimer);
       }
     }
     
@@ -677,6 +689,18 @@ const GameBoard = ({
       
       // Wait 5 seconds for round/turn announcements, then force AI to play if still stuck
       const watchdogTimer = setTimeout(() => {
+        // Don't force AI to play during initial arena display
+        if (showInitialArena) {
+          console.log('⏸️ AI watchdog blocked - arena display in progress');
+          return;
+        }
+        
+        // Don't force AI to play during round announcement
+        if (showRoundAnnouncement) {
+          console.log('⏸️ AI watchdog blocked - round announcement in progress');
+          return;
+        }
+        
         if (aiPlayer.active && aiPlayer.hand?.length > 0 && !aiPlayer.chosenCard) {
           console.log('🚨 AI WATCHDOG: Forcing AI to play');
           const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
@@ -688,7 +712,7 @@ const GameBoard = ({
     }
   }, [aiPlayer?.active, aiPlayer?.hand?.length, aiPlayer?.chosenCard, gameState?.battlePhase, 
       gameState?.gameStarted, gameState?.gameOver, showRoundAnnouncement, showTurnAnnouncement, 
-      onPlayCard, aiPlayer?.id]);
+      onPlayCard, aiPlayer?.id, showInitialArena]);
 
   // General game stuck detector - detects if game is in an invalid state
   useEffect(() => {
@@ -746,6 +770,18 @@ const GameBoard = ({
   }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve]);
 
   const handleCardClick = (cardIndex) => {
+    // Block actions during initial arena display
+    if (showInitialArena) {
+      console.log('⏸️ Card click blocked - arena display in progress');
+      return;
+    }
+    
+    // Block actions during round announcement
+    if (showRoundAnnouncement) {
+      console.log('⏸️ Card click blocked - round announcement in progress');
+      return;
+    }
+    
     if (isMyTurn && onPlayCard && !gameState?.gameOver && !isPaused && !gameState?.pendingAbility) {
       const card = currentPlayer.hand[cardIndex];
       

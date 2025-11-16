@@ -29,17 +29,19 @@
   },
   "devDependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
     "dotenv": "^16.3.1",
-    "joi": "^17.11.0",
-    "express-validator": "^7.0.1"
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
     "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
     "server": "node server-proxy.js",
     "dev": "concurrently \"npm run server\" \"npm start\"",
@@ -47,7 +49,10 @@
     "lint:fix": "eslint src/ --fix",
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
-    "build:production": "npm run security:audit && npm run build"
+    "security:check": "npm run lint",
+    "build:production": "cross-env NODE_ENV=production GENERATE_SOURCEMAP=false npm run build",
+    "clean": "rimraf build node_modules/.cache",
+    "postbuild": "echo 'Build complete! Check build/ folder'"
   },
   "eslintConfig": {
     "extends": [

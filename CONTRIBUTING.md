@@ -39,16 +39,57 @@ By participating in this project, you agree to abide by our Code of Conduct:
 #### Development Setup
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/nebula-card-game.git
-cd nebula-card-game
+git clone https://github.com/YOUR_USERNAME/nebula-elemental-battle.git
+cd nebula-elemental-battle
 
 # Install dependencies
 npm install
 
-# Install security dependencies
-npm install helmet express-rate-limit dotenv joi express-validator
+# Copy environment template and configure
+cp .env.example .env
+# Edit .env with your settings (NEVER commit this file)
 
-# Copy environment template
+# Run security audit
+npm run security:audit
+
+# Start development server
+npm start
+```
+
+#### Security Considerations
+**IMPORTANT:** Before committing any code:
+
+1. **Never commit sensitive data:**
+   - API keys, tokens, or credentials
+   - Private keys or certificates
+   - Personal information
+   - Environment files (.env)
+
+2. **Check your commits:**
+   ```bash
+   # Review changes before committing
+   git diff
+   
+   # Check for accidentally staged sensitive files
+   git status
+   ```
+
+3. **Use environment variables:**
+   - Store sensitive config in .env (gitignored)
+   - Use .env.example as template
+   - Document required variables
+
+4. **Run security checks:**
+   ```bash
+   npm run security:check
+   npm run lint
+   ```
+
+5. **Keep dependencies updated:**
+   ```bash
+   npm audit fix
+   npm update
+   ```
 cp .env.example .env
 
 # Start development server
