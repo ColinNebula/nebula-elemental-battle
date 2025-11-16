@@ -104,13 +104,14 @@
 }
 
 .round-subtitle {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 600;
   color: #ffeb3b;
   text-shadow: 0 0 15px rgba(255, 235, 59, 0.8),
                2px 2px 4px rgba(0, 0, 0, 0.8);
   margin-top: 10px;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .round-decorative-elements {

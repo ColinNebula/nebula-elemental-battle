@@ -372,6 +372,57 @@ class GameClient {
           
           console.log('🃏 Card chosen:', { player: player?.name, cardIndex, hand: player?.hand?.length });
           
+          // If player has no cards in hand, try to draw from reserve first
+          if (player && player.active && player.hand.length === 0) {
+            if (player.deck && player.deck.length > 0) {
+              console.log('🎴 Player hand empty, auto-drawing from reserve deck');
+              const drawnCard = player.deck.shift();
+              player.hand.push(drawnCard);
+              player.cardCount = player.hand.length + (player.deck?.length || 0);
+              console.log(`✅ Player drew card, now has ${player.hand.length} in hand`);
+              this.notifyListeners('GAME_UPDATE', chooseRoom);
+            } else {
+              console.log('⚠️ Player has no cards to play, checking game over...');
+              
+              // Check if AI also has no cards - if so, end game
+              const aiHasNoCards = (ai.hand.length === 0 && (!ai.deck || ai.deck.length === 0));
+              if (aiHasNoCards) {
+                chooseRoom.gameOver = true;
+                
+                // Calculate total strength from all played cards
+                const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                
+                console.log('📊 Final strengths:', {
+                  playerTotal: playerTotalStrength,
+                  aiTotal: aiTotalStrength,
+                  playerScore: player.score,
+                  aiScore: ai.score
+                });
+                
+                // Determine winner by total strength
+                if (playerTotalStrength > aiTotalStrength) {
+                  chooseRoom.winner = player.name;
+                } else if (aiTotalStrength > playerTotalStrength) {
+                  chooseRoom.winner = ai.name;
+                } else {
+                  chooseRoom.winner = 'Tie';
+                }
+                
+                console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                this.notifyListeners('GAME_UPDATE', chooseRoom);
+                return { type: 'GAME_OVER', winner: chooseRoom.winner };
+              }
+              
+              player.active = false;
+              ai.active = true;
+              this.notifyListeners('GAME_UPDATE', chooseRoom);
+              return { type: 'CARD_PLAY_FAILED', reason: 'NO_CARDS' };
+            }
+          }
+          
           if (player && player.active && player.hand.length > parseInt(cardIndex)) {
             // Check for freeze status
             const freezeEffect = this.getActiveStatusEffects(chooseRoom, player).find(e => e.type === 'FREEZE');
@@ -462,12 +513,57 @@ class GameClient {
                     console.log('🔵 AI card selection timeout started (500ms delay)');
                     // Re-check AI has cards before attempting to play
                     if (!ai.hand || ai.hand.length === 0) {
-                      console.error('❌ AI has no cards in hand, skipping turn');
-                      player.active = true;
-                      ai.active = false;
-                      chooseRoom.battlePhase = false;
-                      this.notifyListeners('GAME_UPDATE', chooseRoom);
-                      return;
+                      // Try to draw from reserve deck
+                      if (ai.deck && ai.deck.length > 0) {
+                        console.log('🎴 AI hand empty, drawing from reserve deck');
+                        const drawnCard = ai.deck.shift();
+                        ai.hand.push(drawnCard);
+                        ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
+                        console.log(`✅ AI drew card, now has ${ai.hand.length} in hand`);
+                      } else {
+                        console.log('🚫 AI has no cards in hand or deck, skipping turn...');
+                        
+                        // Check if player also has no cards - if so, end game
+                        const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                        if (playerHasNoCards) {
+                          chooseRoom.gameOver = true;
+                          
+                          // Calculate total strength from all played cards
+                          const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                            sum + (card.modifiedStrength || card.strength || 0), 0);
+                          
+                          console.log('📊 Final strengths:', {
+                            playerTotal: playerTotalStrength,
+                            aiTotal: aiTotalStrength,
+                            playerScore: player.score,
+                            aiScore: ai.score
+                          });
+                          
+                          // Determine winner by total strength
+                          if (playerTotalStrength > aiTotalStrength) {
+                            chooseRoom.winner = player.name;
+                          } else if (aiTotalStrength > playerTotalStrength) {
+                            chooseRoom.winner = ai.name;
+                          } else {
+                            chooseRoom.winner = 'Tie';
+                          }
+                          
+                          console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                          this.notifyListeners('GAME_UPDATE', chooseRoom);
+                          return;
+                        }
+                        
+                        // AI has no cards but player does - skip AI turn
+                        console.log('⏭️ AI skipping turn (no cards), switching to player');
+                        player.active = true;
+                        ai.active = false;
+                        chooseRoom.battlePhase = false;
+                        chooseRoom.currentRound++;
+                        this.notifyListeners('GAME_UPDATE', chooseRoom);
+                        return;
+                      }
                     }
                   
                   // Validate AI hand is array and has valid cards
@@ -862,6 +958,11 @@ class GameClient {
                       }
                       
                       console.log('🏁 Game over! All cards played. Winner:', chooseRoom.winner);
+                      
+                      // Immediately notify listeners of game over
+                      console.log('📤 Notifying listeners of GAME OVER immediately...');
+                      this.notifyListeners('GAME_UPDATE', chooseRoom);
+                      console.log('✅ Game over notification sent');
                     } else {
                       console.log('▶️ Setting up next round...', {
                         currentRound: chooseRoom.currentRound,
@@ -968,10 +1069,43 @@ class GameClient {
                 }
               }, 2000); // 2000ms for AI to "think" before selecting card
               } else {
-                console.log('❌ AI has no cards or missing!', {
+                console.log('⏭️ AI has no cards, skipping turn...', {
                   aiExists: !!ai,
-                  aiHandLength: ai?.hand?.length
+                  aiHandLength: ai?.hand?.length,
+                  aiDeckLength: ai?.deck?.length || 0
                 });
+                
+                // Check if player also has no cards - if so, end game
+                const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                if (playerHasNoCards) {
+                  chooseRoom.gameOver = true;
+                  
+                  // Calculate total strength from all played cards
+                  const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  
+                  // Determine winner by total strength
+                  if (playerTotalStrength > aiTotalStrength) {
+                    chooseRoom.winner = player.name;
+                  } else if (aiTotalStrength > playerTotalStrength) {
+                    chooseRoom.winner = ai.name;
+                  } else {
+                    chooseRoom.winner = 'Tie';
+                  }
+                  
+                  console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                  this.notifyListeners('GAME_UPDATE', chooseRoom);
+                } else {
+                  // AI has no cards but player does - skip AI turn
+                  console.log('⏭️ Skipping AI turn, returning control to player');
+                  player.active = true;
+                  ai.active = false;
+                  chooseRoom.battlePhase = false;
+                  chooseRoom.currentRound++;
+                  this.notifyListeners('GAME_UPDATE', chooseRoom);
+                }
               }
             }, 6000); // 6 seconds delay after player plays
             
@@ -1148,30 +1282,62 @@ class GameClient {
     // Define all available status effects
     room.availableStatusEffects = {
       // Buffs
-      STRENGTH_BOOST: { type: 'buff', name: 'Strength Boost', icon: '💪', description: '+{value} strength for {duration} turns' },
-      SHIELD: { type: 'buff', name: 'Shield', icon: '🛡️', description: 'Absorb next {value} damage' },
-      DOUBLE_STRIKE: { type: 'buff', name: 'Double Strike', icon: '⚔️', description: 'Play 2 cards this turn' },
-      REGENERATION: { type: 'buff', name: 'Regeneration', icon: '💚', description: '+{value} score each turn for {duration} turns' },
-      ELEMENT_MASTERY: { type: 'buff', name: 'Element Mastery', icon: '🔮', description: 'All {element} cards get +{value} strength' },
-      DRAW_POWER: { type: 'buff', name: 'Draw Power', icon: '📚', description: 'Draw {value} extra cards' },
-      TURN_EXTENSION: { type: 'buff', name: 'Turn Extension', icon: '⏰', description: 'Get +{value} seconds on turns' },
-      PIERCING: { type: 'buff', name: 'Piercing', icon: '🗡️', description: 'Ignore opponent shields for {duration} turns' },
-      CRITICAL_HIT: { type: 'buff', name: 'Critical Strike', icon: '💥', description: 'Next attack deals double damage' },
+      STRENGTH_BOOST: { type: 'buff', name: 'Strength Boost', icon: '💪', description: '+{value} strength for {duration} turns', stackable: true },
+      SHIELD: { type: 'buff', name: 'Shield', icon: '🛡️', description: 'Absorb next {value} damage', stackable: true },
+      BARRIER: { type: 'buff', name: 'Barrier', icon: '🔰', description: 'Immune to debuffs for {duration} turns', stackable: false },
+      DOUBLE_STRIKE: { type: 'buff', name: 'Double Strike', icon: '⚔️', description: 'Play 2 cards this turn', stackable: false },
+      REGENERATION: { type: 'buff', name: 'Regeneration', icon: '💚', description: '+{value} score each turn for {duration} turns', stackable: true },
+      ELEMENT_MASTERY: { type: 'buff', name: 'Element Mastery', icon: '🔮', description: 'All {element} cards get +{value} strength', stackable: false },
+      DRAW_POWER: { type: 'buff', name: 'Draw Power', icon: '📚', description: 'Draw {value} extra cards', stackable: true },
+      TURN_EXTENSION: { type: 'buff', name: 'Turn Extension', icon: '⏰', description: 'Get +{value} seconds on turns', stackable: false },
+      PIERCING: { type: 'buff', name: 'Piercing', icon: '🗡️', description: 'Ignore opponent shields for {duration} turns', stackable: false },
+      CRITICAL_HIT: { type: 'buff', name: 'Critical Strike', icon: '💥', description: 'Next attack deals double damage', stackable: false },
+      CLEANSE: { type: 'buff', name: 'Cleanse', icon: '✨', description: 'Remove all debuffs', instant: true },
+      REFLECT: { type: 'buff', name: 'Reflect', icon: '🪞', description: 'Reflect {value}% damage back for {duration} turns', stackable: false },
       
       // Debuffs
-      WEAKNESS: { type: 'debuff', name: 'Weakness', icon: '😵', description: '-{value} strength for {duration} turns' },
-      BURN: { type: 'debuff', name: 'Burn', icon: '🔥', description: 'Lose {value} score each turn for {duration} turns' },
-      FREEZE: { type: 'debuff', name: 'Freeze', icon: '🧊', description: 'Skip next {duration} turns' },
-      CONFUSION: { type: 'debuff', name: 'Confusion', icon: '😵‍💫', description: 'Random card selection for {duration} turns' },
-      SILENCE: { type: 'debuff', name: 'Silence', icon: '🔇', description: 'No element abilities for {duration} turns' },
-      FATIGUE: { type: 'debuff', name: 'Fatigue', icon: '😴', description: 'Cards cost 1 score to play for {duration} turns' },
-      CURSE: { type: 'debuff', name: 'Curse', icon: '👹', description: 'All cards have -{value} strength for {duration} turns' },
-      POISON: { type: 'debuff', name: 'Poison', icon: '☠️', description: 'Lose {value} score and strength each turn' },
-      VULNERABILITY: { type: 'debuff', name: 'Vulnerability', icon: '🎯', description: 'Take +{value} damage for {duration} turns' }
+      WEAKNESS: { type: 'debuff', name: 'Weakness', icon: '😵', description: '-{value} strength for {duration} turns', stackable: true },
+      BURN: { type: 'debuff', name: 'Burn', icon: '🔥', description: 'Lose {value} HP each turn for {duration} turns (DoT)', stackable: true },
+      FREEZE: { type: 'debuff', name: 'Freeze', icon: '🧊', description: 'Cannot play cards for {duration} turns', stackable: false },
+      STUN: { type: 'debuff', name: 'Stun', icon: '💫', description: 'Skip next turn completely', stackable: false },
+      CONFUSION: { type: 'debuff', name: 'Confusion', icon: '😵‍💫', description: 'Random card selection for {duration} turns', stackable: false },
+      SILENCE: { type: 'debuff', name: 'Silence', icon: '🔇', description: 'No element abilities for {duration} turns', stackable: false },
+      FATIGUE: { type: 'debuff', name: 'Fatigue', icon: '😴', description: 'Cards cost {value} score to play for {duration} turns', stackable: true },
+      CURSE: { type: 'debuff', name: 'Curse', icon: '👹', description: 'All cards have -{value} strength for {duration} turns', stackable: true },
+      POISON: { type: 'debuff', name: 'Poison', icon: '☠️', description: 'Lose {value} HP per turn, cards lose strength', stackable: true },
+      VULNERABILITY: { type: 'debuff', name: 'Vulnerability', icon: '🎯', description: 'Take +{value}% damage for {duration} turns', stackable: false },
+      BLEED: { type: 'debuff', name: 'Bleed', icon: '🩸', description: 'Lose {value} HP at turn end for {duration} turns', stackable: true },
+      SLOW: { type: 'debuff', name: 'Slow', icon: '🐌', description: 'Turn timer reduced by {value} seconds', stackable: false }
     };
   }
   
   applyStatusEffect(room, targetPlayer, effectType, value = 1, duration = 3, element = null) {
+    const playerKey = targetPlayer.isAI ? 'ai' : 'player';
+    const effectDef = room.availableStatusEffects[effectType];
+    
+    // Check for barrier immunity (blocks debuffs)
+    if (effectDef?.type === 'debuff') {
+      const hasBarrier = room.statusEffects[playerKey].some(e => e.type === 'BARRIER');
+      if (hasBarrier) {
+        console.log(`🔰 ${targetPlayer.name}'s barrier blocked ${effectType}!`);
+        return false;
+      }
+    }
+    
+    // Handle instant effects
+    if (effectType === 'CLEANSE') {
+      const removedEffects = room.statusEffects[playerKey].filter(e => {
+        const def = room.availableStatusEffects[e.type];
+        return def?.type === 'debuff';
+      });
+      room.statusEffects[playerKey] = room.statusEffects[playerKey].filter(e => {
+        const def = room.availableStatusEffects[e.type];
+        return def?.type !== 'debuff';
+      });
+      console.log(`✨ ${targetPlayer.name} cleansed ${removedEffects.length} debuffs!`);
+      return true;
+    }
+    
     const effect = {
       id: room.statusEffectId++,
       type: effectType,
@@ -1179,30 +1345,36 @@ class GameClient {
       duration: duration,
       element: element,
       turnsRemaining: duration,
-      appliedThisTurn: true
+      appliedThisTurn: true,
+      totalDamageDealt: 0 // Track DoT damage
     };
-    
-    const playerKey = targetPlayer.isAI ? 'ai' : 'player';
     
     // Check for duplicate effects and stack or replace
     const existingEffect = room.statusEffects[playerKey].find(e => e.type === effectType && e.element === element);
     if (existingEffect) {
-      if (['STRENGTH_BOOST', 'WEAKNESS', 'SHIELD'].includes(effectType)) {
+      if (effectDef?.stackable) {
         existingEffect.value += value; // Stack values
         existingEffect.turnsRemaining = Math.max(existingEffect.turnsRemaining, duration);
       } else {
         existingEffect.turnsRemaining = duration; // Refresh duration
+        existingEffect.value = Math.max(existingEffect.value, value); // Use higher value
       }
     } else {
       room.statusEffects[playerKey].push(effect);
     }
     
     console.log(`✨ Applied ${effectType} to ${targetPlayer.name}: ${value} for ${duration} turns`);
+    return true;
   }
   
   processStatusEffects(room, player) {
     const playerKey = player.isAI ? 'ai' : 'player';
     const effects = room.statusEffects[playerKey];
+    let damageLog = [];
+    
+    // Check for stun/freeze (these prevent turn)
+    const isStunned = effects.some(e => e.type === 'STUN' && !e.appliedThisTurn);
+    const isFrozen = effects.some(e => e.type === 'FREEZE' && !e.appliedThisTurn);
     
     // Apply turn-based effects
     effects.forEach(effect => {
@@ -1214,34 +1386,62 @@ class GameClient {
       switch (effect.type) {
         case 'REGENERATION':
           player.score += effect.value;
-          console.log(`💚 ${player.name} regenerated ${effect.value} score`);
+          console.log(`💚 ${player.name} regenerated ${effect.value} HP`);
           break;
           
         case 'BURN':
-          player.score = Math.max(0, player.score - effect.value);
-          console.log(`🔥 ${player.name} burned for ${effect.value} score`);
+          const burnDamage = effect.value;
+          player.score = Math.max(0, player.score - burnDamage);
+          effect.totalDamageDealt += burnDamage;
+          damageLog.push({ type: 'BURN', damage: burnDamage });
+          console.log(`🔥 ${player.name} burned for ${burnDamage} HP (Total: ${effect.totalDamageDealt})`);
+          break;
+          
+        case 'BLEED':
+          const bleedDamage = effect.value;
+          player.score = Math.max(0, player.score - bleedDamage);
+          effect.totalDamageDealt += bleedDamage;
+          damageLog.push({ type: 'BLEED', damage: bleedDamage });
+          console.log(`🩸 ${player.name} bled for ${bleedDamage} HP (Total: ${effect.totalDamageDealt})`);
           break;
           
         case 'POISON':
-          player.score = Math.max(0, player.score - effect.value);
+          const poisonDamage = effect.value;
+          player.score = Math.max(0, player.score - poisonDamage);
+          effect.totalDamageDealt += poisonDamage;
+          // Weaken cards in hand
           if (player.hand.length > 0) {
             player.hand.forEach(card => {
               if (card.modifiedStrength) {
-                card.modifiedStrength = Math.max(1, card.modifiedStrength - effect.value);
+                card.modifiedStrength = Math.max(1, card.modifiedStrength - 1);
               } else {
-                card.modifiedStrength = Math.max(1, card.strength - effect.value);
+                card.modifiedStrength = Math.max(1, card.strength - 1);
               }
             });
           }
-          console.log(`☠️ ${player.name} poisoned for ${effect.value} score and strength`);
+          damageLog.push({ type: 'POISON', damage: poisonDamage });
+          console.log(`☠️ ${player.name} poisoned for ${poisonDamage} HP and cards weakened (Total: ${effect.totalDamageDealt})`);
+          break;
+          
+        case 'STUN':
+          console.log(`💫 ${player.name} is stunned!`);
+          break;
+          
+        case 'FREEZE':
+          console.log(`🧊 ${player.name} is frozen!`);
           break;
           
         case 'FATIGUE':
           // Applied when playing cards
+          console.log(`😴 ${player.name} is fatigued (costs ${effect.value} HP per card)`);
+          break;
+          
+        case 'BARRIER':
+          console.log(`🔰 ${player.name} has barrier protection`);
           break;
           
         default:
-          console.warn('Unknown status effect:', effect.type);
+          // Silent for unknown effects
           break;
       }
       
@@ -1250,6 +1450,51 @@ class GameClient {
     
     // Remove expired effects
     room.statusEffects[playerKey] = effects.filter(effect => effect.turnsRemaining > 0);
+    
+    return {
+      isStunned,
+      isFrozen,
+      canAct: !isStunned && !isFrozen,
+      damageLog
+    };
+  }
+  
+  hasStatusEffect(room, player, effectType) {
+    const playerKey = player.isAI ? 'ai' : 'player';
+    return room.statusEffects[playerKey].some(e => e.type === effectType);
+  }
+  
+  removeStatusEffect(room, player, effectType) {
+    const playerKey = player.isAI ? 'ai' : 'player';
+    const removed = room.statusEffects[playerKey].filter(e => e.type === effectType);
+    room.statusEffects[playerKey] = room.statusEffects[playerKey].filter(e => e.type !== effectType);
+    return removed.length;
+  }
+  
+  absorbDamageWithShield(room, player, incomingDamage) {
+    const playerKey = player.isAI ? 'ai' : 'player';
+    const shields = room.statusEffects[playerKey].filter(e => e.type === 'SHIELD');
+    let remainingDamage = incomingDamage;
+    
+    for (let shield of shields) {
+      if (remainingDamage <= 0) break;
+      
+      const absorbed = Math.min(shield.value, remainingDamage);
+      shield.value -= absorbed;
+      remainingDamage -= absorbed;
+      
+      console.log(`🛡️ ${player.name}'s shield absorbed ${absorbed} damage (${shield.value} remaining)`);
+    }
+    
+    // Remove depleted shields
+    room.statusEffects[playerKey] = room.statusEffects[playerKey].filter(e => 
+      e.type !== 'SHIELD' || e.value > 0
+    );
+    
+    return {
+      absorbedDamage: incomingDamage - remainingDamage,
+      actualDamage: remainingDamage
+    };
   }
   
   applyStatusModifiersToCard(room, card, player) {
@@ -1305,13 +1550,27 @@ class GameClient {
     });
     
     // Verify AI should be active (coin toss winner)
-    if (!ai || !ai.active || ai.hand.length === 0) {
+    if (!ai || !ai.active) {
       console.log('⚠️ triggerAIFirstMove called but AI should not play:', { 
         aiExists: !!ai, 
         aiActive: ai?.active, 
         handLength: ai?.hand?.length 
       });
       return;
+    }
+    
+    // If AI has no cards in hand, try to draw from reserve
+    if (ai.hand.length === 0) {
+      if (ai.deck && ai.deck.length > 0) {
+        console.log('🎴 AI hand empty on first move, drawing from reserve deck');
+        const drawnCard = ai.deck.shift();
+        ai.hand.push(drawnCard);
+        ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
+        console.log(`✅ AI drew card, now has ${ai.hand.length} in hand`);
+      } else {
+        console.log('⚠️ AI has no cards available to play');
+        return;
+      }
     }
     
     console.log('🤖 AI making first move...');
@@ -1636,8 +1895,8 @@ class GameClient {
     
     // TECHNOLOGY: Shield EARTH cards from attacks and protect from METEOR
     if (player1Card.element === 'TECHNOLOGY' && !player1Silenced) {
-      // Apply strong shield buff
-      this.applyStatusEffect(room, player1, 'SHIELD', 5, 5);
+      // Apply shield buff
+      this.applyStatusEffect(room, player1, 'SHIELD', 3, 3);
       this.applyStatusEffect(room, player2, 'SILENCE', 1, 2);
       
       // Protect all EARTH cards in hand by boosting their strength
@@ -1645,12 +1904,12 @@ class GameClient {
         const earthCards = player1.hand.filter(c => c && c.element === 'EARTH');
         earthCards.forEach(card => {
           if (card) {
-            card.modifiedStrength = (card.modifiedStrength || card.strength) + 3;
+            card.modifiedStrength = (card.modifiedStrength || card.strength) + 2;
           }
         });
         
         if (earthCards.length > 0) {
-          console.log(`🔧 TECHNOLOGY: Protected ${earthCards.length} EARTH cards (+3 strength each)`);
+          console.log(`🔧 TECHNOLOGY: Protected ${earthCards.length} EARTH cards (+2 strength each)`);
         }
       }
       
@@ -1664,8 +1923,8 @@ class GameClient {
     }
     
     if (player2Card.element === 'TECHNOLOGY' && !player2Silenced) {
-      // Apply strong shield buff
-      this.applyStatusEffect(room, player2, 'SHIELD', 5, 5);
+      // Apply shield buff
+      this.applyStatusEffect(room, player2, 'SHIELD', 3, 3);
       this.applyStatusEffect(room, player1, 'SILENCE', 1, 2);
       
       // Protect all EARTH cards in hand by boosting their strength
@@ -1673,12 +1932,12 @@ class GameClient {
         const earthCards = player2.hand.filter(c => c && c.element === 'EARTH');
         earthCards.forEach(card => {
           if (card) {
-            card.modifiedStrength = (card.modifiedStrength || card.strength) + 3;
+            card.modifiedStrength = (card.modifiedStrength || card.strength) + 2;
           }
         });
         
         if (earthCards.length > 0) {
-          console.log(`🔧 TECHNOLOGY: AI protected ${earthCards.length} EARTH cards (+3 strength each)`);
+          console.log(`🔧 TECHNOLOGY: AI protected ${earthCards.length} EARTH cards (+2 strength each)`);
         }
       }
       

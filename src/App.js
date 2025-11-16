@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import './accessibility.css';
 import MainMenu from './components/MainMenu';
 import Lobby from './components/Lobby';
 import StoryMode from './components/StoryMode';
@@ -15,10 +16,13 @@ import SplashScreen from './components/SplashScreen';
 import CoinToss from './components/CoinToss';
 import ThemeShop from './components/ThemeShop';
 import DonationBanner from './components/DonationBanner';
+import Inventory from './components/Inventory';
 import GameClient from './services/GameClient';
 import securityManager from './utils/security';
 import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, getProfile, updateProfile, recoverStoryProgress, recoverProfile } from './utils/statistics';
 import { awardCoins, initializeThemes } from './utils/themes';
+import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
+import { createDefaultInventory, generateLoot } from './utils/powerUps';
 
 function App() {
   // Donation banner state
@@ -61,25 +65,92 @@ function App() {
   const [showStats, setShowStats] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showThemeShop, setShowThemeShop] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
   const [playerProfile, setPlayerProfile] = useState(() => recoverProfile());
   const [gameStartTime, setGameStartTime] = useState(null);
   const [lastRoundWinner, setLastRoundWinner] = useState(null);
+  const [playerInventory, setPlayerInventory] = useState(() => {
+    const saved = localStorage.getItem('playerInventory');
+    return saved ? JSON.parse(saved) : createDefaultInventory();
+  });
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('gameSettings');
-    return saved ? JSON.parse(saved) : {
+    const accessibilitySettings = initializeAccessibility();
+    return saved ? {
+      ...JSON.parse(saved),
+      ...accessibilitySettings
+    } : {
       soundEnabled: true,
       musicEnabled: true,
       animationsEnabled: true,
       timerEnabled: true,
-      keyboardEnabled: true
+      keyboardEnabled: true,
+      colorblindMode: accessibilitySettings.colorblindMode,
+      highContrast: accessibilitySettings.highContrast,
+      textSize: accessibilitySettings.textSize,
+      showElementIcons: accessibilitySettings.showElementIcons
     };
   });
 
   // Initialize themes on app startup
   useEffect(() => {
     initializeThemes();
+    initializeAccessibility();
   }, []);
+
+  // Apply accessibility settings when they change
+  useEffect(() => {
+    if (settings.colorblindMode) {
+      applyColorblindMode(settings.colorblindMode);
+    }
+    if (settings.highContrast !== undefined) {
+      applyHighContrast(settings.highContrast);
+    }
+    if (settings.textSize) {
+      applyTextSize(settings.textSize);
+    }
+    if (settings.showElementIcons !== undefined) {
+      localStorage.setItem('showElementIcons', settings.showElementIcons);
+    }
+    
+    // Dispatch event for other components to react
+    window.dispatchEvent(new Event('settingsUpdated'));
+  }, [settings.colorblindMode, settings.highContrast, settings.textSize, settings.showElementIcons]);
+
+  // Handler for settings changes that also persists to localStorage
+  const handleSettingsChange = (newSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('gameSettings', JSON.stringify(newSettings));
+  };
+
+  // Persist inventory changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('playerInventory', JSON.stringify(playerInventory));
+  }, [playerInventory]);
+
+  // Inventory handlers
+  const handleUseConsumable = (item) => {
+    console.log('Using consumable:', item);
+    // Apply consumable effect to game state if in game
+    if (gameClient && roomId) {
+      // Will be handled by GameClient integration
+    }
+  };
+
+  const handleEquipItem = (equipped, unequipped) => {
+    console.log('Equipped:', equipped, 'Unequipped:', unequipped);
+    // Equipment bonuses will be applied automatically through inventory.getEquipmentBonuses()
+  };
+
+  const handleUnequipItem = (item) => {
+    console.log('Unequipped:', item);
+  };
+
+  const handleAddToActiveDeck = (card) => {
+    console.log('Added to deck:', card);
+    // This will integrate with deck building system
+  };
 
   useEffect(() => {
     // Clear old cached data on version change (but preserve user data)
@@ -271,6 +342,25 @@ function App() {
         
         if (coinReward.coinsEarned > 0) {
           console.log(`🪙 Earned ${coinReward.coinsEarned} coins! Total: ${coinReward.totalCoins}`);
+        }
+        
+        // Award loot for winning or completing matches
+        if (playerWon === true || playerWon === null) {
+          const playerLevel = Math.floor((playerProfile.gamesPlayed || 0) / 10) + 1;
+          const loot = generateLoot(playerLevel, playerWon === true);
+          
+          loot.forEach(item => {
+            if (item.type === 'currency') {
+              playerInventory.addCurrency(item.amount);
+              console.log(`💰 Earned ${item.amount} gold!`);
+            } else {
+              playerInventory.addItem(item);
+              console.log(`✨ Obtained: ${item.name} (${item.rarity})`);
+            }
+          });
+          
+          // Update inventory state
+          setPlayerInventory({ ...playerInventory });
         }
         
         setPlayerProfile(updatedProfile);
@@ -664,7 +754,7 @@ function App() {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)}
         settings={settings}
-        onSettingsChange={setSettings}
+        onSettingsChange={handleSettingsChange}
       />
       <Tutorial 
         isOpen={showTutorial} 
@@ -678,6 +768,18 @@ function App() {
       {/* Theme Shop Modal */}
       {showThemeShop && (
         <ThemeShop onClose={() => setShowThemeShop(false)} />
+      )}
+      
+      {/* Inventory Modal */}
+      {showInventory && (
+        <Inventory 
+          inventory={playerInventory}
+          onUseConsumable={handleUseConsumable}
+          onEquipItem={handleEquipItem}
+          onUnequipItem={handleUnequipItem}
+          onAddToActiveDeck={handleAddToActiveDeck}
+          onClose={() => setShowInventory(false)}
+        />
       )}
       
       {/* Player Profile Modal */}
@@ -703,6 +805,7 @@ function App() {
           onShowStats={() => setShowStats(true)}
           onShowProfile={() => setShowProfile(true)}
           onShowThemeShop={() => setShowThemeShop(true)}
+          onShowInventory={() => setShowInventory(true)}
           onShowSettings={() => setShowSettings(true)}
           onQuit={handleQuit}
         />

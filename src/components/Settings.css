@@ -153,6 +153,51 @@
   margin: 0;
 }
 
+.settings-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #4ecdc4, transparent);
+  margin: 25px 0 20px 0;
+  border-radius: 2px;
+}
+
+.settings-section-title {
+  color: #4ecdc4;
+  font-size: 20px;
+  margin: 0 0 15px 0;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(78, 205, 196, 0.5);
+}
+
+.setting-select {
+  background: rgba(0, 0, 0, 0.5);
+  color: #e0e0e0;
+  border: 2px solid rgba(78, 205, 196, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.setting-select:hover {
+  border-color: #4ecdc4;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.setting-select:focus {
+  outline: none;
+  border-color: #4ecdc4;
+  box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+}
+
+.setting-select option {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 10px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

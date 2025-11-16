@@ -8,6 +8,7 @@ const MainMenu = ({
   onShowStats, 
   onShowProfile,
   onShowThemeShop,
+  onShowInventory,
   onShowSettings,
   onQuit 
 }) => {
@@ -36,6 +37,7 @@ const MainMenu = ({
         </div>
 
         <div className="menu-buttons">
+          {/* Core Gameplay */}
           <button className="menu-btn primary-btn" onClick={onPlayGame}>
             <span className="btn-icon">⚔️</span>
             <span className="btn-text">QUICK PLAY</span>
@@ -54,16 +56,24 @@ const MainMenu = ({
             <span className="btn-subtitle">Learn the Basics</span>
           </button>
 
+          {/* Player Progress */}
+          <button className="menu-btn" onClick={onShowProfile}>
+            <span className="btn-icon">👤</span>
+            <span className="btn-text">PROFILE</span>
+            <span className="btn-subtitle">Player Info</span>
+          </button>
+
           <button className="menu-btn" onClick={onShowStats}>
             <span className="btn-icon">📊</span>
             <span className="btn-text">STATISTICS</span>
             <span className="btn-subtitle">View Your Records</span>
           </button>
 
-          <button className="menu-btn" onClick={onShowProfile}>
-            <span className="btn-icon">👤</span>
-            <span className="btn-text">PROFILE</span>
-            <span className="btn-subtitle">Player Info</span>
+          {/* Customization & Items */}
+          <button className="menu-btn inventory-btn" onClick={onShowInventory}>
+            <span className="btn-icon">📦</span>
+            <span className="btn-text">INVENTORY</span>
+            <span className="btn-subtitle">Power-Ups & Equipment</span>
           </button>
 
           <button className="menu-btn theme-shop-btn" onClick={onShowThemeShop}>
@@ -72,6 +82,7 @@ const MainMenu = ({
             <span className="btn-subtitle">Customize Appearance</span>
           </button>
 
+          {/* Settings & Exit */}
           <button className="menu-btn" onClick={onShowSettings}>
             <span className="btn-icon">⚙️</span>
             <span className="btn-text">SETTINGS</span>
