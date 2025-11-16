@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "A strategic card battle game featuring elemental powers, AI personalities, and story mode",
   "private": true,
-  "homepage": ".",
+  "homepage": "https://ColinNebula.github.io/nebula-elemental-battle",
   "author": "Your Name",
   "license": "MIT",
   "keywords": [
@@ -33,6 +33,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
+    "gh-pages": "^6.3.0",
     "helmet": "^7.1.0",
     "joi": "^17.11.0"
   },
@@ -50,6 +51,8 @@
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
     "security:check": "npm run lint",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "build:production": "cross-env NODE_ENV=production GENERATE_SOURCEMAP=false npm run build",
     "clean": "rimraf build node_modules/.cache",
     "postbuild": "echo 'Build complete! Check build/ folder'"
