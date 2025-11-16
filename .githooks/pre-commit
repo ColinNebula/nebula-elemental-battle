@@ -1,0 +1,55 @@
+#!/bin/sh
+# Pre-commit hook for security checks
+# Place this in .git/hooks/pre-commit and make it executable
+
+echo "🔍 Running pre-commit security checks..."
+
+# Check for common secret patterns
+echo "📝 Checking for secrets..."
+if git diff --cached --name-only | xargs grep -E "(API_KEY|SECRET|PASSWORD|TOKEN|PRIVATE_KEY).*=.*['\"][^'\"]{8,}" 2>/dev/null; then
+    echo "❌ ERROR: Possible secret detected in staged files!"
+    echo "Please remove secrets and use environment variables."
+    exit 1
+fi
+
+# Check if .env file is staged
+if git diff --cached --name-only | grep -E "^\.env$" > /dev/null; then
+    echo "❌ ERROR: .env file is staged!"
+    echo "This file should not be committed. It's in .gitignore."
+    exit 1
+fi
+
+# Check for large files (>5MB)
+echo "📦 Checking for large files..."
+for file in $(git diff --cached --name-only); do
+    if [ -f "$file" ]; then
+        size=$(wc -c < "$file")
+        if [ $size -gt 5242880 ]; then
+            echo "⚠️  WARNING: Large file detected: $file ($(($size / 1024 / 1024))MB)"
+            echo "Consider using Git LFS or a CDN for large assets."
+        fi
+    fi
+done
+
+# Run npm audit (optional - can be slow)
+if [ -f "package.json" ]; then
+    echo "🔒 Running npm audit..."
+    npm audit --audit-level=high --production 2>&1 | grep -E "(high|critical)" && {
+        echo "❌ ERROR: High or critical vulnerabilities found!"
+        echo "Run 'npm audit fix' to resolve them."
+        exit 1
+    }
+fi
+
+# Run linter (optional)
+if [ -f "package.json" ] && grep -q '"lint"' package.json; then
+    echo "🧹 Running linter..."
+    npm run lint --silent 2>&1 | grep -E "error" && {
+        echo "❌ ERROR: Linting errors found!"
+        echo "Fix linting errors before committing."
+        exit 1
+    }
+fi
+
+echo "✅ All security checks passed!"
+exit 0

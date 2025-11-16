@@ -1,0 +1,78 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0c29;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#302b63;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#24243e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ee5a6f;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ecdc4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#44a08d;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a770ef;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cf8bf3;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGradient)"/>
+  
+  <!-- Outer Glow -->
+  <circle cx="256" cy="256" r="220" fill="url(#glowGradient)" opacity="0.3"/>
+  
+  <!-- Card 1 - Left (Fire) -->
+  <g transform="translate(150, 256) rotate(-15)">
+    <rect x="-50" y="-70" width="100" height="140" rx="8" fill="url(#cardGradient1)" filter="url(#glow)"/>
+    <rect x="-45" y="-65" width="90" height="130" rx="6" fill="none" stroke="#fff" stroke-width="2" opacity="0.3"/>
+    <text x="0" y="10" font-family="Arial, sans-serif" font-size="60" text-anchor="middle" fill="#fff" filter="url(#glow)">🔥</text>
+  </g>
+  
+  <!-- Card 2 - Center (Lightning) -->
+  <g transform="translate(256, 220) rotate(0)">
+    <rect x="-55" y="-75" width="110" height="150" rx="8" fill="url(#cardGradient2)" filter="url(#glow)"/>
+    <rect x="-50" y="-70" width="100" height="140" rx="6" fill="none" stroke="#fff" stroke-width="2" opacity="0.3"/>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="70" text-anchor="middle" fill="#fff" filter="url(#glow)">⚡</text>
+  </g>
+  
+  <!-- Card 3 - Right (Ice) -->
+  <g transform="translate(362, 256) rotate(15)">
+    <rect x="-50" y="-70" width="100" height="140" rx="8" fill="url(#cardGradient3)" filter="url(#glow)"/>
+    <rect x="-45" y="-65" width="90" height="130" rx="6" fill="none" stroke="#fff" stroke-width="2" opacity="0.3"/>
+    <text x="0" y="10" font-family="Arial, sans-serif" font-size="60" text-anchor="middle" fill="#fff" filter="url(#glow)">❄️</text>
+  </g>
+  
+  <!-- Central Energy Circle -->
+  <circle cx="256" cy="340" r="60" fill="none" stroke="#ffd700" stroke-width="4" opacity="0.6" filter="url(#glow)"/>
+  <circle cx="256" cy="340" r="45" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.4"/>
+  
+  <!-- Element Symbols Around Circle -->
+  <text x="256" y="310" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#ffd700" font-weight="bold" filter="url(#glow)">ELEMENTAL</text>
+  <text x="256" y="360" font-family="Arial, sans-serif" font-size="32" text-anchor="middle" fill="#ffd700" font-weight="bold" filter="url(#glow)">BATTLE</text>
+  
+  <!-- Decorative Stars -->
+  <circle cx="180" cy="140" r="3" fill="#ffd700" opacity="0.8"/>
+  <circle cx="220" cy="120" r="2" fill="#ffd700" opacity="0.6"/>
+  <circle cx="332" cy="140" r="3" fill="#ffd700" opacity="0.8"/>
+  <circle cx="292" cy="120" r="2" fill="#ffd700" opacity="0.6"/>
+  <circle cx="256" cy="100" r="4" fill="#ffd700" opacity="0.9" filter="url(#glow)"/>
+  
+  <!-- Energy Lines -->
+  <path d="M 200 340 Q 228 320 256 340" stroke="#ffd700" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M 256 340 Q 284 320 312 340" stroke="#ffd700" stroke-width="2" fill="none" opacity="0.4"/>
+</svg>
