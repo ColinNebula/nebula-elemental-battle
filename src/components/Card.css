@@ -58,6 +58,11 @@
   border-radius: 10px;
 }
 
+/* Dark overlay for cards with background images to maintain text readability */
+.card.has-background-image::before {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.6) 100%);
+}
+
 .card-tooltip {
   position: absolute;
   top: -180px;

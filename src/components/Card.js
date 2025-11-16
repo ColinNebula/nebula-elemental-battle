@@ -88,6 +88,21 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
     return borderWidths[tier];
   };
 
+  const getCardBackgroundImage = () => {
+    const elementImages = {
+      'ELECTRICITY': `${process.env.PUBLIC_URL}/electricity-card.png`,
+      'FIRE': `${process.env.PUBLIC_URL}/fire card.png`,
+      'ICE': `${process.env.PUBLIC_URL}/ice-card.png`,
+      'WATER': `${process.env.PUBLIC_URL}/water-card.png`,
+      'EARTH': `${process.env.PUBLIC_URL}/earth_card.png`,
+      'DARK': `${process.env.PUBLIC_URL}/moon-card.png`,
+      'LIGHT': `${process.env.PUBLIC_URL}/star-card.png`,
+      'TECHNOLOGY': `${process.env.PUBLIC_URL}/tech-card.png`,
+      'METEOR': `${process.env.PUBLIC_URL}/meteor.png`
+    };
+    return elementImages[card.element] || null;
+  };
+
   const handleClick = () => {
     if (onClick && isPlayable) {
       setIsPlaying(true);
@@ -98,14 +113,20 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
     }
   };
 
+  const backgroundImage = getCardBackgroundImage();
+
   return (
     <div 
-      className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''}`}
+      className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''}`}
       onClick={handleClick}
       style={{ 
         borderColor: getElementColorLocal(card.element),
         borderWidth: getRarityBorder(),
-        '--element-color': getElementColorLocal(card.element)
+        '--element-color': getElementColorLocal(card.element),
+        backgroundImage: backgroundImage ? `url('${backgroundImage}')` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
       }}
       data-key={keyboardKey || ''}
       data-element={card.element}
