@@ -9,6 +9,25 @@ class SoundManager {
     this.volume = 0.5;
     this.musicVolume = 0.3;
     this.currentMusicIntensity = 'calm';
+    this.backgroundMusic = null;
+    this.currentTrack = null;
+    
+    // Available background music tracks
+    this.musicTracks = [
+      'At_the_End_of_All_Things.mp3',
+      'Battle_of_the_Pixelated_Cyborgs.mp3',
+      'Boss_Battle_Loop_1.mp3',
+      'Burnt_Out_Space_Hulk.mp3',
+      'Cooler_Heads_Prevail.mp3',
+      'Figuring_it_All_Out.mp3',
+      'Further_Investigation.mp3',
+      'Strange_Dealings_Afoot.mp3',
+      'Sunrise_in_Megalopolis.mp3',
+      'The_Fallout.mp3',
+      'Treat_or_Trick.mp3',
+      'Under_Cover_of_the_Myst.mp3',
+      'When_You_Risk_it_All.mp3'
+    ];
   }
 
   // Initialize all sound effects
@@ -374,50 +393,65 @@ class SoundManager {
   playMusic(intensity = 'calm') {
     if (!this.musicEnabled) return;
     
+    // If music is already playing, don't restart it
+    if (this.backgroundMusic && !this.backgroundMusic.paused) {
+      console.log('🎵 Music already playing:', this.currentTrack);
+      return;
+    }
+    
     // Stop any existing music first
     this.stopMusic();
     
     this.currentMusicIntensity = intensity;
-    // Music disabled by default - ambient oscillator can cause humming
-    // Implement with actual audio files if needed
     
-    /* Disabled ambient music oscillator to prevent humming
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.createAmbientMusic(audioContext, intensity);
+      // Select a random track
+      const randomIndex = Math.floor(Math.random() * this.musicTracks.length);
+      this.currentTrack = this.musicTracks[randomIndex];
+      
+      // Create audio element
+      this.backgroundMusic = new Audio(`${process.env.PUBLIC_URL}/${this.currentTrack}`);
+      this.backgroundMusic.volume = this.musicVolume;
+      this.backgroundMusic.loop = true;
+      
+      // Play the track
+      this.backgroundMusic.play().catch(error => {
+        console.log('Music autoplay prevented:', error);
+      });
+      
+      console.log('🎵 Now playing:', this.currentTrack);
     } catch (error) {
       console.error('Error playing music:', error);
     }
-    */
   }
 
   createAmbientMusic(audioContext, intensity) {
-    const baseFreq = intensity === 'intense' ? 220 : intensity === 'battle' ? 180 : 150;
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = baseFreq;
-    
-    gainNode.gain.setValueAtTime(this.musicVolume * 0.1, audioContext.currentTime);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.start();
-    
-    // Store for later stopping
-    this.music = { oscillator, gainNode, audioContext };
+    // Legacy method - no longer used
+    // Background music now uses MP3 files
   }
 
   stopMusic() {
+    // Stop legacy oscillator music
     if (this.music && this.music.oscillator) {
       try {
         this.music.gainNode.gain.exponentialRampToValueAtTime(0.01, this.music.audioContext.currentTime + 1);
         this.music.oscillator.stop(this.music.audioContext.currentTime + 1);
         this.music = null;
       } catch (error) {
-        console.error('Error stopping music:', error);
+        console.error('Error stopping oscillator music:', error);
+      }
+    }
+    
+    // Stop MP3 background music
+    if (this.backgroundMusic) {
+      try {
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
+        this.backgroundMusic = null;
+        this.currentTrack = null;
+        console.log('🎵 Music stopped');
+      } catch (error) {
+        console.error('Error stopping background music:', error);
       }
     }
   }
@@ -428,12 +462,35 @@ class SoundManager {
 
   setMusicVolume(volume) {
     this.musicVolume = Math.max(0, Math.min(1, volume));
+    
+    // Update legacy oscillator music
     if (this.music && this.music.gainNode) {
       this.music.gainNode.gain.value = this.musicVolume * 0.1;
     }
+    
+    // Update MP3 background music
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.musicVolume;
+    }
   }
 
-  toggleSound() {
+  pauseMusic() {
+    if (this.backgroundMusic && !this.backgroundMusic.paused) {
+      this.backgroundMusic.pause();
+      console.log('🎵 Music paused');
+    }
+  }
+
+  resumeMusic() {
+    if (this.backgroundMusic && this.backgroundMusic.paused) {
+      this.backgroundMusic.play().catch(error => {
+        console.log('Error resuming music:', error);
+      });
+      console.log('🎵 Music resumed');
+    }
+  }
+
+  toggleMusic() {
     this.enabled = !this.enabled;
     return this.enabled;
   }
@@ -446,6 +503,27 @@ class SoundManager {
       this.playMusic(this.currentMusicIntensity);
     }
     return this.musicEnabled;
+  }
+  
+  // Change to next random track
+  changeTrack() {
+    if (!this.musicEnabled) return;
+    
+    // Get a different random track
+    const availableTracks = this.musicTracks.filter(track => track !== this.currentTrack);
+    if (availableTracks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableTracks.length);
+      this.currentTrack = availableTracks[randomIndex];
+      
+      // Stop current music and play new track
+      this.stopMusic();
+      this.playMusic(this.currentMusicIntensity);
+    }
+  }
+  
+  // Get currently playing track name
+  getCurrentTrack() {
+    return this.currentTrack ? this.currentTrack.replace('.mp3', '').replace(/_/g, ' ') : 'None';
   }
 }
 

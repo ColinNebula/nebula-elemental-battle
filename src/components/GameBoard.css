@@ -1022,6 +1022,59 @@
   transform: scale(3);
   animation: cardPreviewShow 1s ease-out forwards;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.card-preview-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  pointer-events: all;
+}
+
+.confirm-card-btn,
+.back-to-deck-btn {
+  padding: 4px 8px;
+  font-size: 8px;
+  font-weight: bold;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-card-btn {
+  background: transparent;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  border-color: rgba(76, 175, 80, 0.8);
+}
+
+.confirm-card-btn:hover {
+  background: rgba(69, 160, 73, 0.3);
+  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.5);
+  transform: translateY(-1px);
+  border-color: rgba(76, 175, 80, 1);
+}
+
+.back-to-deck-btn {
+  background: transparent;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  border-color: rgba(244, 67, 54, 0.8);
+}
+
+.back-to-deck-btn:hover {
+  background: rgba(211, 47, 47, 0.3);
+  box-shadow: 0 3px 8px rgba(244, 67, 54, 0.5);
+  transform: translateY(-1px);
+  border-color: rgba(244, 67, 54, 1);
 }
 
 /* Graveyard Preview Styles */
@@ -1203,14 +1256,17 @@
   .sidebar-toggle {
     display: flex !important;
     position: fixed !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
     will-change: transform;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    width: 50px !important;
-    height: 90px !important;
+    width: 55px !important;
+    height: 100px !important;
     top: 50% !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
   }
   
   /* Position toggles at screen edges */
@@ -1223,7 +1279,8 @@
     right: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    background: rgba(30, 30, 150, 0.95) !important;
+    background: rgba(30, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
     border-left: none !important;
     border-radius: 0 12px 12px 0 !important;
   }
@@ -1237,22 +1294,23 @@
     left: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    background: rgba(100, 30, 150, 0.95) !important;
+    background: rgba(100, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
     border-right: none !important;
     border-radius: 12px 0 0 12px !important;
   }
   
-  /* When visible, keep toggles attached to sidebar */
+  /* When visible, keep toggles at edges but shift them inward slightly for better UX */
   .left-sidebar.visible .left-toggle {
-    position: absolute;
-    right: -40px;
-    left: auto;
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
   }
   
   .right-sidebar.visible .right-toggle {
-    position: absolute;
-    left: -40px;
-    right: auto;
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
   }
   
   /* Adjust sidebar width for mobile */
@@ -1515,6 +1573,9 @@
   margin-right: 5px;
 }
 
+/* End of first mobile (768px) media query */
+}
+
 /* Mobile adjustments for hand */
 @media (max-width: 768px) {
   .hand-container {
@@ -1598,23 +1659,36 @@
   /* Ensure toggles remain visible on small screens */
   .sidebar-toggle {
     display: flex !important;
-    z-index: 200;
+    z-index: 99999 !important;
+    width: 55px !important;
+    height: 100px !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
   }
   
-  .left-sidebar:not(.visible) .left-toggle {
+  .left-sidebar:not(.visible) .left-toggle,
+  .left-sidebar.visible .left-toggle,
+  .left-toggle {
     position: fixed !important;
     left: 0 !important;
-    transform: translateY(-50%) translateX(0) !important;
-    background: rgba(30, 30, 150, 0.95);
+    right: auto !important;
+    transform: translateY(-50%) !important;
+    background: rgba(30, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-left: none !important;
   }
   
-  .right-sidebar:not(.visible) .right-toggle {
+  .right-sidebar:not(.visible) .right-toggle,
+  .right-sidebar.visible .right-toggle,
+  .right-toggle {
     position: fixed !important;
     right: 0 !important;
-    transform: translateY(-50%) translateX(0) !important;
-    background: rgba(100, 30, 150, 0.95);
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    background: rgba(100, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-right: none !important;
   }
-}
 
   .turn-announcement {
     top: calc(50% - 80px);
@@ -2701,6 +2775,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Show toggles on screens 768px and below */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex !important;
+    z-index: 99999 !important;
+  }
+}
+
 .sidebar-toggle:hover {
   background: rgba(0, 0, 0, 0.9);
   border-color: rgba(255, 255, 255, 0.6);
@@ -2896,7 +2978,9 @@
   position: absolute;
   width: 70px;
   height: 100px;
-  background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border: 2px solid #333;
   border-radius: 8px;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
@@ -2913,7 +2997,6 @@
 .card-back-small:nth-child(5) { top: 12px; }
 
 .player-card-back {
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
   border: 2px solid #1976d2;
 }
 
@@ -2927,9 +3010,8 @@
 }
 
 .card-back-small::after {
-  content: '🎴';
-  opacity: 0.7;
-  font-size: 60px;
+  content: '';
+  opacity: 0;
 }
 
 .used-cards-section {
@@ -4204,32 +4286,42 @@
   .sidebar-toggle {
     display: flex !important;
     position: fixed !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
     opacity: 1 !important;
     visibility: visible !important;
-    width: 50px !important;
-    height: 90px !important;
+    width: 55px !important;
+    height: 100px !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
   }
   
   .left-toggle,
-  .left-sidebar .left-toggle {
+  .left-sidebar .left-toggle,
+  .left-sidebar:not(.visible) .left-toggle,
+  .left-sidebar.visible .left-toggle {
     position: fixed !important;
     left: 0 !important;
     right: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    background: rgba(30, 30, 150, 0.95) !important;
+    background: rgba(30, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-left: none !important;
     border-radius: 0 12px 12px 0 !important;
   }
   
   .right-toggle,
-  .right-sidebar .right-toggle {
+  .right-sidebar .right-toggle,
+  .right-sidebar:not(.visible) .right-toggle,
+  .right-sidebar.visible .right-toggle {
     position: fixed !important;
     right: 0 !important;
     left: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    background: rgba(100, 30, 150, 0.95) !important;
+    background: rgba(100, 30, 150, 0.98) !important;
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-right: none !important;
     border-radius: 12px 0 0 12px !important;
   }
   

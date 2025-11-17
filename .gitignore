@@ -119,14 +119,42 @@ build/
 dist/
 out/
 
-# security
+# Security and sensitive files
 *.key
 *.pem
 *.crt
 *.p12
 *.pfx
+*.keystore
+*.jks
 secrets/
 config/local.json
+.secrets
+.credentials
+aws-credentials.json
+gcloud-credentials.json
+
+# API keys and tokens
+.env.production
+.env.staging
+*.secret
+*-secret.json
+apikeys.json
+tokens.json
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_dsa
+id_dsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Private keys
+private*.key
+private*.pem
 
 # database
 *.db
@@ -140,12 +168,12 @@ config/local.json
 *.7z
 
 # Large assets and media files
+# NOTE: MP3 files in /public are tracked for game music
 # Images larger than 1MB should be in CDN or external storage
 *.mp4
 *.mov
 *.avi
 *.webm
-*.mp3
 *.wav
 *.flac
 *.ogg
@@ -156,6 +184,17 @@ config/local.json
 *.docx
 *.ppt
 *.pptx
+
+# Large images (over 5MB)
+*.[5-9]MB.png
+*.[1-9][0-9]MB.png
+*.[5-9]MB.jpg
+*.[1-9][0-9]MB.jpg
+
+# Video files
+*.mkv
+*.wmv
+*.flv
 
 # Backup and temporary server files
 *-server.js

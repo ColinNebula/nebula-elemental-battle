@@ -42,6 +42,7 @@ const GameBoard = ({
   const [showTurnAnnouncement, setShowTurnAnnouncement] = useState(true);
   const [showMatchBonus, setShowMatchBonus] = useState(false);
   const [cardPreview, setCardPreview] = useState(null);
+  const [pendingCardIndex, setPendingCardIndex] = useState(null);
   const [lastTurnInfo, setLastTurnInfo] = useState({ playerId: null, round: -1 });
   const [turnTimer, setTurnTimer] = useState(20);
   const gameBoardRef = useRef(null);
@@ -138,8 +139,11 @@ const GameBoard = ({
           const y = rect.height / 2 + (Math.random() - 0.5) * 100;
           
           // Sound effects
-          soundManager.playElementSound(cardPlay.card.element);
-          soundManager.playSound('cardFlip');
+          const cardStrength = cardPlay.card.modifiedStrength || cardPlay.card.strength;
+          if (soundManager) {
+            soundManager.playElementSound(cardPlay.card.element);
+            soundManager.playSound('cardFlip');
+          }
           
           // Card flip animation
           const cardElements = gameBoardRef.current.querySelectorAll('.played-card');
@@ -150,9 +154,9 @@ const GameBoard = ({
           // Particle effects
           createParticles(cardPlay.card.element, x, y, gameBoardRef.current);
           
-          // Damage numbers and power play sound
-          if ((cardPlay.card.modifiedStrength || cardPlay.card.strength) >= 10) {
-            soundManager.playSound('powerPlay');
+          // Power play and combo sounds
+          if (cardStrength >= 10) {
+            if (soundManager) soundManager.playSound('powerPlay');
             createDamageNumber(
               cardPlay.card.modifiedStrength || cardPlay.card.strength, 
               x, 
@@ -201,8 +205,11 @@ const GameBoard = ({
   // Story mode defeat countdown
   useEffect(() => {
     if (gameState?.gameOver && isStoryMode && gameState.winner !== humanPlayer?.name && gameState.winner !== 'Tie') {
-      // Player lost in story mode
+      // Player lost in story mode - show defeat countdown
       setDefeatCountdown(10);
+    } else if (gameState?.gameOver) {
+      // Game over in any other scenario - ensure defeatCountdown is null for game over screen
+      setDefeatCountdown(null);
     }
   }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, isStoryMode]);
 
@@ -242,16 +249,18 @@ const GameBoard = ({
         const winner = gameState.winner === 'Tie' ? 'tie' : gameState.winner;
         
         // Play victory or defeat sound
-        if (winner === 'tie') {
-          soundManager.playSound('victory');
-        } else if (winner === humanPlayer?.name) {
-          soundManager.playSound('victory');
-        } else {
-          soundManager.playSound('defeat');
+        if (soundManager) {
+          if (winner === 'tie') {
+            soundManager.playSound('victory');
+          } else if (winner === humanPlayer?.name) {
+            soundManager.playSound('victory');
+          } else {
+            soundManager.playSound('defeat');
+          }
+          
+          // Stop background music
+          soundManager.stopMusic();
         }
-        
-        // Stop background music
-        soundManager.stopMusic();
         
         createVictoryCelebration(winner, gameBoardRef.current);
       }, 500);
@@ -294,10 +303,12 @@ const GameBoard = ({
         setShowTurnAnnouncement(true);
         
         // Play turn sound
-        if (activePlayerId === currentPlayerId) {
-          soundManager.playSound('yourTurn');
-        } else {
-          soundManager.playSound('opponentTurn');
+        if (soundManager) {
+          if (activePlayerId === currentPlayerId) {
+            soundManager.playSound('yourTurn');
+          } else {
+            soundManager.playSound('opponentTurn');
+          }
         }
         
         // Keep announcement visible - shorter for AI turn
@@ -364,7 +375,7 @@ const GameBoard = ({
           lastAnnouncedRoundRef.current = roundToDisplay;
           setCurrentRoundNumber(roundToDisplay);
           setShowRoundAnnouncement(true);
-          soundManager.playSound('yourTurn');
+          if (soundManager) soundManager.playSound('yourTurn');
           
           // Add phase transition animation
           if (gameBoardRef.current) {
@@ -409,30 +420,35 @@ const GameBoard = ({
     }
   }, [gameState?.currentRound, gameState?.gameStarted, gameState?.gameOver, showInitialArena, arenaTheme]);
 
-  // Background music management
+  // Background music management - start once when game begins
   useEffect(() => {
+    if (!soundManager) return; // Safety check
+    
+    // Only start music once when game starts
     if (gameState?.gameStarted && !gameState?.gameOver) {
-      // Determine music intensity based on cards remaining
-      const humanCardsLeft = (humanPlayer?.hand?.length || 0) + (humanPlayer?.deck?.length || 0);
-      const aiCardsLeft = (aiPlayer?.hand?.length || 0) + (aiPlayer?.deck?.length || 0);
-      const totalCardsLeft = humanCardsLeft + aiCardsLeft;
-      
-      // Start intense music when few cards remain
-      if (totalCardsLeft <= 4) {
-        soundManager.playMusic('intense');
-      } else if (totalCardsLeft <= 10) {
-        soundManager.playMusic('battle');
-      } else {
+      // Check if music is not already playing
+      if (!soundManager.backgroundMusic) {
         soundManager.playMusic('calm');
       }
     }
     
     return () => {
-      if (gameState?.gameOver) {
+      if (soundManager && gameState?.gameOver) {
         soundManager.stopMusic();
       }
     };
-  }, [gameState?.gameStarted, gameState?.gameOver, humanPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.hand?.length, aiPlayer?.deck?.length]);
+  }, [gameState?.gameStarted, gameState?.gameOver]);
+
+  // Pause/resume background music when game is paused
+  useEffect(() => {
+    if (!soundManager) return;
+    
+    if (isPaused) {
+      soundManager.pauseMusic();
+    } else {
+      soundManager.resumeMusic();
+    }
+  }, [isPaused]);
 
   // Handle round announcement completion
   const handleRoundAnnouncementComplete = () => {
@@ -445,10 +461,12 @@ const GameBoard = ({
       setShowTurnAnnouncement(true);
       
       // Play turn sound
-      if (activePlayerId === currentPlayerId) {
-        soundManager.playSound('yourTurn');
-      } else {
-        soundManager.playSound('opponentTurn');
+      if (soundManager) {
+        if (activePlayerId === currentPlayerId) {
+          soundManager.playSound('yourTurn');
+        } else {
+          soundManager.playSound('opponentTurn');
+        }
       }
       
       // Keep announcement visible - shorter for AI turn
@@ -503,7 +521,7 @@ const GameBoard = ({
             }, 2000);
             
             // Play timeout sound
-            soundManager.playSound('defeat');
+            if (soundManager) soundManager.playSound('defeat');
             
             if (onForfeit) {
               onForfeit();
@@ -631,7 +649,7 @@ const GameBoard = ({
               createDamageNumber(-1, x, y, gameBoardRef.current, false, false, true);
               
               // Play meteor sound
-              if (idx === 0) {
+              if (idx === 0 && soundManager) {
                 soundManager.playSound('defeat');
               }
             }
@@ -769,6 +787,53 @@ const GameBoard = ({
     }
   }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve]);
 
+  // Check if both players have 0 cards - end the game
+  useEffect(() => {
+    if (!gameState?.gameStarted || gameState?.gameOver) return;
+    
+    const humanHandEmpty = !humanPlayer?.hand || humanPlayer.hand.length === 0;
+    const aiHandEmpty = !aiPlayer?.hand || aiPlayer.hand.length === 0;
+    const humanDeckEmpty = !humanPlayer?.deck || humanPlayer.deck.length === 0;
+    const aiDeckEmpty = !aiPlayer?.deck || aiPlayer.deck.length === 0;
+    
+    // Only end game if both players have no cards in hand AND no cards in deck
+    if (humanHandEmpty && aiHandEmpty && humanDeckEmpty && aiDeckEmpty) {
+      console.log('🏁 Both players have no cards in hand and deck - ending game');
+      
+      // Manually set game over state
+      gameState.gameOver = true;
+      gameState.battlePhase = false;
+      
+      // Determine winner by comparing played cards total strength
+      const humanTotal = humanPlayer?.playedCards?.reduce((sum, card) => 
+        sum + (card.modifiedStrength || card.strength || 0), 0) || 0;
+      const aiTotal = aiPlayer?.playedCards?.reduce((sum, card) => 
+        sum + (card.modifiedStrength || card.strength || 0), 0) || 0;
+      
+      console.log('Final totals - Human:', humanTotal, 'AI:', aiTotal);
+      
+      // Set winner
+      if (humanTotal > aiTotal) {
+        gameState.winner = humanPlayer.name;
+      } else if (aiTotal > humanTotal) {
+        gameState.winner = aiPlayer.name;
+      } else {
+        gameState.winner = 'Tie';
+      }
+      
+      console.log('🏆 Winner:', gameState.winner);
+      
+      // Force a state update to trigger game over UI
+      if (onPlayCard) {
+        // Trigger a dummy update to refresh the game state
+        setTimeout(() => {
+          const dummyEvent = new CustomEvent('gameStateUpdate');
+          window.dispatchEvent(dummyEvent);
+        }, 100);
+      }
+    }
+  }, [humanPlayer?.hand?.length, aiPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.deck?.length, gameState?.gameStarted, gameState?.gameOver, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState, humanPlayer, aiPlayer, onPlayCard]);
+
   const handleCardClick = (cardIndex) => {
     // Block actions during initial arena display
     if (showInitialArena) {
@@ -793,15 +858,23 @@ const GameBoard = ({
         createParticles(card.element, x, y, gameBoardRef.current);
       }
       
-      // Show card preview first
+      // Show card preview and store pending card index for confirmation
       setCardPreview({ card, isPlayer: true });
-      
-      // After 1 second, hide preview and play card
-      setTimeout(() => {
-        setCardPreview(null);
-        onPlayCard(cardIndex);
-      }, 1000);
+      setPendingCardIndex(cardIndex);
     }
+  };
+
+  const handleConfirmCardPlay = () => {
+    if (pendingCardIndex !== null) {
+      setCardPreview(null);
+      setPendingCardIndex(null);
+      onPlayCard(pendingCardIndex);
+    }
+  };
+
+  const handleBackToDeck = () => {
+    setCardPreview(null);
+    setPendingCardIndex(null);
   };
 
   const handlePauseResume = () => {
@@ -1095,6 +1168,16 @@ const GameBoard = ({
           ) : (
             <div className={`card-preview-container ${cardPreview.isPlayer ? 'player-preview' : 'ai-preview'}`}>
               <Card card={cardPreview.card} isPlayable={false} />
+              {cardPreview.isPlayer && pendingCardIndex !== null && (
+                <div className="card-preview-actions">
+                  <button className="confirm-card-btn" onClick={handleConfirmCardPlay}>
+                    ✓ OK
+                  </button>
+                  <button className="back-to-deck-btn" onClick={handleBackToDeck}>
+                    ← Back
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1260,7 +1343,7 @@ const GameBoard = ({
                 <h4>Remaining Cards</h4>
                 <div className="vertical-card-stack">
                   {Array(aiPlayer.cardCount).fill(null).map((_, i) => (
-                    <div key={i} className="card-back-small"></div>
+                    <div key={i} className="card-back-small" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
                   ))}
                 </div>
               </div>
@@ -1270,7 +1353,7 @@ const GameBoard = ({
                   <h4>Reserve Deck ({aiPlayer.deck.length})</h4>
                   <div className="reserve-deck-stack">
                     {aiPlayer.deck.map((_, i) => (
-                      <div key={i} className="card-back-small" style={{ top: `${i * 2}px` }}></div>
+                      <div key={i} className="card-back-small" style={{ top: `${i * 2}px`, backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
                     ))}
                   </div>
                 </div>
@@ -1307,7 +1390,7 @@ const GameBoard = ({
                 <h4>Remaining Cards</h4>
                 <div className="vertical-card-stack">
                   {Array(humanPlayer.cardCount).fill(null).map((_, i) => (
-                    <div key={i} className="card-back-small player-card-back"></div>
+                    <div key={i} className="card-back-small player-card-back" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
                   ))}
                 </div>
               </div>
@@ -1317,7 +1400,7 @@ const GameBoard = ({
                   <h4>Reserve Deck ({humanPlayer.deck.length})</h4>
                   <div className="reserve-deck-stack">
                     {humanPlayer.deck.map((_, i) => (
-                      <div key={i} className="card-back-small player-card-back" style={{ top: `${i * 2}px` }}></div>
+                      <div key={i} className="card-back-small player-card-back" style={{ top: `${i * 2}px`, backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
                     ))}
                   </div>
                 </div>

@@ -1,12 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './StoryMode.css';
 import { STORY_MODE_CAMPAIGN, AI_PERSONALITIES } from '../utils/aiPersonalities';
 
 function StoryMode({ onStartBattle, onBack, completedStages = [] }) {
   const [selectedStage, setSelectedStage] = useState(null);
   const [showStageDetails, setShowStageDetails] = useState(false);
+  const storyMusicRef = useRef(null);
 
   const currentStage = completedStages.length;
+
+  useEffect(() => {
+    // Play Under Cover of the Myst music when story mode opens
+    storyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
+    storyMusicRef.current.volume = 0.3;
+    storyMusicRef.current.loop = true;
+    storyMusicRef.current.play().catch(err => console.log('Story music autoplay prevented:', err));
+
+    return () => {
+      // Stop music when leaving story mode
+      if (storyMusicRef.current) {
+        storyMusicRef.current.pause();
+        storyMusicRef.current = null;
+      }
+    };
+  }, []);
 
   const handleStageClick = (stage) => {
     // Only allow playing current stage or replaying completed stages

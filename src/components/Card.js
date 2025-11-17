@@ -46,6 +46,83 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
     return getElementDisplay(element, accessibilitySettings.showElementIcons);
   };
 
+  // Generate card name based on element and strength
+  const getCardName = () => {
+    const strength = card.modifiedStrength || card.strength;
+    const names = {
+      FIRE: {
+        low: ['Spark', 'Ember', 'Flame'],
+        mid: ['Blaze', 'Inferno', 'Pyre'],
+        high: ['Phoenix', 'Infernal Lord', 'Solar Flare']
+      },
+      ICE: {
+        low: ['Frost', 'Chill', 'Snowflake'],
+        mid: ['Glacier', 'Blizzard', 'Freeze'],
+        high: ['Frost Titan', 'Eternal Winter', 'Ice Queen']
+      },
+      WATER: {
+        low: ['Droplet', 'Stream', 'Ripple'],
+        mid: ['Wave', 'Torrent', 'Cascade'],
+        high: ['Tidal Wave', 'Leviathan', 'Ocean King']
+      },
+      ELECTRICITY: {
+        low: ['Static', 'Spark', 'Charge'],
+        mid: ['Bolt', 'Thunder', 'Storm'],
+        high: ['Thunderlord', 'Zeus Strike', 'Lightning God']
+      },
+      EARTH: {
+        low: ['Pebble', 'Stone', 'Rock'],
+        mid: ['Boulder', 'Quake', 'Tremor'],
+        high: ['Mountain', 'Earth Titan', 'Avalanche']
+      },
+      POWER: {
+        low: ['Energy', 'Force', 'Pulse'],
+        mid: ['Surge', 'Nova', 'Burst'],
+        high: ['Supernova', 'Cosmic Force', 'Star Power']
+      },
+      LIGHT: {
+        low: ['Gleam', 'Glow', 'Shine'],
+        mid: ['Radiance', 'Beam', 'Flash'],
+        high: ['Solar Flare', 'Holy Light', 'Divine Ray']
+      },
+      DARK: {
+        low: ['Shadow', 'Shade', 'Gloom'],
+        mid: ['Eclipse', 'Void', 'Abyss'],
+        high: ['Black Hole', 'Dark Matter', 'Oblivion']
+      },
+      METEOR: {
+        low: ['Asteroid', 'Comet', 'Rock'],
+        mid: ['Meteor', 'Fireball', 'Impact'],
+        high: ['Extinction', 'Armageddon', 'Planet Killer']
+      },
+      NEUTRAL: {
+        low: ['Echo', 'Mimic', 'Copy'],
+        mid: ['Adapter', 'Shifter', 'Mirror'],
+        high: ['Omni Card', 'Versatile', 'Universal']
+      },
+      TECHNOLOGY: {
+        low: ['Bot', 'Drone', 'Circuit'],
+        mid: ['Android', 'Cyborg', 'Mech'],
+        high: ['AI Overlord', 'Omega Unit', 'Tech God']
+      }
+    };
+
+    const elementNames = names[card.element] || names.NEUTRAL;
+    let tier;
+    
+    if (strength <= 4) {
+      tier = 'low';
+    } else if (strength <= 8) {
+      tier = 'mid';
+    } else {
+      tier = 'high';
+    }
+
+    const tierNames = elementNames[tier] || elementNames.mid;
+    const index = Math.abs(card.id?.charCodeAt(0) || 0) % tierNames.length;
+    return tierNames[index];
+  };
+
   const getTierColor = (tier) => {
     const colors = {
       'COMMON': '#9e9e9e',
@@ -169,6 +246,7 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
         <span className="element-icon-large" style={{ color: getElementColorLocal(card.element) }}>
           {getElementIcon(card.element)}
         </span>
+        <div className="card-name">{getCardName()}</div>
         <div className="strength-large">{card.modifiedStrength || card.strength}</div>
         {card.tier && (
           <div className="card-tier" style={{ color: getTierColor(card.tier) }}>

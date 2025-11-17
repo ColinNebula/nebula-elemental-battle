@@ -27,26 +27,72 @@ const Inventory = ({
     ...Object.values(EQUIPMENT)
   ]);
 
+  // Helper function to calculate equipment bonuses from plain inventory object
+  const getEquipmentBonuses = (inv) => {
+    const bonuses = {
+      strengthBoost: 0,
+      elementBoosts: {},
+      damageReduction: 0,
+      shieldRegen: 0,
+      extraCardDraw: 0,
+      turnTimeBonus: 0,
+      deckSizeBonus: 0,
+      elementMatchBonus: 0
+    };
+
+    if (!inv || !inv.equipment) return bonuses;
+
+    Object.values(inv.equipment).forEach(item => {
+      if (!item) return;
+
+      switch (item.effect) {
+        case 'strength_boost':
+          bonuses.strengthBoost += item.value;
+          break;
+        case 'element_boost':
+          bonuses.elementBoosts[item.element] = (bonuses.elementBoosts[item.element] || 0) + item.value;
+          break;
+        case 'damage_reduction':
+          bonuses.damageReduction += item.value;
+          break;
+        case 'shield_regen':
+          bonuses.shieldRegen += item.value;
+          break;
+        case 'card_draw':
+          bonuses.extraCardDraw += item.value;
+          break;
+        case 'turn_time':
+          bonuses.turnTimeBonus += item.value;
+          break;
+        case 'deck_size':
+          bonuses.deckSizeBonus += item.value;
+          break;
+        case 'element_mastery':
+          bonuses.elementMatchBonus += item.value;
+          break;
+      }
+    });
+
+    return bonuses;
+  };
+
   const handleUseConsumable = (itemId) => {
-    const result = inventory.useConsumable(itemId);
-    if (result.success && onUseConsumable) {
-      onUseConsumable(result.item);
+    if (onUseConsumable) {
+      onUseConsumable(itemId);
     }
     setSelectedItem(null);
   };
 
   const handleEquip = (item) => {
-    const result = inventory.equipItem(item);
-    if (result.success && onEquipItem) {
-      onEquipItem(result.equipped, result.unequipped);
+    if (onEquipItem) {
+      onEquipItem(item);
     }
     setSelectedItem(null);
   };
 
   const handleUnequip = (slot) => {
-    const result = inventory.unequipItem(slot);
-    if (result.success && onUnequipItem) {
-      onUnequipItem(result.item);
+    if (onUnequipItem) {
+      onUnequipItem(slot);
     }
   };
 
@@ -418,12 +464,12 @@ const Inventory = ({
 
         <div className="inventory-footer">
           <div className="currency-display">
-            💰 Gold: {inventory.currency}
+            💰 Gold: {inventory.currency || 0}
           </div>
           <div className="equipment-bonuses">
             <strong>Active Bonuses:</strong>
             {(() => {
-              const bonuses = inventory.getEquipmentBonuses();
+              const bonuses = getEquipmentBonuses(inventory);
               const bonusTexts = [];
               if (bonuses.strengthBoost > 0) bonusTexts.push(`+${bonuses.strengthBoost} Strength`);
               if (bonuses.damageReduction > 0) bonusTexts.push(`-${bonuses.damageReduction} Damage Taken`);
