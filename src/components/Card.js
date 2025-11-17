@@ -89,18 +89,30 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
   };
 
   const getCardBackgroundImage = () => {
+    const basePath = process.env.PUBLIC_URL || '';
     const elementImages = {
-      'ELECTRICITY': `${process.env.PUBLIC_URL}/electricity-card.png`,
-      'FIRE': `${process.env.PUBLIC_URL}/fire card.png`,
-      'ICE': `${process.env.PUBLIC_URL}/ice-card.png`,
-      'WATER': `${process.env.PUBLIC_URL}/water-card.png`,
-      'EARTH': `${process.env.PUBLIC_URL}/earth_card.png`,
-      'DARK': `${process.env.PUBLIC_URL}/moon-card.png`,
-      'LIGHT': `${process.env.PUBLIC_URL}/star-card.png`,
-      'TECHNOLOGY': `${process.env.PUBLIC_URL}/tech-card.png`,
-      'METEOR': `${process.env.PUBLIC_URL}/meteor.png`
+      'ELECTRICITY': `${basePath}/electricity-card.png`,
+      'FIRE': `${basePath}/fire card.png`,
+      'ICE': `${basePath}/ice-card.png`,
+      'WATER': `${basePath}/water-card.png`,
+      'EARTH': `${basePath}/earth_card.png`,
+      'DARK': `${basePath}/moon-card.png`,
+      'LIGHT': `${basePath}/star-card.png`,
+      'TECHNOLOGY': `${basePath}/tech-card.png`,
+      'METEOR': `${basePath}/meteor.png`,
+      'NATURE': null, // No image yet
+      'POWER': null // No image yet
     };
-    return elementImages[card.element] || null;
+    
+    const element = card?.element || null;
+    const imagePath = elementImages[element] !== undefined ? elementImages[element] : null;
+    
+    // Debug logging
+    if (element && imagePath) {
+      console.log(`Card element: ${element}, Image path: ${imagePath}`);
+    }
+    
+    return imagePath;
   };
 
   const handleClick = () => {
@@ -123,10 +135,7 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
         borderColor: getElementColorLocal(card.element),
         borderWidth: getRarityBorder(),
         '--element-color': getElementColorLocal(card.element),
-        backgroundImage: backgroundImage ? `url('${backgroundImage}')` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        '--card-bg-image': backgroundImage ? `url('${backgroundImage}')` : 'none'
       }}
       data-key={keyboardKey || ''}
       data-element={card.element}
