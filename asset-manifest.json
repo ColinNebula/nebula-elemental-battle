@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/nebula-elemental-battle/static/css/main.18f7e459.css",
-    "main.js": "/nebula-elemental-battle/static/js/main.508b8576.js",
+    "main.js": "/nebula-elemental-battle/static/js/main.e5c597aa.js",
     "static/js/206.6c07afc3.chunk.js": "/nebula-elemental-battle/static/js/206.6c07afc3.chunk.js",
     "static/media/mech3.png": "/nebula-elemental-battle/static/media/mech3.30680e3fea301afb9a8c.png",
     "index.html": "/nebula-elemental-battle/index.html"
   },
   "entrypoints": [
     "static/css/main.18f7e459.css",
-    "static/js/main.508b8576.js"
+    "static/js/main.e5c597aa.js"
   ]
 }
