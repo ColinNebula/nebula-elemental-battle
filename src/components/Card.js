@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import CardTooltip from './CardTooltip';
 import './Card.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 
 const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isPlaying, setIsPlaying] = useState(false);
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     colorblindMode: 'none',
     showElementIcons: true,
     highContrast: false
   });
+
+  const handleMouseEnter = (e) => {
+    if (card) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      });
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+  };
 
   // Load accessibility settings
   useEffect(() => {
@@ -103,7 +120,7 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
       TECHNOLOGY: {
         low: ['Bot', 'Drone', 'Circuit'],
         mid: ['Android', 'Cyborg', 'Mech'],
-        high: ['AI Overlord', 'Omega Unit', 'Tech God']
+        high: ['AI Core', 'Omega', 'Tech Lord']
       }
     };
 
@@ -205,22 +222,25 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
   const backgroundImage = getCardBackgroundImage();
 
   return (
-    <div 
-      className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''}`}
-      onClick={handleClick}
-      style={{ 
-        borderColor: getElementColorLocal(card.element),
-        borderWidth: getRarityBorder(),
-        '--element-color': getElementColorLocal(card.element),
-        '--card-bg-image': backgroundImage ? `url('${backgroundImage}')` : 'none'
-      }}
-      data-key={keyboardKey || ''}
-      data-element={card.element}
-      data-colorblind={accessibilitySettings.colorblindMode !== 'none' ? 'true' : 'false'}
-      role="button"
-      tabIndex={isPlayable ? 0 : -1}
-      aria-label={`${card.element} card with strength ${card.modifiedStrength || card.strength}`}
-    >
+    <>
+      <div 
+        className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''}`}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ 
+          borderColor: getElementColorLocal(card.element),
+          borderWidth: getRarityBorder(),
+          '--element-color': getElementColorLocal(card.element),
+          '--card-bg-image': backgroundImage ? `url('${backgroundImage}')` : 'none'
+        }}
+        data-key={keyboardKey || ''}
+        data-element={card.element}
+        data-colorblind={accessibilitySettings.colorblindMode !== 'none' ? 'true' : 'false'}
+        role="button"
+        tabIndex={isPlayable ? 0 : -1}
+        aria-label={`${card.element} card with strength ${card.modifiedStrength || card.strength}`}
+      >
       {card.isLegendary && <div className="legendary-glow"></div>}
       {accessibilitySettings.colorblindMode !== 'none' && (
         <div className="element-label-overlay">
@@ -278,6 +298,10 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
         )}
       </div>
     </div>
+    {showTooltip && isPlayable && (
+      <CardTooltip card={card} position={tooltipPosition} />
+    )}
+    </>
   );
 };
 

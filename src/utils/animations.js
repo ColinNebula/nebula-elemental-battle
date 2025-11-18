@@ -340,3 +340,280 @@ export const createComboMultiplierAnimation = (text, x, y, container) => {
   
   return combo;
 };
+
+// Enhanced element-specific play animations
+export const createElementPlayAnimation = (element, cardElement, container) => {
+  if (!cardElement || !container) return null;
+
+  const animations = [];
+  
+  try {
+    const rect = cardElement.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const centerX = rect.left - containerRect.left + rect.width / 2;
+    const centerY = rect.top - containerRect.top + rect.height / 2;
+
+  switch (element) {
+    case 'FIRE':
+      // Burst into flames
+      for (let i = 0; i < 15; i++) {
+        const flame = document.createElement('div');
+        flame.className = 'element-animation fire-burst';
+        flame.textContent = ['🔥', '🔴', '🟠'][Math.floor(Math.random() * 3)];
+        flame.style.left = `${centerX}px`;
+        flame.style.top = `${centerY}px`;
+        const angle = (i / 15) * Math.PI * 2;
+        const distance = 80 + Math.random() * 40;
+        flame.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+        flame.style.setProperty('--ty', `${Math.sin(angle) * distance - 50}px`);
+        flame.style.animationDelay = `${i * 0.05}s`;
+        container.appendChild(flame);
+        animations.push(flame);
+        setTimeout(() => flame.remove(), 1200);
+      }
+      cardElement.classList.add('fire-glow');
+      setTimeout(() => cardElement.classList.remove('fire-glow'), 1000);
+      break;
+
+    case 'ICE':
+      // Freeze effect with ice crystals
+      const iceOverlay = document.createElement('div');
+      iceOverlay.className = 'element-animation ice-overlay';
+      iceOverlay.style.left = `${centerX - 75}px`;
+      iceOverlay.style.top = `${centerY - 75}px`;
+      container.appendChild(iceOverlay);
+      animations.push(iceOverlay);
+      setTimeout(() => iceOverlay.remove(), 1500);
+
+      for (let i = 0; i < 20; i++) {
+        const crystal = document.createElement('div');
+        crystal.className = 'element-animation ice-crystal';
+        crystal.textContent = '❄️';
+        crystal.style.left = `${centerX + (Math.random() - 0.5) * 150}px`;
+        crystal.style.top = `${centerY + (Math.random() - 0.5) * 150}px`;
+        crystal.style.animationDelay = `${i * 0.05}s`;
+        container.appendChild(crystal);
+        animations.push(crystal);
+        setTimeout(() => crystal.remove(), 1500);
+      }
+      break;
+
+    case 'WATER':
+      // Splash and ripple effect
+      const ripple = document.createElement('div');
+      ripple.className = 'element-animation water-ripple';
+      ripple.style.left = `${centerX}px`;
+      ripple.style.top = `${centerY}px`;
+      container.appendChild(ripple);
+      animations.push(ripple);
+      setTimeout(() => ripple.remove(), 1500);
+
+      for (let i = 0; i < 12; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'element-animation water-splash';
+        drop.textContent = '💧';
+        drop.style.left = `${centerX}px`;
+        drop.style.top = `${centerY}px`;
+        const angle = (i / 12) * Math.PI * 2;
+        drop.style.setProperty('--tx', `${Math.cos(angle) * 60}px`);
+        drop.style.setProperty('--ty', `${Math.sin(angle) * 60}px`);
+        container.appendChild(drop);
+        animations.push(drop);
+        setTimeout(() => drop.remove(), 1000);
+      }
+      break;
+
+    case 'ELECTRICITY':
+      // Lightning bolts and sparks
+      for (let i = 0; i < 8; i++) {
+        const bolt = document.createElement('div');
+        bolt.className = 'element-animation electric-bolt';
+        bolt.textContent = '⚡';
+        bolt.style.left = `${centerX}px`;
+        bolt.style.top = `${centerY}px`;
+        const angle = (i / 8) * Math.PI * 2;
+        bolt.style.setProperty('--tx', `${Math.cos(angle) * 100}px`);
+        bolt.style.setProperty('--ty', `${Math.sin(angle) * 100}px`);
+        bolt.style.animationDelay = `${i * 0.08}s`;
+        container.appendChild(bolt);
+        animations.push(bolt);
+        setTimeout(() => bolt.remove(), 800);
+      }
+      
+      const flash = document.createElement('div');
+      flash.className = 'element-animation electric-flash';
+      flash.style.left = `${centerX - 100}px`;
+      flash.style.top = `${centerY - 100}px`;
+      container.appendChild(flash);
+      animations.push(flash);
+      setTimeout(() => flash.remove(), 300);
+      break;
+
+    case 'EARTH':
+      // Rocks and dust
+      for (let i = 0; i < 10; i++) {
+        const rock = document.createElement('div');
+        rock.className = 'element-animation earth-rock';
+        rock.textContent = ['🪨', '🌍', '⛰️'][Math.floor(Math.random() * 3)];
+        rock.style.left = `${centerX + (Math.random() - 0.5) * 100}px`;
+        rock.style.top = `${centerY + 50}px`;
+        rock.style.setProperty('--ty', `${-100 - Math.random() * 50}px`);
+        rock.style.animationDelay = `${i * 0.1}s`;
+        container.appendChild(rock);
+        animations.push(rock);
+        setTimeout(() => rock.remove(), 1500);
+      }
+      break;
+
+    case 'LIGHT':
+      // Radiant beams
+      const lightBurst = document.createElement('div');
+      lightBurst.className = 'element-animation light-burst';
+      lightBurst.style.left = `${centerX}px`;
+      lightBurst.style.top = `${centerY}px`;
+      container.appendChild(lightBurst);
+      animations.push(lightBurst);
+      setTimeout(() => lightBurst.remove(), 1000);
+
+      for (let i = 0; i < 16; i++) {
+        const beam = document.createElement('div');
+        beam.className = 'element-animation light-beam';
+        beam.style.left = `${centerX}px`;
+        beam.style.top = `${centerY}px`;
+        beam.style.transform = `rotate(${i * 22.5}deg)`;
+        container.appendChild(beam);
+        animations.push(beam);
+        setTimeout(() => beam.remove(), 800);
+      }
+      break;
+
+    case 'DARK':
+      // Shadow expansion
+      const shadow = document.createElement('div');
+      shadow.className = 'element-animation dark-shadow';
+      shadow.style.left = `${centerX}px`;
+      shadow.style.top = `${centerY}px`;
+      container.appendChild(shadow);
+      animations.push(shadow);
+      setTimeout(() => shadow.remove(), 1200);
+
+      for (let i = 0; i < 12; i++) {
+        const wisp = document.createElement('div');
+        wisp.className = 'element-animation dark-wisp';
+        wisp.textContent = '🌑';
+        wisp.style.left = `${centerX}px`;
+        wisp.style.top = `${centerY}px`;
+        const angle = (i / 12) * Math.PI * 2;
+        wisp.style.setProperty('--tx', `${Math.cos(angle) * 80}px`);
+        wisp.style.setProperty('--ty', `${Math.sin(angle) * 80}px`);
+        wisp.style.animationDelay = `${i * 0.06}s`;
+        container.appendChild(wisp);
+        animations.push(wisp);
+        setTimeout(() => wisp.remove(), 1500);
+      }
+      break;
+
+    case 'TECHNOLOGY':
+      // Digital glitch effect
+      const glitch = document.createElement('div');
+      glitch.className = 'element-animation tech-glitch';
+      glitch.style.left = `${centerX - 75}px`;
+      glitch.style.top = `${centerY - 75}px`;
+      glitch.textContent = '⚙️';
+      container.appendChild(glitch);
+      animations.push(glitch);
+      setTimeout(() => glitch.remove(), 1000);
+
+      for (let i = 0; i < 8; i++) {
+        const pixel = document.createElement('div');
+        pixel.className = 'element-animation tech-pixel';
+        pixel.style.left = `${centerX + (Math.random() - 0.5) * 120}px`;
+        pixel.style.top = `${centerY + (Math.random() - 0.5) * 120}px`;
+        pixel.style.backgroundColor = ['#00ff00', '#0000ff', '#ff00ff'][Math.floor(Math.random() * 3)];
+        container.appendChild(pixel);
+        animations.push(pixel);
+        setTimeout(() => pixel.remove(), 800);
+      }
+      break;
+
+    case 'METEOR':
+      // Meteor impact
+      const impact = document.createElement('div');
+      impact.className = 'element-animation meteor-impact';
+      impact.textContent = '☄️';
+      impact.style.left = `${centerX}px`;
+      impact.style.top = `${centerY - 150}px`;
+      container.appendChild(impact);
+      animations.push(impact);
+      setTimeout(() => impact.remove(), 1000);
+
+      const shockwave = document.createElement('div');
+      shockwave.className = 'element-animation meteor-shockwave';
+      shockwave.style.left = `${centerX}px`;
+      shockwave.style.top = `${centerY}px`;
+      container.appendChild(shockwave);
+      animations.push(shockwave);
+      setTimeout(() => shockwave.remove(), 1200);
+      break;
+
+    default:
+      // Default sparkle effect
+      for (let i = 0; i < 8; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'element-animation default-sparkle';
+        sparkle.textContent = '✨';
+        sparkle.style.left = `${centerX}px`;
+        sparkle.style.top = `${centerY}px`;
+        const angle = (i / 8) * Math.PI * 2;
+        sparkle.style.setProperty('--tx', `${Math.cos(angle) * 60}px`);
+        sparkle.style.setProperty('--ty', `${Math.sin(angle) * 60}px`);
+        container.appendChild(sparkle);
+        animations.push(sparkle);
+        setTimeout(() => sparkle.remove(), 1000);
+      }
+  }
+
+  return animations;
+  } catch (error) {
+    console.warn('Error in createElementPlayAnimation:', error);
+    return [];
+  }
+};
+
+// Victory pose with enhanced animations
+export const createEnhancedVictoryPose = (winner, container) => {
+  if (!container) return null;
+
+  const pose = document.createElement('div');
+  pose.className = 'enhanced-victory-pose';
+  
+  // Animated character/trophy
+  const trophy = document.createElement('div');
+  trophy.className = 'victory-trophy';
+  trophy.textContent = '🏆';
+  pose.appendChild(trophy);
+
+  // Winner text
+  const text = document.createElement('div');
+  text.className = 'victory-pose-text';
+  text.textContent = winner === 'Tie' ? '🤝 TIE GAME! 🤝' : `🎉 ${winner} WINS! 🎉`;
+  pose.appendChild(text);
+
+  // Fireworks
+  for (let i = 0; i < 20; i++) {
+    const firework = document.createElement('div');
+    firework.className = 'victory-firework';
+    firework.textContent = ['💫', '⭐', '✨', '🌟'][Math.floor(Math.random() * 4)];
+    firework.style.left = `${Math.random() * 100}%`;
+    firework.style.animationDelay = `${Math.random() * 2}s`;
+    pose.appendChild(firework);
+  }
+
+  container.appendChild(pose);
+
+  setTimeout(() => {
+    pose.remove();
+  }, 4000);
+
+  return pose;
+};

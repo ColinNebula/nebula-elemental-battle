@@ -16,7 +16,9 @@ import {
   createPhaseTransition,
   createShuffleAnimation,
   createCardFlipAnimation,
-  createComboMultiplierAnimation
+  createComboMultiplierAnimation,
+  createElementPlayAnimation,
+  createEnhancedVictoryPose
 } from '../utils/animations';
 import soundManager from '../utils/sounds';
 import { getCurrentThemes, HAND_THEMES, ARENA_THEMES } from '../utils/themes';
@@ -246,11 +248,11 @@ const GameBoard = ({
         // Check if ref is still valid after timeout
         if (!gameBoardRef.current) return;
         
-        const winner = gameState.winner === 'Tie' ? 'tie' : gameState.winner;
+        const winner = gameState.winner === 'Tie' ? 'Tie' : gameState.winner;
         
         // Play victory or defeat sound
         if (soundManager) {
-          if (winner === 'tie') {
+          if (winner === 'Tie') {
             soundManager.playSound('victory');
           } else if (winner === humanPlayer?.name) {
             soundManager.playSound('victory');
@@ -262,7 +264,11 @@ const GameBoard = ({
           soundManager.stopMusic();
         }
         
-        createVictoryCelebration(winner, gameBoardRef.current);
+        // Create enhanced victory pose animation
+        createEnhancedVictoryPose(winner, gameBoardRef.current);
+        
+        // Also create traditional victory celebration
+        createVictoryCelebration(winner === 'Tie' ? 'tie' : winner, gameBoardRef.current);
       }, 500);
     }
   }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name]);
@@ -705,7 +711,10 @@ const GameBoard = ({
         battlePhase: gameState.battlePhase
       });
       
-      // Wait 5 seconds for round/turn announcements, then force AI to play if still stuck
+      // Use shorter delay (1.5s) if turn announcement is not showing (forfeit scenario)
+      // Use longer delay (5s) if announcements might be showing
+      const delay = showTurnAnnouncement || showRoundAnnouncement || showInitialArena ? 5000 : 1500;
+      
       const watchdogTimer = setTimeout(() => {
         // Don't force AI to play during initial arena display
         if (showInitialArena) {
@@ -724,7 +733,7 @@ const GameBoard = ({
           const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
           onPlayCard(randomIndex, aiPlayer.id);
         }
-      }, 5000); // Increased from 3000ms to allow for round announcement
+      }, delay);
       
       return () => clearTimeout(watchdogTimer);
     }
@@ -793,12 +802,10 @@ const GameBoard = ({
     
     const humanHandEmpty = !humanPlayer?.hand || humanPlayer.hand.length === 0;
     const aiHandEmpty = !aiPlayer?.hand || aiPlayer.hand.length === 0;
-    const humanDeckEmpty = !humanPlayer?.deck || humanPlayer.deck.length === 0;
-    const aiDeckEmpty = !aiPlayer?.deck || aiPlayer.deck.length === 0;
     
-    // Only end game if both players have no cards in hand AND no cards in deck
-    if (humanHandEmpty && aiHandEmpty && humanDeckEmpty && aiDeckEmpty) {
-      console.log('🏁 Both players have no cards in hand and deck - ending game');
+    // End game if both players have no cards in hand
+    if (humanHandEmpty && aiHandEmpty) {
+      console.log('🏁 Both players have no cards in hand - ending game');
       
       // Manually set game over state
       gameState.gameOver = true;
@@ -865,7 +872,25 @@ const GameBoard = ({
   };
 
   const handleConfirmCardPlay = () => {
-    if (pendingCardIndex !== null) {
+    if (pendingCardIndex !== null && currentPlayer) {
+      const card = currentPlayer.hand[pendingCardIndex];
+      
+      // Trigger enhanced element play animation
+      if (gameBoardRef.current && card) {
+        // Find the card element being played
+        const cardElements = gameBoardRef.current.querySelectorAll('.hand .card');
+        const cardElement = cardElements[pendingCardIndex];
+        
+        // Only trigger animation if card element exists
+        if (cardElement && typeof cardElement.getBoundingClientRect === 'function') {
+          try {
+            createElementPlayAnimation(card.element, cardElement, gameBoardRef.current);
+          } catch (error) {
+            console.warn('Error creating element animation:', error);
+          }
+        }
+      }
+      
       setCardPreview(null);
       setPendingCardIndex(null);
       onPlayCard(pendingCardIndex);

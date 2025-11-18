@@ -22,7 +22,7 @@ import securityManager from './utils/security';
 import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, getProfile, updateProfile, recoverStoryProgress, recoverProfile } from './utils/statistics';
 import { awardCoins, initializeThemes } from './utils/themes';
 import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
-import { createDefaultInventory, generateLoot } from './utils/powerUps';
+import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/powerUps';
 
 function App() {
   // Donation banner state
@@ -72,7 +72,7 @@ function App() {
   const [lastRoundWinner, setLastRoundWinner] = useState(null);
   const [playerInventory, setPlayerInventory] = useState(() => {
     const saved = localStorage.getItem('playerInventory');
-    return saved ? JSON.parse(saved) : createDefaultInventory();
+    return saved ? PlayerInventory.fromJSON(JSON.parse(saved)) : createDefaultInventory();
   });
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('gameSettings');
