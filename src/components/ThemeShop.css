@@ -23,6 +23,7 @@
   overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   border: 2px solid #3498db;
+  -webkit-overflow-scrolling: touch;
 }
 
 .theme-shop-header {

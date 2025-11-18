@@ -41,33 +41,78 @@ const GameBoard = ({
   const humanPlayer = gameState?.players?.find(p => !p.isAI);
   const aiPlayer = gameState?.players?.find(p => p.isAI);
   const isMyTurn = currentPlayer?.active;
-  const [showTurnAnnouncement, setShowTurnAnnouncement] = useState(true);
-  const [showMatchBonus, setShowMatchBonus] = useState(false);
+  
+  // UI State - Consolidated announcements and overlays
+  const [uiState, setUIState] = useState({
+    showTurnAnnouncement: true,
+    showMatchBonus: false,
+    showRoundAnnouncement: false,
+    showForfeitAnnouncement: false,
+    showMeteorStrike: false,
+    showInitialArena: false,
+    isPaused: false,
+    fadeOut: false
+  });
+  
+  // Card and game state
   const [cardPreview, setCardPreview] = useState(null);
   const [pendingCardIndex, setPendingCardIndex] = useState(null);
   const [lastTurnInfo, setLastTurnInfo] = useState({ playerId: null, round: -1 });
   const [turnTimer, setTurnTimer] = useState(20);
-  const gameBoardRef = useRef(null);
   const [lastPlayedCards, setLastPlayedCards] = useState([]);
-  const [isPaused, setIsPaused] = useState(false);
-  const [showForfeitAnnouncement, setShowForfeitAnnouncement] = useState(false);
-  const [defeatCountdown, setDefeatCountdown] = useState(null);
-  const [fadeOut, setFadeOut] = useState(false);
   const [hasAutoSkipped, setHasAutoSkipped] = useState(false);
-  const [leftSidebarVisible, setLeftSidebarVisible] = useState(false);
-  const [rightSidebarVisible, setRightSidebarVisible] = useState(false);
-  const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
+  
+  // Sidebar visibility
+  const [sidebarState, setSidebarState] = useState({
+    left: false,
+    right: false
+  });
+  
+  // Round and meteor state
   const [currentRoundNumber, setCurrentRoundNumber] = useState(1);
-  const lastAnnouncedRoundRef = useRef(0);
   const [meteorDamageDisplay, setMeteorDamageDisplay] = useState([]);
-  const handCardRefs = useRef({});
-  const [showMeteorStrike, setShowMeteorStrike] = useState(false);
   const [meteorStrikeInfo, setMeteorStrikeInfo] = useState(null);
-  const [handTheme, setHandTheme] = useState('standard');
-  const [arenaTheme, setArenaTheme] = useState('cosmic');
-  const [showInitialArena, setShowInitialArena] = useState(false);
+  const [defeatCountdown, setDefeatCountdown] = useState(null);
+  
+  // Theme state
+  const [themeState, setThemeState] = useState({
+    hand: 'standard',
+    arena: 'cosmic'
+  });
+  
+  const [sortBy, setSortBy] = useState('none');
+  
+  // Refs
+  const gameBoardRef = useRef(null);
+  const lastAnnouncedRoundRef = useRef(0);
   const hasShownInitialArenaRef = useRef(false);
-  const [sortBy, setSortBy] = useState('none'); // 'none', 'element', 'strength', 'rarity'
+  const handCardRefs = useRef({});
+  
+  // Derived values for backward compatibility
+  const showTurnAnnouncement = uiState.showTurnAnnouncement;
+  const setShowTurnAnnouncement = (val) => setUIState(prev => ({ ...prev, showTurnAnnouncement: val }));
+  const showMatchBonus = uiState.showMatchBonus;
+  const setShowMatchBonus = (val) => setUIState(prev => ({ ...prev, showMatchBonus: val }));
+  const showRoundAnnouncement = uiState.showRoundAnnouncement;
+  const setShowRoundAnnouncement = (val) => setUIState(prev => ({ ...prev, showRoundAnnouncement: val }));
+  const showForfeitAnnouncement = uiState.showForfeitAnnouncement;
+  const setShowForfeitAnnouncement = (val) => setUIState(prev => ({ ...prev, showForfeitAnnouncement: val }));
+  const showMeteorStrike = uiState.showMeteorStrike;
+  const setShowMeteorStrike = (val) => setUIState(prev => ({ ...prev, showMeteorStrike: val }));
+  const showInitialArena = uiState.showInitialArena;
+  const setShowInitialArena = (val) => setUIState(prev => ({ ...prev, showInitialArena: val }));
+  const isPaused = uiState.isPaused;
+  const setIsPaused = (val) => setUIState(prev => ({ ...prev, isPaused: val }));
+  const fadeOut = uiState.fadeOut;
+  const setFadeOut = (val) => setUIState(prev => ({ ...prev, fadeOut: val }));
+  const leftSidebarVisible = sidebarState.left;
+  const setLeftSidebarVisible = (val) => setSidebarState(prev => ({ ...prev, left: val }));
+  const rightSidebarVisible = sidebarState.right;
+  const setRightSidebarVisible = (val) => setSidebarState(prev => ({ ...prev, right: val }));
+  const handTheme = themeState.hand;
+  const setHandTheme = (val) => setThemeState(prev => ({ ...prev, hand: val }));
+  const arenaTheme = themeState.arena;
+  const setArenaTheme = (val) => setThemeState(prev => ({ ...prev, arena: val }));
 
   // Load hand theme from localStorage and listen for changes
   useEffect(() => {
@@ -318,7 +363,7 @@ const GameBoard = ({
         }
         
         // Keep announcement visible - shorter for AI turn
-        const announcementDuration = activePlayerId === currentPlayerId ? 1500 : 1200;
+        const announcementDuration = activePlayerId === currentPlayerId ? 2000 : 1500;
         const timer = setTimeout(() => {
           setShowTurnAnnouncement(false);
         }, announcementDuration);
@@ -476,7 +521,7 @@ const GameBoard = ({
       }
       
       // Keep announcement visible - shorter for AI turn
-      const announcementDuration = activePlayerId === currentPlayerId ? 1500 : 1200;
+      const announcementDuration = activePlayerId === currentPlayerId ? 2000 : 1500;
       setTimeout(() => {
         setShowTurnAnnouncement(false);
       }, announcementDuration);
@@ -494,11 +539,11 @@ const GameBoard = ({
       return;
     }
     
-    // Wait 3 seconds before starting countdown
+    // Wait 1.5 seconds before starting countdown
     let timerStarted = false;
     const startDelay = setTimeout(() => {
       timerStarted = true;
-    }, 3000);
+    }, 1500);
 
     const interval = setInterval(() => {
       if (!timerStarted) return; // Don't count down until delay completes
@@ -1249,15 +1294,17 @@ const GameBoard = ({
         </div>
       )}
 
+      {/* Left Sidebar Toggle - Outside sidebar for mobile visibility */}
+      <button 
+        className="sidebar-toggle left-toggle"
+        onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
+        aria-label="Toggle player stats"
+      >
+        {leftSidebarVisible ? '◀' : '▶'}
+      </button>
+
       {/* Left Sidebar - Both Players */}
       <div className={`left-sidebar ${leftSidebarVisible ? 'visible' : ''}`}>
-        <button 
-          className="sidebar-toggle left-toggle"
-          onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
-          aria-label="Toggle player stats"
-        >
-          {leftSidebarVisible ? '◀' : '▶'}
-        </button>
         <div className="sidebar-content">
           <h3>Player 2 (AI)</h3>
           {aiPlayer && (
@@ -1351,15 +1398,17 @@ const GameBoard = ({
         </div>
       </div>
 
+      {/* Right Sidebar Toggle - Outside sidebar for mobile visibility */}
+      <button 
+        className="sidebar-toggle right-toggle"
+        onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
+        aria-label="Toggle card decks"
+      >
+        {rightSidebarVisible ? '▶' : '◀'}
+      </button>
+
       {/* Right Sidebar - Card Decks */}
       <div className={`right-sidebar ${rightSidebarVisible ? 'visible' : ''}`}>
-        <button 
-          className="sidebar-toggle right-toggle"
-          onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
-          aria-label="Toggle card decks"
-        >
-          {rightSidebarVisible ? '▶' : '◀'}
-        </button>
         <div className="sidebar-content">
           <h3>Player 2 Cards</h3>
           {aiPlayer && gameState.gameStarted && (
