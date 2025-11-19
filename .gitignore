@@ -1,125 +1,114 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-/dist
-
-# environment variables
+# ==============================================
+# CRITICAL: Environment & Secrets
+# ==============================================
 .env
 .env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.staging
+*.secret
+*-secret.json
+apikeys.json
+tokens.json
+secrets/
+.secrets
+.credentials
 
-# logs
+# ==============================================
+# Dependencies
+# ==============================================
+/node_modules
+/.pnp
+.pnp.js
+jspm_packages/
+.npm
+.yarn/
+.pnp.*
+
+# ==============================================
+# Build & Production
+# ==============================================
+/build
+/dist
+/out
+.next
+.nuxt
+.cache
+.parcel-cache
+
+# ==============================================
+# Testing & Coverage
+# ==============================================
+/coverage
+coverage/
+*.lcov
+.nyc_output
+
+# ==============================================
+# Logs & Runtime Data
+# ==============================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 error.log
 *.log
-
-# runtime data
+*.log.*
+logs/
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# dependency directories
-node_modules/
-jspm_packages/
-
-# optional npm cache directory
-.npm
-
-# optional eslint cache
+# ==============================================
+# Cache & Temp Files
+# ==============================================
 .eslintcache
-
-# microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
-
-# optional REPL history
 .node_repl_history
-
-# output of 'npm pack'
 *.tgz
-
-# yarn integrity file
 .yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# serverless directories
 .serverless/
-
-# fusebox cache
 .fusebox/
-
-# dynamodb local files
 .dynamodb/
-
-# ternjs port file
 .tern-port
-
-# stores vscode versions used for testing vscode extensions
 .vscode-test
+*.tmp
+*.temp
+*~
 
+# ==============================================
+# OS-Specific Files
+# ==============================================
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# windows
+# Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-# ide files
+# ==============================================
+# IDE & Editors
+# ==============================================
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# temporary files
-*.tmp
-*.temp
-
-# build artifacts
-build/
-dist/
-out/
-
-# Security and sensitive files
+# ==============================================
+# Security & Keys (NEVER COMMIT)
+# ==============================================
 *.key
 *.pem
 *.crt
@@ -127,125 +116,75 @@ out/
 *.pfx
 *.keystore
 *.jks
-secrets/
-config/local.json
-.secrets
-.credentials
-aws-credentials.json
-gcloud-credentials.json
-
-# API keys and tokens
-.env.production
-.env.staging
-*.secret
-*-secret.json
-apikeys.json
-tokens.json
-
-# SSH keys
-id_rsa
-id_rsa.pub
-id_dsa
-id_dsa.pub
-id_ecdsa
-id_ecdsa.pub
-id_ed25519
-id_ed25519.pub
-
-# Private keys
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
 private*.key
 private*.pem
+aws-credentials.json
+gcloud-credentials.json
+config/local.json
 
-# database
+# ==============================================
+# Database Files
+# ==============================================
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 
-# archives
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# Large assets and media files
-# NOTE: MP3 files in /public are tracked for game music
-# Images larger than 1MB should be in CDN or external storage
+# ==============================================
+# Large Media Files (Use CDN for production)
+# ==============================================
+# NOTE: Game music MP3s in /public are tracked
 *.mp4
 *.mov
 *.avi
 *.webm
+*.mkv
+*.wmv
+*.flv
 *.wav
 *.flac
-*.ogg
 
-# Large document files
+# Large documents
 *.pdf
 *.doc
 *.docx
 *.ppt
 *.pptx
 
-# Large images (over 5MB)
-*.[5-9]MB.png
-*.[1-9][0-9]MB.png
-*.[5-9]MB.jpg
-*.[1-9][0-9]MB.jpg
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
 
-# Video files
-*.mkv
-*.wmv
-*.flv
+# ==============================================
+# Reports & Documentation
+# ==============================================
+docs/generated/
+benchmark-results/
+performance-reports/
+build-report.html
+bundle-analysis.json
 
-# Backup and temporary server files
+# ==============================================
+# Server Files (Keep specific ones)
+# ==============================================
+# Ignore all server files except specific ones
 *-server.js
 !server/
 !basic-server.js
 !secure-server.js
-error.log
-*.log.*
-logs/
+!api-server.js
+!stable-api-server.js
 
-# Generated documentation
-docs/generated/
-
-# Local development files
-.env
-.env.local
-.env.*.local
-*.local
-
-# Package lock (keep for reproducible builds)
+# ==============================================
+# Misc
+# ==============================================
+# Keep package-lock.json for reproducible builds
 # package-lock.json
-
-# OS and editor specific
-.vscode/settings.json
-.vscode/launch.json
-.vscode/*.log
-
-# Test and benchmark results
-benchmark-results/
-performance-reports/
-
-# Certificate and key files
-*.key
-*.cert
-*.csr
-*.pem
-*.p12
-*.pfx
-certs/
-keys/
-
-# Large node_modules cache
-.npm/
-.yarn/
-.pnp.*
-
-# Build size reports
-build-report.html
-bundle-analysis.json
-
-# Development databases
-*.db-journal
-*.db-wal
-*.db-shm

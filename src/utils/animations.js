@@ -348,6 +348,12 @@ export const createElementPlayAnimation = (element, cardElement, container) => {
   const animations = [];
   
   try {
+    // Additional safety check for DOM elements
+    if (!cardElement.getBoundingClientRect || !container.getBoundingClientRect) {
+      console.warn('getBoundingClientRect not available on element');
+      return null;
+    }
+    
     const rect = cardElement.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     const centerX = rect.left - containerRect.left + rect.width / 2;

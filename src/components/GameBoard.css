@@ -1248,22 +1248,41 @@
 
 /* Mobile devices */
 @media (max-width: 768px) {
-  /* Hide sidebars by default on mobile */
+  /* Sidebars positioned at viewport edges on mobile - slide in/out */
   .left-sidebar {
-    transform: translateX(-100%);
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: translateX(-100%) !important;
+    width: 85vw !important;
+    max-width: 320px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    z-index: 100 !important;
+    border-radius: 0 !important;
   }
   
   .right-sidebar {
-    transform: translateX(100%);
+    position: fixed !important;
+    right: 0 !important;
+    top: 0 !important;
+    left: auto !important;
+    transform: translateX(100%) !important;
+    width: 85vw !important;
+    max-width: 320px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    z-index: 100 !important;
+    border-radius: 0 !important;
   }
   
   /* Show sidebars when visible class is added */
   .left-sidebar.visible {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
   
   .right-sidebar.visible {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
   
   /* Show toggle buttons on mobile - critical overrides */
@@ -1296,10 +1315,11 @@
     top: 50% !important;
     transform: translateY(-50%) !important;
     z-index: 999999 !important;
-    background: linear-gradient(135deg, rgba(30, 50, 180, 0.98), rgba(20, 40, 140, 0.98)) !important;
-    border: 3px solid rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+    border: 3px solid rgba(255, 255, 255, 0.5) !important;
     border-left: none !important;
     border-radius: 0 15px 15px 0 !important;
+    backdrop-filter: blur(5px) !important;
   }
   
   /* Position right toggles at right screen edge - always visible */
@@ -1314,22 +1334,16 @@
     top: 50% !important;
     transform: translateY(-50%) !important;
     z-index: 999999 !important;
-    background: linear-gradient(135deg, rgba(120, 30, 180, 0.98), rgba(80, 20, 130, 0.98)) !important;
-    border: 3px solid rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+    border: 3px solid rgba(255, 255, 255, 0.5) !important;
     border-right: none !important;
     border-radius: 15px 0 0 15px !important;
+    backdrop-filter: blur(5px) !important;
   }
   
   /* Active state for toggles */
   .sidebar-toggle:active {
     transform: translateY(-50%) scale(0.95) !important;
-  }
-  
-  /* Adjust sidebar width for mobile */
-  .left-sidebar,
-  .right-sidebar {
-    width: 85vw;
-    max-width: 320px;
   }
   
   .game-board {
@@ -1751,6 +1765,227 @@
   }
 }
 
+/* Smartphone Landscape Mode - Primary */
+@media (max-width: 915px) and (max-height: 500px) and (orientation: landscape) {
+  /* Optimize layout for wide short screens */
+  .game-board {
+    height: 100vh;
+    font-size: 11px;
+  }
+  
+  /* Compact center battle area */
+  .center-battle-area {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 8px 15px;
+    border-radius: 12px;
+    gap: 4px;
+    min-width: 300px;
+    max-width: 50vw;
+    max-height: 70vh;
+  }
+  
+  .center-battle-area h3 {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  
+  .battle-card-row {
+    gap: 3px;
+  }
+  
+  .played-cards-container {
+    gap: 3px;
+    padding: 3px 5px;
+    min-height: 25px;
+  }
+  
+  /* Compact cards */
+  .card {
+    width: 55px !important;
+    height: 80px !important;
+    font-size: 8px;
+  }
+  
+  .card-name {
+    font-size: 7px !important;
+    padding: 2px 3px !important;
+    min-height: 22px !important;
+  }
+  
+  .card-element {
+    font-size: 16px !important;
+    margin: 3px 0 !important;
+  }
+  
+  .card-strength {
+    font-size: 14px !important;
+    padding: 2px 4px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+  }
+  
+  /* Optimize hand position */
+  .hand-container {
+    bottom: 5px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 70%;
+    max-width: 600px;
+    padding: 6px 8px;
+  }
+  
+  .hand {
+    padding: 6px 8px;
+    min-height: 90px;
+    max-height: 100px;
+    border-width: 2px;
+  }
+  
+  .hand .card {
+    margin: 0 -20px;
+  }
+  
+  .hand-label {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* Compact turn announcements */
+  .turn-announcement {
+    top: calc(50% - 30px);
+  }
+  
+  .turn-text {
+    font-size: 14px;
+    padding: 5px 12px;
+  }
+  
+  .timer-display,
+  .ai-thinking {
+    font-size: 18px;
+    margin-top: 3px;
+  }
+  
+  /* Optimize score tracker */
+  .score-tracker {
+    top: 10px;
+    left: 10px;
+    padding: 6px 10px;
+    font-size: 10px;
+    max-width: 280px;
+  }
+  
+  .score-item {
+    gap: 5px;
+  }
+  
+  .player-score,
+  .ai-score {
+    font-size: 14px;
+  }
+  
+  .round-info {
+    font-size: 11px;
+  }
+  
+  /* Compact pause button */
+  .pause-button {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+  
+  /* Sidebar adjustments for landscape */
+  .left-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 70vw;
+    max-width: 350px;
+    height: 100vh;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    padding-left: calc(10px + env(safe-area-inset-left));
+  }
+  
+  .right-sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 70vw;
+    max-width: 350px;
+    height: 100vh;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    padding-right: calc(10px + env(safe-area-inset-right));
+  }
+  
+  /* Sidebar toggle adjustments */
+  .sidebar-toggle {
+    width: 40px !important;
+    height: 70px !important;
+    font-size: 18px !important;
+  }
+  
+  /* Optimize hover effect for landscape touch */
+  .hand .card.playable:hover {
+    transform: translateY(-40px) scale(1.15) rotate(0deg) !important;
+  }
+  
+  /* Ability container optimization */
+  .ability-container {
+    max-height: 75vh;
+  }
+  
+  /* Reserve cards display */
+  .reserve-cards-display {
+    max-height: 35vh;
+  }
+  
+  /* Game log optimization */
+  .game-log {
+    max-height: 50vh;
+  }
+}
+
+/* Extra compact landscape for very short screens */
+@media (max-width: 915px) and (max-height: 400px) and (orientation: landscape) {
+  .center-battle-area {
+    padding: 6px 12px;
+    max-height: 65vh;
+  }
+  
+  .card {
+    width: 50px !important;
+    height: 72px !important;
+  }
+  
+  .hand {
+    min-height: 80px;
+    max-height: 85px;
+  }
+  
+  .hand-container {
+    width: 65%;
+    padding: 4px 6px;
+  }
+  
+  .turn-text {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .timer-display,
+  .ai-thinking {
+    font-size: 16px;
+  }
+}
+
 /* Small mobile devices */
 @media (max-width: 480px) {
   .game-board {
@@ -2148,6 +2383,14 @@
   .pause-button {
     min-width: 44px;
     min-height: 44px;
+  }
+  
+  /* Better card interaction for touch in landscape */
+  @media (orientation: landscape) {
+    .hand .card.playable:active {
+      transform: translateY(-35px) scale(1.2) rotate(0deg) !important;
+      transition: transform 0.15s ease-out;
+    }
   }
 }
 
@@ -2707,30 +2950,40 @@
 
 .left-sidebar {
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 280px;
-  height: 100vh;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  height: 85vh;
+  max-height: calc(100vh - 100px);
   background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
   border-right: 3px solid #3949ab;
+  border-radius: 15px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
-  z-index: 60;
+  z-index: 100;
   overflow-y: auto;
-  transition: transform 0.3s ease-in-out;
+  overflow-x: hidden;
+  transition: all 0.3s ease-in-out;
+  -webkit-overflow-scrolling: touch;
 }
 
 .right-sidebar {
   position: fixed;
-  right: 0;
-  top: 0;
-  width: 280px;
-  height: 100vh;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  height: 85vh;
+  max-height: calc(100vh - 100px);
   background: linear-gradient(180deg, #4a148c 0%, #6a1b9a 100%);
   border-left: 3px solid #7b1fa2;
+  border-radius: 15px;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
-  z-index: 60;
+  z-index: 100;
   overflow-y: auto;
-  transition: transform 0.3s ease-in-out;
+  overflow-x: hidden;
+  transition: all 0.3s ease-in-out;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Sidebar toggle buttons */
@@ -2814,6 +3067,22 @@
   margin-bottom: 10px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+.player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.player-avatar span {
+  display: block;
+  z-index: 1;
 }
 
 .sidebar-player-info p {
@@ -3398,7 +3667,6 @@
   max-height: calc(100vh - 280px);
   overflow: visible;
   backdrop-filter: blur(10px);
-  position: relative;
 }
 
 /* Arena overlay for extra visual effect */

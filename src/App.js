@@ -6,6 +6,7 @@ import Lobby from './components/Lobby';
 import StoryMode from './components/StoryMode';
 import GameBoard from './components/GameBoard';
 import CardSelection from './components/CardSelection';
+import CharacterSelection from './components/CharacterSelection';
 import Settings from './components/Settings';
 import Tutorial from './components/Tutorial';
 import Statistics from './components/Statistics';
@@ -27,6 +28,9 @@ import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/p
 function App() {
   // Donation banner state
   const [showDonationBanner, setShowDonationBanner] = useState(true);
+  
+  // Lobby music ref - persists across lobby, character selection, and card selection
+  const lobbyMusicRef = useRef(null);
 
   // Initialize security
   useEffect(() => {
@@ -67,6 +71,8 @@ function App() {
   const [showThemeShop, setShowThemeShop] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
+  const [showCharacterSelection, setShowCharacterSelection] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [playerProfile, setPlayerProfile] = useState(() => recoverProfile());
   const [gameStartTime, setGameStartTime] = useState(null);
   const [lastRoundWinner, setLastRoundWinner] = useState(null);
@@ -117,6 +123,24 @@ function App() {
     // Dispatch event for other components to react
     window.dispatchEvent(new Event('settingsUpdated'));
   }, [settings.colorblindMode, settings.highContrast, settings.textSize, settings.showElementIcons]);
+
+  // Manage lobby music across lobby, character selection, and card selection screens
+  useEffect(() => {
+    const isInCardSelection = gameState?.cardSelectionPhase && !gameState?.gameStarted;
+    const shouldPlayLobbyMusic = (showLobby || showCharacterSelection || isInCardSelection) && !gameState?.gameStarted;
+    
+    if (shouldPlayLobbyMusic && !lobbyMusicRef.current) {
+      // Start lobby music
+      lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
+      lobbyMusicRef.current.volume = 0.3;
+      lobbyMusicRef.current.loop = true;
+      lobbyMusicRef.current.play().catch(err => console.log('Lobby music autoplay prevented:', err));
+    } else if (!shouldPlayLobbyMusic && lobbyMusicRef.current) {
+      // Stop lobby music when game actually starts
+      lobbyMusicRef.current.pause();
+      lobbyMusicRef.current = null;
+    }
+  }, [showLobby, showCharacterSelection, gameState?.cardSelectionPhase, gameState?.gameStarted]);
 
   // Handler for settings changes that also persists to localStorage
   const handleSettingsChange = (newSettings) => {
@@ -359,8 +383,8 @@ function App() {
             }
           });
           
-          // Update inventory state
-          setPlayerInventory({ ...playerInventory });
+          // Update inventory state - preserve class instance
+          setPlayerInventory(playerInventory);
         }
         
         setPlayerProfile(updatedProfile);
@@ -472,6 +496,15 @@ function App() {
   };
 
   const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS') => {
+    console.log('🎯 Single player mode selected:', { playerName, aiPersonality });
+    // Store selection info and show character selection
+    setCurrentOpponent(aiPersonality);
+    setPlayerProfile({ ...playerProfile, name: playerName });
+    setShowLobby(false);
+    setShowCharacterSelection(true);
+  };
+
+  const startSinglePlayerGame = async (playerName, aiPersonality) => {
     console.log('🎯 Starting single player game:', { playerName, aiPersonality });
     try {
       const result = await gameClient.createRoom(aiPersonality);
@@ -630,18 +663,15 @@ function App() {
     setShowCoinToss(false);
     
     if (roomId) {
-      // Complete the coin toss in the backend and start game
+      // Store who goes first for potential future use
+      setFirstPlayer(playerWon ? playerId : gameState?.players?.find(p => p.id !== playerId)?.id);
+      
+      // Complete the coin toss in the backend
       const result = await gameClient.completeCoinToss(roomId, playerId);
       if (result && result.success) {
-        // Store who goes first for potential future use
-        setFirstPlayer(playerWon ? playerId : gameState?.players?.find(p => p.id !== playerId)?.id);
-        
-        // The backend should have already set who is active based on coin toss
-        // No need to call handleStartGame() - game is already started
-        console.log('✅ Coin toss completed, game should be active now');
+        console.log('✅ Coin toss completed, proceeding to card selection');
       } else {
         console.error('❌ Failed to complete coin toss');
-        setShowCoinToss(false);
       }
     }
   };
@@ -712,6 +742,26 @@ function App() {
     setGameState(null);
     setGameStartTime(null);
     setShowMainMenu(true);
+    setShowCharacterSelection(false);
+    setSelectedCharacter(null);
+  };
+
+  const handleCharacterSelect = async (character) => {
+    setSelectedCharacter(character);
+    setShowCharacterSelection(false);
+    
+    // Start the actual game after character selection
+    const playerName = playerProfile?.name || 'Player 1';
+    const aiPersonality = currentOpponent || 'CHAOS';
+    await startSinglePlayerGame(playerName, aiPersonality);
+  };
+
+  const handleBackFromCharacterSelection = () => {
+    // Return to lobby to choose mode again
+    setShowCharacterSelection(false);
+    setSelectedCharacter(null);
+    setShowLobby(true);
+    setCurrentOpponent(null);
   };
 
   const handleForfeitTurn = async () => {
@@ -853,11 +903,17 @@ function App() {
             </div>
           )}
 
-          {gameState?.cardSelectionPhase && !gameState?.gameStarted ? (
+          {showCharacterSelection ? (
+            <CharacterSelection
+              onSelectCharacter={handleCharacterSelect}
+              onCancel={handleBackFromCharacterSelection}
+            />
+          ) : gameState?.cardSelectionPhase && !gameState?.gameStarted ? (
             <CardSelection
               hand={gameState.players?.find(p => p.id === playerId)?.hand || []}
               onConfirmSelection={handleSelectCards}
               onBack={handleBackFromCardSelection}
+              selectedCharacter={selectedCharacter}
             />
           ) : showCoinToss ? (
             <CoinToss
@@ -878,6 +934,7 @@ function App() {
               onQuit={handleQuit}
               settings={settings}
               isStoryMode={!!storyModeStage}
+              selectedCharacter={selectedCharacter}
             />
           )}
         </>

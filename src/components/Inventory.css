@@ -71,6 +71,104 @@
   transform: rotate(90deg);
 }
 
+/* Mobile Tab Selector (Dropdown) */
+.mobile-tab-selector {
+  display: none;
+  position: relative;
+  padding: 10px 15px;
+  background: rgba(22, 33, 62, 0.3);
+  border-bottom: 2px solid #e94560;
+}
+
+.mobile-dropdown-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(15, 52, 96, 0.8);
+  border: 2px solid #533483;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.mobile-dropdown-btn:active {
+  background: rgba(83, 52, 131, 0.9);
+}
+
+.dropdown-label {
+  flex: 1;
+  text-align: left;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  margin-left: 10px;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.mobile-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 15px;
+  right: 15px;
+  background: rgba(15, 52, 96, 0.98);
+  border: 2px solid #533483;
+  border-radius: 0 0 10px 10px;
+  border-top: none;
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-tab-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(83, 52, 131, 0.3);
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.mobile-tab-btn:last-child {
+  border-bottom: none;
+}
+
+.mobile-tab-btn:active {
+  background: rgba(83, 52, 131, 0.5);
+}
+
+.mobile-tab-btn.active {
+  background: #e94560;
+  color: #fff;
+}
+
 /* Tabs */
 .inventory-tabs {
   display: flex;
@@ -604,37 +702,461 @@
 }
 
 @media (max-width: 768px) {
+  /* Show mobile dropdown, hide desktop tabs */
+  .mobile-tab-selector {
+    display: block;
+  }
+
+  .desktop-tabs {
+    display: none !important;
+  }
   .inventory-modal {
-    width: 95%;
-    height: 90vh;
+    width: 98%;
+    height: 95vh;
+    max-width: 100%;
+    border-radius: 12px;
   }
 
   .inventory-header {
-    padding: 15px 20px;
+    padding: 12px 15px;
+    flex-wrap: nowrap;
   }
 
   .inventory-header h2 {
-    font-size: 24px;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    flex-shrink: 0;
   }
 
   .inventory-tabs {
-    padding: 10px 20px;
+    padding: 8px 10px;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    white-space: nowrap;
+  }
+
+  .inventory-tabs::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .inventory-tabs::-webkit-scrollbar-track {
+    background: rgba(15, 52, 96, 0.3);
+  }
+
+  .inventory-tabs::-webkit-scrollbar-thumb {
+    background: #e94560;
+    border-radius: 2px;
   }
 
   .tab-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: auto;
+    border-width: 2px;
+  }
+
+  .rarity-filter {
+    padding: 8px 15px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rarity-filter label {
+    font-size: 13px;
+  }
+
+  .rarity-filter select {
+    padding: 6px 12px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .inventory-content {
+    flex-direction: column;
+    gap: 15px;
+    padding: 12px 15px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .inventory-main {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .inventory-sidebar {
+    min-height: 250px;
+    max-height: 400px;
+    padding: 15px;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    padding: 5px;
+  }
+
+  .inventory-item {
+    padding: 10px;
+    border-width: 2px;
+  }
+
+  .item-icon {
+    font-size: 36px;
+    margin-bottom: 5px;
+  }
+
+  .item-name {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .item-description {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .item-quantity,
+  .item-strength {
+    font-size: 14px;
+  }
+
+  .item-element {
+    font-size: 11px;
+  }
+
+  .item-rarity {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .item-cost {
+    font-size: 12px;
+    margin-top: 3px;
+  }
+
+  .insufficient-funds {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+
+  /* Equipment Slots Mobile */
+  .equipment-slots {
+    padding: 15px;
+  }
+
+  .equipment-slots h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .equipped-item {
+    padding: 12px;
+    gap: 12px;
+    flex-wrap: nowrap;
+  }
+
+  .equipped-item .item-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .item-info {
+    min-width: 0;
+  }
+
+  .item-info .item-name {
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .item-info .item-description {
+    font-size: 11px;
+  }
+
+  .unequip-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .empty-slot {
+    padding: 15px;
+    font-size: 13px;
+  }
+
+  .slot-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  /* Shop Mobile */
+  .shop-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .shop-header h3 {
+    font-size: 16px;
+  }
+
+  .player-currency {
+    font-size: 18px;
+    align-self: flex-start;
+  }
+
+  /* Item Details Mobile */
+  .item-details {
+    gap: 12px;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
+  .detail-icon {
+    font-size: 48px;
+    align-self: center;
+  }
+
+  .detail-header h3 {
+    font-size: 18px;
+  }
+
+  .detail-rarity {
+    font-size: 12px;
+  }
+
+  .detail-description {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 8px;
+  }
+
+  .detail-stat {
+    padding: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .stat-label {
+    font-size: 13px;
+  }
+
+  .stat-value {
+    font-size: 14px;
+  }
+
+  .action-btn {
     padding: 10px 16px;
     font-size: 14px;
   }
 
+  .no-selection {
+    padding: 30px 15px;
+    font-size: 14px;
+  }
+
+  /* Footer Mobile */
+  .inventory-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px 15px;
+  }
+
+  .currency-display {
+    font-size: 16px;
+  }
+
+  .equipment-bonuses {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .equipment-bonuses strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .empty-inventory {
+    font-size: 16px;
+    padding: 30px 15px;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .inventory-modal {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .inventory-header h2 {
+    font-size: 18px;
+  }
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .tab-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .inventory-tabs {
+    padding: 6px 8px;
+    gap: 3px;
+  }
+
   .inventory-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 6px;
+  }
+
+  .inventory-item {
+    padding: 8px;
+  }
+
+  .item-icon {
+    font-size: 32px;
+  }
+
+  .item-name {
+    font-size: 11px;
+  }
+
+  .item-description {
+    font-size: 10px;
+  }
+
+  .equipped-item {
+    padding: 10px;
     gap: 10px;
   }
 
+  .equipped-item .item-icon {
+    font-size: 24px;
+  }
+
+  .item-info .item-name {
+    font-size: 12px;
+  }
+
+  .item-info .item-description {
+    font-size: 10px;
+  }
+
+  .action-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Landscape mode for mobile */
+@media (max-width: 915px) and (max-height: 500px) and (orientation: landscape) {
+  .inventory-modal {
+    height: 98vh;
+    width: 95%;
+  }
+
+  .inventory-header {
+    padding: 8px 15px;
+  }
+
+  .inventory-header h2 {
+    font-size: 18px;
+  }
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .inventory-tabs {
+    padding: 6px 10px;
+    gap: 3px;
+  }
+
+  .tab-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .inventory-content {
+    padding: 10px 15px;
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .inventory-main {
+    flex: 1.5;
+  }
+
+  .inventory-sidebar {
+    flex: 1;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 6px;
+  }
+
+  .inventory-item {
+    padding: 8px;
+  }
+
+  .item-icon {
+    font-size: 28px;
+  }
+
+  .item-name {
+    font-size: 11px;
+  }
+
+  .detail-icon {
+    font-size: 40px;
+  }
+
   .inventory-footer {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
+    padding: 8px 15px;
+    flex-direction: row;
+    gap: 15px;
+  }
+
+  .currency-display {
+    font-size: 14px;
+  }
+
+  .equipment-bonuses {
+    font-size: 11px;
   }
 }
 

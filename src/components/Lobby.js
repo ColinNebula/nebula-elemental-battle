@@ -13,23 +13,6 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
   const [playerName, setPlayerName] = useState('');
   const [selectedAI, setSelectedAI] = useState('CHAOS');
   const [showAISelection, setShowAISelection] = useState(false);
-  const lobbyMusicRef = useRef(null);
-
-  useEffect(() => {
-    // Play Under Cover of the Myst music when lobby opens
-    lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
-    lobbyMusicRef.current.volume = 0.3;
-    lobbyMusicRef.current.loop = true;
-    lobbyMusicRef.current.play().catch(err => console.log('Lobby music autoplay prevented:', err));
-
-    return () => {
-      // Stop music when leaving lobby
-      if (lobbyMusicRef.current) {
-        lobbyMusicRef.current.pause();
-        lobbyMusicRef.current = null;
-      }
-    };
-  }, []);
 
   const handleSinglePlayer = () => {
     const name = playerName.trim() || 'Player';

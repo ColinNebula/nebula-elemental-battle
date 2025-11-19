@@ -20,6 +20,7 @@ const Inventory = ({
   const [activeTab, setActiveTab] = useState('consumables');
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterRarity, setFilterRarity] = useState('all');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Get all available items for shop
   const [shopItems] = useState([
@@ -403,7 +404,74 @@ const Inventory = ({
           <button className="close-btn" onClick={onClose}>✖</button>
         </div>
 
-        <div className="inventory-tabs">
+        {/* Mobile Dropdown Menu */}
+        <div className="mobile-tab-selector">
+          <button 
+            className="mobile-dropdown-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className="dropdown-label">
+              {activeTab === 'consumables' && `🧪 Consumables (${inventory.consumables.length})`}
+              {activeTab === 'rare_cards' && `⭐ Rare Cards (${inventory.rareCards.length})`}
+              {activeTab === 'wild_cards' && `🃏 Wild Cards (${inventory.wildCards.length})`}
+              {activeTab === 'equipment' && '⚔️ Equipment'}
+              {activeTab === 'shop' && '🏪 Shop'}
+            </span>
+            <span className={`dropdown-arrow ${isMobileMenuOpen ? 'open' : ''}`}>▼</span>
+          </button>
+          {isMobileMenuOpen && (
+            <div className="mobile-dropdown-menu">
+              <button 
+                className={`mobile-tab-btn ${activeTab === 'consumables' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('consumables');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                🧪 Consumables ({inventory.consumables.length})
+              </button>
+              <button 
+                className={`mobile-tab-btn ${activeTab === 'rare_cards' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('rare_cards');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                ⭐ Rare Cards ({inventory.rareCards.length})
+              </button>
+              <button 
+                className={`mobile-tab-btn ${activeTab === 'wild_cards' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('wild_cards');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                🃏 Wild Cards ({inventory.wildCards.length})
+              </button>
+              <button 
+                className={`mobile-tab-btn ${activeTab === 'equipment' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('equipment');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                ⚔️ Equipment
+              </button>
+              <button 
+                className={`mobile-tab-btn ${activeTab === 'shop' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTab('shop');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                🏪 Shop
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Tabs */}
+        <div className="inventory-tabs desktop-tabs">
           <button 
             className={`tab-btn ${activeTab === 'consumables' ? 'active' : ''}`}
             onClick={() => setActiveTab('consumables')}

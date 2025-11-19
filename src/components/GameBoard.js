@@ -35,7 +35,8 @@ const GameBoard = ({
   onForfeit,
   onQuit,
   settings,
-  isStoryMode
+  isStoryMode,
+  selectedCharacter
 }) => {
   const currentPlayer = gameState?.players?.find(p => p.id === currentPlayerId);
   const humanPlayer = gameState?.players?.find(p => !p.isAI);
@@ -186,8 +187,9 @@ const GameBoard = ({
           const y = rect.height / 2 + (Math.random() - 0.5) * 100;
           
           // Sound effects
+          if (!cardPlay.card) return; // Safety check
           const cardStrength = cardPlay.card.modifiedStrength || cardPlay.card.strength;
-          if (soundManager) {
+          if (soundManager && cardPlay.card.element) {
             soundManager.playElementSound(cardPlay.card.element);
             soundManager.playSound('cardFlip');
           }
@@ -199,7 +201,9 @@ const GameBoard = ({
           }
           
           // Particle effects
-          createParticles(cardPlay.card.element, x, y, gameBoardRef.current);
+          if (cardPlay.card.element) {
+            createParticles(cardPlay.card.element, x, y, gameBoardRef.current);
+          }
           
           // Power play and combo sounds
           if (cardStrength >= 10) {
@@ -528,8 +532,9 @@ const GameBoard = ({
     }
   };
 
-  // Turn timer countdown - starts 3 seconds after turn announcement
+  // Turn timer countdown - starts 1.5 seconds after turn announcement
   useEffect(() => {
+    // Don't run timer if disabled or game conditions prevent it
     if (!settings?.timerEnabled || gameState?.gameOver || gameState?.pendingAbility || isPaused || showRoundAnnouncement || showTurnAnnouncement) {
       return;
     }
@@ -578,7 +583,7 @@ const GameBoard = ({
               onForfeit();
             }
           }
-          return 30;
+          return 20;
         }
         return prev - 1;
       });
@@ -589,7 +594,7 @@ const GameBoard = ({
       clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement]);
+  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement, turnTimer]);
 
   // Keyboard shortcuts for card selection
   useEffect(() => {
@@ -651,12 +656,16 @@ const GameBoard = ({
               createVictoryPose(lastCard);
               
               // Add combo multiplier if match bonus
-              if (gameState?.lastMatchBonus) {
-                const rect = lastCard.getBoundingClientRect();
-                const parentRect = gameBoardRef.current.getBoundingClientRect();
-                const x = rect.left - parentRect.left + rect.width / 2;
-                const y = rect.top - parentRect.top;
-                createComboMultiplierAnimation('MATCH!', x, y, gameBoardRef.current);
+              if (gameState?.lastMatchBonus && gameBoardRef.current) {
+                try {
+                  const rect = lastCard.getBoundingClientRect();
+                  const parentRect = gameBoardRef.current.getBoundingClientRect();
+                  const x = rect.left - parentRect.left + rect.width / 2;
+                  const y = rect.top - parentRect.top;
+                  createComboMultiplierAnimation('MATCH!', x, y, gameBoardRef.current);
+                } catch (error) {
+                  console.warn('Error creating combo animation:', error);
+                }
               }
             }
           }, 500);
@@ -753,7 +762,8 @@ const GameBoard = ({
         aiActive: aiPlayer.active,
         aiHandSize: aiPlayer.hand.length,
         aiChosen: aiPlayer.chosenCard,
-        battlePhase: gameState.battlePhase
+        battlePhase: gameState.battlePhase,
+        hasDeckCards: aiPlayer.deck?.length || 0
       });
       
       // Use shorter delay (1.5s) if turn announcement is not showing (forfeit scenario)
@@ -773,10 +783,13 @@ const GameBoard = ({
           return;
         }
         
+        // Only force AI to play if it actually has cards
         if (aiPlayer.active && aiPlayer.hand?.length > 0 && !aiPlayer.chosenCard) {
           console.log('🚨 AI WATCHDOG: Forcing AI to play');
           const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
           onPlayCard(randomIndex, aiPlayer.id);
+        } else if (aiPlayer.active && aiPlayer.hand?.length === 0) {
+          console.log('⏭️ AI WATCHDOG: AI has no cards, waiting for server to skip turn');
         }
       }, delay);
       
@@ -903,7 +916,7 @@ const GameBoard = ({
       const card = currentPlayer.hand[cardIndex];
       
       // Trigger particle effects
-      if (gameBoardRef.current) {
+      if (gameBoardRef.current && card && card.element) {
         const rect = gameBoardRef.current.getBoundingClientRect();
         const x = rect.width / 2;
         const y = rect.height / 2;
@@ -927,7 +940,7 @@ const GameBoard = ({
         const cardElement = cardElements[pendingCardIndex];
         
         // Only trigger animation if card element exists
-        if (cardElement && typeof cardElement.getBoundingClientRect === 'function') {
+        if (card && card.element && cardElement && typeof cardElement.getBoundingClientRect === 'function') {
           try {
             createElementPlayAnimation(card.element, cardElement, gameBoardRef.current);
           } catch (error) {
@@ -971,17 +984,20 @@ const GameBoard = ({
   const getSortedHand = (hand) => {
     if (!hand || hand.length === 0) return [];
     
-    const sortedWithIndices = hand.map((card, originalIndex) => ({
-      card,
-      originalIndex
-    }));
+    // Filter out any undefined/null cards before mapping
+    const sortedWithIndices = hand
+      .map((card, originalIndex) => ({
+        card,
+        originalIndex
+      }))
+      .filter(item => item.card && item.card.element);
     
     switch (sortBy) {
       case 'element':
         const elementOrder = ['FIRE', 'ICE', 'WATER', 'ELECTRICITY', 'EARTH', 'POWER', 'LIGHT', 'DARK', 'NEUTRAL', 'TECHNOLOGY', 'METEOR'];
         sortedWithIndices.sort((a, b) => {
-          const indexA = elementOrder.indexOf(a.card.element);
-          const indexB = elementOrder.indexOf(b.card.element);
+          const indexA = a.card?.element ? elementOrder.indexOf(a.card.element) : 999;
+          const indexB = b.card?.element ? elementOrder.indexOf(b.card.element) : 999;
           return indexA - indexB;
         });
         break;
@@ -1108,7 +1124,11 @@ const GameBoard = ({
           ) : (
             <>
               <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
-              <div className="ai-thinking">AI is thinking...</div>
+              <div className="ai-thinking">
+                {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
+                  ? '🚫 AI has no cards - Skipping turn...'
+                  : 'AI is thinking...'}
+              </div>
             </>
           )}
         </div>
@@ -1350,7 +1370,18 @@ const GameBoard = ({
           <h3>Player 1 (You)</h3>
           {humanPlayer && (
             <div className="sidebar-player-info">
-              <div className="player-avatar">👤</div>
+              <div className="player-avatar">
+                {selectedCharacter?.image ? (
+                  <img 
+                    src={`${process.env.PUBLIC_URL}/${selectedCharacter.image}`} 
+                    alt={selectedCharacter.name}
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                  />
+                ) : null}
+                <span style={{ display: selectedCharacter?.image ? 'none' : 'block' }}>
+                  {selectedCharacter?.icon || '👤'}
+                </span>
+              </div>
               <p><strong>{humanPlayer.name}</strong></p>
               <p>Score: {humanPlayer.score}</p>
               {/* Status Effects Display */}
