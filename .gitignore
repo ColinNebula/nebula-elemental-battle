@@ -139,6 +139,9 @@ config/local.json
 # ==============================================
 # Large Media Files
 # ==============================================
+# Audio backups from compression script
+public/audio-backup/
+
 # Video files (always too large for GitHub)
 *.mp4
 *.mov
