@@ -35,6 +35,16 @@ jobs:
         run: npm run build:production
         env:
           CI: false
+          
+      - name: Check build size
+        run: |
+          $totalSize = (Get-ChildItem build -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
+          Write-Host "Build folder size: $([math]::Round($totalSize, 2)) MB"
+          if ($totalSize -gt 100) {
+            Write-Error "Build size exceeds 100MB limit!"
+            exit 1
+          }
+        shell: pwsh
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
