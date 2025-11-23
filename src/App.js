@@ -29,6 +29,7 @@ import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, g
 import { awardCoins, initializeThemes } from './utils/themes';
 import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
 import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/powerUps';
+import mobileScreenManager from './utils/mobileScreenManager';
 
 function App() {
   // Donation banner state
@@ -36,6 +37,15 @@ function App() {
   
   // Lobby music ref - persists across lobby, character selection, and card selection
   const lobbyMusicRef = useRef(null);
+
+  // Initialize mobile screen manager
+  useEffect(() => {
+    mobileScreenManager.init();
+    
+    return () => {
+      mobileScreenManager.destroy();
+    };
+  }, []);
 
   // Initialize security and migrate storage
   useEffect(() => {
