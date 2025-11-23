@@ -4981,9 +4981,9 @@
 
 /* Epic Battle Begin styling */
 .phase-transition.battle-start-epic {
-  font-size: 84px;
+  font-size: 56px;
   font-weight: 900;
-  letter-spacing: 8px;
+  letter-spacing: 6px;
   background: linear-gradient(45deg, #ff0000, #ff7700, #ffdd00, #ff7700, #ff0000);
   background-size: 400% 400%;
   -webkit-background-clip: text;
