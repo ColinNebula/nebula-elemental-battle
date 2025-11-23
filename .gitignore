@@ -139,23 +139,6 @@ config/local.json
 # ==============================================
 # Large Media Files
 # ==============================================
-# Background music files (103MB total) - Optional for deployment
-# See public/AUDIO_README.md for details
-public/*.mp3
-public/At_the_End_of_All_Things.mp3
-public/Battle_of_the_Pixelated_Cyborgs.mp3
-public/Boss_Battle_Loop_1.mp3
-public/Burnt_Out_Space_Hulk.mp3
-public/Cooler_Heads_Prevail.mp3
-public/Figuring_it_All_Out.mp3
-public/Further_Investigation.mp3
-public/Strange_Dealings_Afoot.mp3
-public/Sunrise_in_Megalopolis.mp3
-public/The_Fallout.mp3
-public/Treat_or_Trick.mp3
-public/Under_Cover_of_the_Myst.mp3
-public/When_You_Risk_it_All.mp3
-
 # Video files (always too large for GitHub)
 *.mp4
 *.mov
