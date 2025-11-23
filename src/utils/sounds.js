@@ -15,21 +15,16 @@ class SoundManager {
     this.lastScoreDifference = 0;
     this.intensityCheckInterval = null;
     
-    // Available background music tracks
+    // Available background music tracks (8 tracks, ~30MB optimized for deployment)
     this.musicTracks = [
       'At_the_End_of_All_Things.mp3',
-      'Battle_of_the_Pixelated_Cyborgs.mp3',
       'Boss_Battle_Loop_1.mp3',
-      'Burnt_Out_Space_Hulk.mp3',
       'Cooler_Heads_Prevail.mp3',
       'Figuring_it_All_Out.mp3',
-      'Further_Investigation.mp3',
       'Strange_Dealings_Afoot.mp3',
-      'Sunrise_in_Megalopolis.mp3',
       'The_Fallout.mp3',
       'Treat_or_Trick.mp3',
-      'Under_Cover_of_the_Myst.mp3',
-      'When_You_Risk_it_All.mp3'
+      'Under_Cover_of_the_Myst.mp3'
     ];
     
     // Voice lines for different avatar personalities
@@ -657,7 +652,7 @@ class SoundManager {
       let trackIndex;
       if (intensity === 'intense') {
         // Battle tracks for intense moments
-        const intenseTracks = ['Battle_of_the_Pixelated_Cyborgs.mp3', 'Boss_Battle_Loop_1.mp3', 'When_You_Risk_it_All.mp3'];
+        const intenseTracks = ['Boss_Battle_Loop_1.mp3', 'Treat_or_Trick.mp3'];
         const availableIntense = intenseTracks.filter(t => this.musicTracks.includes(t));
         trackIndex = this.musicTracks.indexOf(availableIntense[Math.floor(Math.random() * availableIntense.length)]);
       } else {
