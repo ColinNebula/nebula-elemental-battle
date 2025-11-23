@@ -1242,6 +1242,11 @@ const GameBoard = ({
   const handleCardClick = (cardIndex) => {
     console.log('🎴 Card clicked:', { cardIndex, isMyTurn, gameOver: gameState?.gameOver, isPaused, pendingAbility: gameState?.pendingAbility });
     
+    // Try to start music on first user interaction
+    if (soundManager) {
+      soundManager.tryStartMusic();
+    }
+    
     // Block actions during initial arena display
     if (showInitialArena) {
       console.log('⏸️ Card click blocked - arena display in progress');

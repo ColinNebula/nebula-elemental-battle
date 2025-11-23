@@ -673,9 +673,16 @@ class SoundManager {
       this.backgroundMusic.loop = true;
       
       // Play the track
-      this.backgroundMusic.play().catch(error => {
-        console.log('Music autoplay prevented:', error);
-      });
+      const playPromise = this.backgroundMusic.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log('🎵 Music playing successfully:', this.currentTrack);
+        }).catch(error => {
+          console.warn('⚠️ Music autoplay prevented - user interaction required:', error.message);
+          console.log('💡 Music will start after any button click or card play');
+        });
+      }
       
       console.log(`🎵 Now playing [${intensity}]:`, this.currentTrack);
     } catch (error) {
@@ -849,6 +856,18 @@ class SoundManager {
   // Get currently playing track name
   getCurrentTrack() {
     return this.currentTrack ? this.currentTrack.replace('.mp3', '').replace(/_/g, ' ') : 'None';
+  }
+  
+  // Try to start music (call this after any user interaction)
+  tryStartMusic() {
+    if (this.musicEnabled && this.backgroundMusic && this.backgroundMusic.paused) {
+      this.backgroundMusic.play().catch(error => {
+        console.log('Could not start music yet:', error.message);
+      });
+    } else if (this.musicEnabled && !this.backgroundMusic) {
+      // No music loaded yet, start it
+      this.playMusic('calm');
+    }
   }
 }
 
