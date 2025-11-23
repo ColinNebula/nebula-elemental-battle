@@ -3,8 +3,11 @@ import './BrandScreen.css';
 
 const BrandScreen = ({ onComplete }) => {
   const [fadeOut, setFadeOut] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
+    console.log('BrandScreen mounted, PUBLIC_URL:', process.env.PUBLIC_URL);
+    
     // Show for 3.5 seconds then fade out
     const timer = setTimeout(() => {
       setFadeOut(true);
@@ -23,14 +26,31 @@ const BrandScreen = ({ onComplete }) => {
     };
   }, [onComplete]);
 
+  const handleImageError = () => {
+    console.error('Failed to load brand image');
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Brand image loaded successfully');
+  };
+
   return (
     <div className={`brand-screen ${fadeOut ? 'fade-out' : ''}`}>
       <div className="brand-content">
-        <img 
-          src={`${process.env.PUBLIC_URL}/nebulamedia.png`} 
-          alt="Nebula Media" 
-          className="brand-logo"
-        />
+        {!imageError ? (
+          <img 
+            src={`${process.env.PUBLIC_URL}/nebulamedia.png`} 
+            alt="Nebula Media" 
+            className="brand-logo"
+            onError={handleImageError}
+            onLoad={handleImageLoad}
+          />
+        ) : (
+          <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#333' }}>
+            NEBULA MEDIA
+          </div>
+        )}
       </div>
     </div>
   );
