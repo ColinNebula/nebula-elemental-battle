@@ -162,6 +162,7 @@ export const AI_PERSONALITIES = {
   SHADOW: {
     name: 'Shadow the Voidwalker',
     avatar: '🌙',
+    avatarImage: 'void-walker-avatar.png',
     difficulty: 'Expert',
     element: 'DARK',
     description: 'A mysterious fighter who exploits weaknesses',

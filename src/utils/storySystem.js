@@ -249,8 +249,7 @@ export const CHARACTER_BACKSTORIES = {
       'When they emerged, they could manipulate shadows at will.',
       'They seek to understand what they became in that darkness.'
     ],
-    artwork: '🌑👤',
-    unlock: 'Complete Chapter 2 (Dark Path)'
+    artwork: '🌑👤',    avatarImage: 'void-walker-avatar.png',    unlock: 'Complete Chapter 2 (Dark Path)'
   }
 };
 
