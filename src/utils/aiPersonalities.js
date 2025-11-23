@@ -185,6 +185,7 @@ export const AI_PERSONALITIES = {
   NEXUS: {
     name: 'Nexus the Omnipotent',
     avatar: '⭐',
+    avatarImage: 'power-nexus--avatar.png',
     difficulty: 'Master',
     element: 'POWER',
     description: 'The ultimate champion who masters all elements',
