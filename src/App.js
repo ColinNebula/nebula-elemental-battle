@@ -955,11 +955,14 @@ function App() {
         setShowSplash(true);
       }} />}
       
-      {/* Splash Screen */}
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} isReturning={isReturningToSplash} />}
-      
-      {/* PWA Install Prompt - Only show on main menu */}
-      {!showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && <InstallPrompt />}
+      {/* Only show other content when brand screen is done */}
+      {!showBrandScreen && (
+        <>
+          {/* Splash Screen */}
+          {showSplash && <SplashScreen onComplete={handleSplashComplete} isReturning={isReturningToSplash} />}
+          
+          {/* PWA Install Prompt - Only show on main menu */}
+          {!showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && <InstallPrompt />}
       
       {/* Tutorial Mode */}
       {showTutorialMode && (
@@ -1133,11 +1136,14 @@ function App() {
           )}
         </>
       ) : null}
-      {/* Donation Banner - Only show on main menu */}
-      {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && !showStoryMode && !showCredits && !showLobby && (
-        <DonationBanner 
-          onClose={() => setShowDonationBanner(false)}
-        />
+          
+          {/* Donation Banner - Only show on main menu */}
+          {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && !showStoryMode && !showCredits && !showLobby && (
+            <DonationBanner 
+              onClose={() => setShowDonationBanner(false)}
+            />
+          )}
+        </>
       )}
     </div>
   );
