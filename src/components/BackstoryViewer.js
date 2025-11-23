@@ -33,7 +33,15 @@ function BackstoryViewer({ unlockedBackstories = [], onClose }) {
                   onClick={() => isUnlocked && handleCharacterSelect(characterId)}
                 >
                   <div className="character-artwork">
-                    {isUnlocked ? backstory.artwork : '🔒'}
+                    {isUnlocked ? (
+                      backstory.avatarImage ? (
+                        <img src={`${process.env.PUBLIC_URL}/${backstory.avatarImage}`} alt={backstory.title} style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                      ) : (
+                        backstory.artwork
+                      )
+                    ) : (
+                      '🔒'
+                    )}
                   </div>
                   <h3 className="character-title">
                     {isUnlocked ? backstory.title : '???'}
@@ -53,7 +61,15 @@ function BackstoryViewer({ unlockedBackstories = [], onClose }) {
             
             <div className="backstory-content">
               <div className="backstory-artwork-large">
-                {CHARACTER_BACKSTORIES[selectedCharacter].artwork}
+                {CHARACTER_BACKSTORIES[selectedCharacter].avatarImage ? (
+                  <img 
+                    src={`${process.env.PUBLIC_URL}/${CHARACTER_BACKSTORIES[selectedCharacter].avatarImage}`} 
+                    alt={CHARACTER_BACKSTORIES[selectedCharacter].title} 
+                    style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  CHARACTER_BACKSTORIES[selectedCharacter].artwork
+                )}
               </div>
               
               <h3 className="backstory-title">

@@ -152,6 +152,7 @@ export const CHARACTER_BACKSTORIES = {
       'Now he channels pure rage into devastating combat, seeking release through conflict.'
     ],
     artwork: '😡🔥',
+    avatarImage: 'rage-avatar.png',
     unlock: 'Default'
   },
   
@@ -165,6 +166,7 @@ export const CHARACTER_BACKSTORIES = {
       'Now she channels her rage into disciplined combat, never forgetting her past.'
     ],
     artwork: '🔥🌋',
+    avatarImage: 'ember-the-firestarter-avatar.png',
     unlock: 'Defeat Ember in Story Mode'
   },
   
@@ -178,6 +180,7 @@ export const CHARACTER_BACKSTORIES = {
       'Now he fights with cold precision, emotion buried deep beneath ice.'
     ],
     artwork: '❄️🏔️',
+    avatarImage: 'frost-the-frozen-avatar.png',
     unlock: 'Defeat Frost in Story Mode'
   },
   
@@ -191,6 +194,7 @@ export const CHARACTER_BACKSTORIES = {
       'She now travels the world, following the call of the sea.'
     ],
     artwork: '💧🌊',
+    avatarImage: 'water-avatar.png',
     unlock: 'Defeat Aqua in Story Mode'
   },
   
@@ -204,6 +208,7 @@ export const CHARACTER_BACKSTORIES = {
       'He seeks to master the storm that gave him this gift.'
     ],
     artwork: '⚡🌩️',
+    avatarImage: 'vol- the-electrifier-avatar.png',
     unlock: 'Defeat Volt in Story Mode'
   },
   
@@ -217,6 +222,7 @@ export const CHARACTER_BACKSTORIES = {
       'Now one with the earth, he cannot be shaken or moved.'
     ],
     artwork: '🌍⛰️',
+    avatarImage: 'terra-the-earthshaker-avatar.png',
     unlock: 'Defeat Terra in Story Mode'
   },
   
@@ -230,6 +236,7 @@ export const CHARACTER_BACKSTORIES = {
       'His light is both a blessing and a burden.'
     ],
     artwork: '✨☀️',
+    avatarImage: 'lumina-the-radiant-avatar.png',
     unlock: 'Complete Chapter 2 (Light Path)'
   },
   
