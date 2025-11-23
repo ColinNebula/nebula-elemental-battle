@@ -5,22 +5,26 @@ Some logo files (logo192.png, logo512.png) appear to be default React logos show
 
 ## Quick Fix Options
 
-### Option 1: Use Online Icon Generator (Recommended)
+### Option 1: Use Online Icon Generator (Recommended - EASIEST)
 1. Go to https://realfavicongenerator.net/
-2. Upload `public/nebulamedia.png` or a custom game logo
-3. Download the generated icon pack
-4. Replace files in `public/` folder:
+2. Upload `public/nebulamedia.png` (or create your own 512x512 game logo)
+3. Click "Generate your Favicons and HTML code"
+4. Download the generated icon pack
+5. Extract and replace these files in `public/` folder:
    - favicon.ico
-   - logo72.png
-   - logo96.png
-   - logo128.png
-   - logo144.png
-   - logo152.png
-   - logo180.png
-   - logo192.png
-   - logo384.png
-   - logo512.png
+   - logo72.png → rename from android-chrome-72x72.png
+   - logo96.png → rename from android-chrome-96x96.png  
+   - logo128.png → rename from android-chrome-128x128.png
+   - logo144.png → rename from android-chrome-144x144.png
+   - logo152.png → rename from mstile-150x150.png
+   - logo180.png → rename from apple-touch-icon.png
+   - logo192.png → rename from android-chrome-192x192.png
+   - logo384.png → resize android-chrome-512x512.png to 384x384
+   - logo512.png → rename from android-chrome-512x512.png
    - apple-touch-icon.png
+6. Rebuild: `npm run build`
+7. Commit: `git add public/logo*.png public/favicon.ico public/apple-touch-icon.png`
+8. Deploy: `git commit -m "Update app icons" && git push origin main`
 
 ### Option 2: Manual Image Editing
 Use image editing software to resize your brand logo:
