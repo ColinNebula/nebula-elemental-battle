@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from './Card';
 import './CardSelection.css';
 
-const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
+const CardSelection = ({ hand, onConfirmSelection, onBack, isTutorial = false }) => {
   const [selectedIndices, setSelectedIndices] = useState([]);
   const [timeLeft, setTimeLeft] = useState(20);
 
@@ -20,8 +20,10 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
     }
   };
 
-  // Countdown timer effect
+  // Countdown timer effect (disabled in tutorial)
   useEffect(() => {
+    if (isTutorial) return; // No timer in tutorial mode
+    
     if (timeLeft <= 0) {
       // Time's up - start with whatever cards are selected
       onConfirmSelection(selectedIndices);
@@ -33,14 +35,14 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, selectedIndices, onConfirmSelection]);
+  }, [timeLeft, selectedIndices, onConfirmSelection, isTutorial]);
 
   return (
     <div className="card-selection-overlay">
       <div className="card-selection-container">
         <div className="card-selection-header">
           <h2>Select Your Starting 5 Cards</h2>
-          {onBack && (
+          {onBack && !isTutorial && (
             <button className="back-button" onClick={onBack} title="Back to Main Menu">
               ← Back
             </button>
@@ -53,9 +55,11 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
           <p className="selection-count">
             Selected: {selectedIndices.length} / 5
           </p>
-          <div className={`selection-timer ${timeLeft <= 5 ? 'low-time' : timeLeft <= 10 ? 'warning-time' : ''}`}>
-            ⏱️ Time Left: <span className="timer-value">{timeLeft}s</span>
-          </div>
+          {!isTutorial && (
+            <div className={`selection-timer ${timeLeft <= 5 ? 'low-time' : timeLeft <= 10 ? 'warning-time' : ''}`}>
+              ⏱️ Time Left: <span className="timer-value">{timeLeft}s</span>
+            </div>
+          )}
         </div>
         
         <div className="card-selection-grid">
@@ -80,7 +84,7 @@ const CardSelection = ({ hand, onConfirmSelection, onBack }) => {
         >
           {selectedIndices.length === 5 ? 'Confirm Selection' : `Select ${5 - selectedIndices.length} More Card${5 - selectedIndices.length !== 1 ? 's' : ''}`}
         </button>
-        {timeLeft <= 5 && selectedIndices.length > 0 && selectedIndices.length < 5 && (
+        {!isTutorial && timeLeft <= 5 && selectedIndices.length > 0 && selectedIndices.length < 5 && (
           <p className="time-warning">
             ⚠️ Starting soon with {selectedIndices.length} card{selectedIndices.length !== 1 ? 's' : ''}!
           </p>

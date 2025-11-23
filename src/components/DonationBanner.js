@@ -25,9 +25,9 @@ const DonationBanner = ({ onClose }) => {
       const donationData = {
         enabled: true,
         links: {
-          paypal: 'https://paypal.me/yourpaypal',
-          kofi: 'https://ko-fi.com/yourkofi',
-          github: 'https://github.com/sponsors/yourgithub'
+          paypal: 'https://paypal.me/ColinNebulapaypal',
+          kofi: 'https://ko-fi.com/colinNebulakofi',
+          github: 'https://github.com/sponsors/ColinNebulagithub'
         },
         message: 'Support Nebula 3D Dev - Your contributions help keep this project alive!'
       };

@@ -1,0 +1,267 @@
+/* Mana Display Styling */
+
+.mana-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(63, 81, 181, 0.9), rgba(48, 63, 159, 0.9));
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid #5c6bc0;
+  box-shadow: 0 0 20px rgba(92, 107, 192, 0.6),
+              inset 0 0 15px rgba(92, 107, 192, 0.3);
+  min-width: 160px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Surge state - golden glow */
+.mana-display.surge-active {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 152, 0, 0.9));
+  border-color: #ffc107;
+  box-shadow: 0 0 30px rgba(255, 193, 7, 0.8),
+              inset 0 0 20px rgba(255, 193, 7, 0.4);
+  animation: surgePulse 0.5s ease-in-out;
+}
+
+/* Overdrafted state - red warning */
+.mana-display.overdrafted {
+  background: linear-gradient(135deg, rgba(211, 47, 47, 0.9), rgba(183, 28, 28, 0.9));
+  border-color: #d32f2f;
+  box-shadow: 0 0 30px rgba(211, 47, 47, 0.8),
+              inset 0 0 20px rgba(211, 47, 47, 0.4);
+  animation: overdraftShake 0.5s ease-in-out;
+}
+
+/* Low mana warning */
+.mana-display.low-mana {
+  border-color: #ff9800;
+  animation: lowManaPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes surgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes overdraftShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes lowManaPulse {
+  0%, 100% { 
+    border-color: #5c6bc0;
+    box-shadow: 0 0 20px rgba(92, 107, 192, 0.6);
+  }
+  50% { 
+    border-color: #ff9800;
+    box-shadow: 0 0 30px rgba(255, 152, 0, 0.8);
+  }
+}
+
+.mana-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 10px rgba(92, 107, 192, 1));
+  animation: manaGlow 2s ease-in-out infinite;
+}
+
+@keyframes manaGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(92, 107, 192, 1));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(92, 107, 192, 1));
+    transform: scale(1.1);
+  }
+}
+
+.mana-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mana-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mana-values {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.current-mana {
+  font-size: 22px;
+  font-weight: 900;
+  color: #e3f2fd;
+  text-shadow: 0 0 10px rgba(92, 107, 192, 0.8);
+}
+
+.mana-separator {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.max-mana {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mana-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mana-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5c6bc0 0%, #7986cb 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(92, 107, 192, 0.8);
+  position: relative;
+}
+
+.mana-bar-fill.surge {
+  background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 1);
+  animation: surgeGlow 0.5s ease-in-out;
+}
+
+@keyframes surgeGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.8); }
+  50% { box-shadow: 0 0 25px rgba(255, 193, 7, 1); }
+}
+
+.mana-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: manaShimmer 2s linear infinite;
+}
+
+@keyframes manaShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.mana-regen {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mana-display {
+    min-width: 160px;
+    padding: 12px 15px;
+    gap: 12px;
+  }
+  
+  .mana-icon {
+    font-size: 28px;
+  }
+  
+  .current-mana {
+    font-size: 24px;
+  }
+  
+  .max-mana {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mana-display {
+    min-width: 140px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .mana-icon {
+    font-size: 24px;
+  }
+  
+  .current-mana {
+    font-size: 20px;
+  }
+  
+  .max-mana {
+    font-size: 14px;
+  }
+  
+  .mana-bar-container {
+    height: 6px;
+  }
+  
+  .mana-notification {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* Floating Notifications */
+.mana-notification {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  animation: floatUp 2s ease-out forwards;
+}
+
+.mana-notification.surge {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+}
+
+.mana-notification.combo {
+  background: linear-gradient(135deg, #ff5722, #f44336);
+  box-shadow: 0 0 20px rgba(255, 87, 34, 0.8);
+}
+
+.mana-notification.emergency {
+  background: linear-gradient(135deg, #4caf50, #8bc34a);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px);
+  }
+}

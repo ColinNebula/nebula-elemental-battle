@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import StrategicSettings from './StrategicSettings';
 import './Lobby.css';
 
 const AI_OPPONENTS = [
@@ -13,6 +14,7 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
   const [playerName, setPlayerName] = useState('');
   const [selectedAI, setSelectedAI] = useState('CHAOS');
   const [showAISelection, setShowAISelection] = useState(false);
+  const [showStrategicSettings, setShowStrategicSettings] = useState(false);
 
   const handleSinglePlayer = () => {
     const name = playerName.trim() || 'Player';
@@ -22,6 +24,20 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
   const handleMultiplayer = () => {
     const name = playerName.trim() || 'Player';
     onMultiplayer(name);
+  };
+
+  const handleStrategicMode = () => {
+    setShowStrategicSettings(true);
+  };
+
+  const handleStrategicStart = (settings) => {
+    const name = playerName.trim() || 'Player';
+    setShowStrategicSettings(false);
+    onSinglePlayer(name, selectedAI, settings);
+  };
+
+  const handleStrategicCancel = () => {
+    setShowStrategicSettings(false);
   };
 
   const selectedOpponent = AI_OPPONENTS.find(ai => ai.key === selectedAI) || AI_OPPONENTS[0];
@@ -106,8 +122,30 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
               </div>
               <button className="mode-button">Coming Soon</button>
             </div>
+            
+            <div className="mode-card strategic">
+              <div className="mode-icon">⚡</div>
+              <h2 className="mode-title">Strategic Mode</h2>
+              <p className="mode-description">Advanced tactical gameplay</p>
+              <div className="mode-features">
+                <div className="feature">💎 Mana System</div>
+                <div className="feature">🌦️ Weather Effects</div>
+                <div className="feature">🏔️ Terrain Bonuses</div>
+              </div>
+              <button className="mode-button" onClick={handleStrategicMode}>
+                Configure & Play
+              </button>
+            </div>
           </div>
         </div>
+        
+        {/* Strategic Settings Modal */}
+        {showStrategicSettings && (
+          <StrategicSettings
+            onStart={handleStrategicStart}
+            onCancel={handleStrategicCancel}
+          />
+        )}
 
         <div className="lobby-info">
           <h3>Game Features:</h3>
@@ -117,6 +155,7 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
             <li>🔗 Card evolution - chain same elements for bonuses</li>
             <li>⚰️ Graveyard mechanics - revive fallen cards</li>
             <li>💀 Fatigue damage - strategic deck management</li>
+            <li>⚡ Strategic Mode - Mana, weather, and terrain systems</li>
           </ul>
         </div>
       </div>

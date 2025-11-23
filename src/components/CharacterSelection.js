@@ -37,7 +37,7 @@ const AVATARS = [
   {
     id: 'fire',
     name: 'Flame Sorcerer',
-    image: 'fire1-avatar.png',
+    image: 'ember-the-firestarter-avatar.png',
     description: 'Pyromancer wielding devastating flame magic',
     element: 'FIRE',
     icon: '🔥'

@@ -1,0 +1,689 @@
+/* Advanced Card Mechanics - Visual Effects */
+
+/* ============================================================================
+   RARITY VISUAL EFFECTS
+   ============================================================================ */
+
+/* Common Cards - Basic styling */
+.card.common {
+  border-color: #9e9e9e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Rare Cards - Blue glow */
+.card.rare {
+  border-color: #2196f3;
+  border-width: 3px;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6),
+              0 4px 8px rgba(0, 0, 0, 0.4);
+  animation: rareGlow 3s ease-in-out infinite;
+}
+
+@keyframes rareGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.6),
+                0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(33, 150, 243, 0.9),
+                0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Epic Cards - Purple glow with particles */
+.card.epic {
+  border-color: #9c27b0;
+  border-width: 4px;
+  box-shadow: 0 0 30px rgba(156, 39, 176, 0.8),
+              0 4px 12px rgba(0, 0, 0, 0.5);
+  animation: epicGlow 2.5s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
+}
+
+.card.epic::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent 30%, rgba(156, 39, 176, 0.4) 50%, transparent 70%);
+  border-radius: inherit;
+  animation: epicShimmer 3s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes epicGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(156, 39, 176, 0.8),
+                0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(156, 39, 176, 1),
+                0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@keyframes epicShimmer {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(45deg);
+  }
+}
+
+/* Legendary Cards - Gold with intense effects */
+.card.legendary {
+  border-color: #ff9800;
+  border-width: 5px;
+  box-shadow: 0 0 40px rgba(255, 152, 0, 1),
+              0 0 60px rgba(255, 215, 0, 0.6),
+              0 4px 20px rgba(0, 0, 0, 0.6);
+  animation: legendaryPulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: visible;
+}
+
+.card.legendary::before {
+  content: '✨';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  animation: legendarySparkle 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+.card.legendary::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(45deg, 
+    transparent 25%, 
+    rgba(255, 215, 0, 0.3) 50%, 
+    transparent 75%);
+  border-radius: inherit;
+  animation: legendaryRotate 4s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes legendaryPulse {
+  0%, 100% {
+    box-shadow: 0 0 40px rgba(255, 152, 0, 1),
+                0 0 60px rgba(255, 215, 0, 0.6),
+                0 4px 20px rgba(0, 0, 0, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(255, 152, 0, 1),
+                0 0 80px rgba(255, 215, 0, 0.9),
+                0 4px 25px rgba(0, 0, 0, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes legendarySparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+@keyframes legendaryRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   EVOLUTION EFFECTS
+   ============================================================================ */
+
+.card.evolved {
+  position: relative;
+}
+
+.card.evolved::before {
+  content: '🔗';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 18px;
+  z-index: 10;
+  animation: evolutionBadge 2s ease-in-out infinite;
+}
+
+@keyframes evolutionBadge {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.8));
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 15px rgba(76, 175, 80, 1));
+  }
+}
+
+.evolution-glow {
+  animation: evolutionGlow 1s ease-out;
+}
+
+@keyframes evolutionGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+  50% {
+    box-shadow: 0 0 60px 20px rgba(76, 175, 80, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 30px 10px rgba(76, 175, 80, 0.4);
+  }
+}
+
+/* Evolution particles */
+.evolution-particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.evolution-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: evolutionParticle 1.5s ease-out forwards;
+}
+
+@keyframes evolutionParticle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x), var(--y)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   COMBO EFFECTS
+   ============================================================================ */
+
+.combo-indicator {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.6);
+  animation: comboPopIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+@keyframes comboPopIn {
+  0% {
+    transform: translateX(-50%) scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.combo-chain-display {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 8px 15px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  border: 2px solid #ffd93d;
+}
+
+.combo-multiplier {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffd93d;
+  text-shadow: 0 0 10px rgba(255, 217, 61, 0.8);
+  animation: comboMultiplierPulse 1s ease-in-out infinite;
+}
+
+@keyframes comboMultiplierPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================================================
+   COUNTER CARD EFFECTS
+   ============================================================================ */
+
+.card.counter {
+  position: relative;
+}
+
+.card.counter::after {
+  content: '⚔️';
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  font-size: 20px;
+  opacity: 0.7;
+  animation: counterFloat 2s ease-in-out infinite;
+}
+
+@keyframes counterFloat {
+  0%, 100% {
+    transform: translateY(-50%) translateX(0);
+  }
+  50% {
+    transform: translateY(-50%) translateX(-5px);
+  }
+}
+
+.counter-activation {
+  animation: counterFlash 0.5s ease-out;
+}
+
+@keyframes counterFlash {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+  50% {
+    box-shadow: 0 0 40px 10px rgba(244, 67, 54, 1);
+  }
+}
+
+/* Counter effect burst */
+.counter-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border: 3px solid #f44336;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: counterBurst 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes counterBurst {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   TRAP CARD EFFECTS
+   ============================================================================ */
+
+.trap-card {
+  position: relative;
+  opacity: 0.3;
+  filter: brightness(0.5);
+}
+
+.trap-card::before {
+  content: '🕸️';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 60px;
+  opacity: 0.5;
+  z-index: 5;
+}
+
+.trap-revealed {
+  animation: trapReveal 0.8s ease-out;
+}
+
+@keyframes trapReveal {
+  0% {
+    opacity: 0.3;
+    filter: brightness(0.5);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+    box-shadow: 0 0 50px rgba(156, 39, 176, 1);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.trap-activation {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(156, 39, 176, 0.95);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(156, 39, 176, 0.8);
+  animation: trapMessage 2s ease-out forwards;
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+@keyframes trapMessage {
+  0% {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   FUSION EFFECTS
+   ============================================================================ */
+
+.fusion-animation {
+  position: relative;
+}
+
+.fusion-glow {
+  animation: fusionGlow 2s ease-out;
+}
+
+@keyframes fusionGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+  50% {
+    box-shadow: 0 0 80px 30px rgba(255, 152, 0, 1),
+                0 0 120px 40px rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 40px 10px rgba(255, 152, 0, 0.6);
+  }
+}
+
+.fusion-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.fusion-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #ffd700 0%, #ff9800 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  animation: fusionParticle 2s ease-out forwards;
+}
+
+@keyframes fusionParticle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x), var(--y)) scale(0);
+    opacity: 0;
+  }
+}
+
+.fusion-complete-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #ff9800 0%, #ffd700 100%);
+  color: white;
+  padding: 30px 50px;
+  border-radius: 20px;
+  font-size: 32px;
+  font-weight: 900;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 10px 40px rgba(255, 152, 0, 0.8);
+  animation: fusionBanner 3s ease-out forwards;
+  z-index: 10000;
+}
+
+@keyframes fusionBanner {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   PERSISTENT ABILITY INDICATORS
+   ============================================================================ */
+
+.persistent-ability-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 30px;
+  height: 30px;
+  background: rgba(33, 150, 243, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  animation: persistentPulse 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes persistentPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 2px 12px rgba(33, 150, 243, 0.8);
+  }
+}
+
+.ability-duration-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+.ability-duration-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2196f3 0%, #64b5f6 100%);
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.8);
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .combo-indicator {
+    font-size: 14px;
+    padding: 8px 15px;
+    top: -40px;
+  }
+  
+  .fusion-complete-banner {
+    font-size: 24px;
+    padding: 20px 35px;
+  }
+  
+  .card.legendary::before {
+    font-size: 16px;
+  }
+  
+  .persistent-ability-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .combo-indicator {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .trap-activation {
+    font-size: 12px;
+    padding: 10px 15px;
+  }
+  
+  .card.epic,
+  .card.legendary {
+    border-width: 3px;
+  }
+}
+
+/* ============================================================================
+   TRAP SELECTION VISUAL EFFECTS
+   ============================================================================ */
+
+.trap-selected {
+  border: 3px solid #8b4513 !important;
+  box-shadow: 0 0 25px rgba(139, 69, 19, 0.8),
+              inset 0 0 15px rgba(139, 69, 19, 0.3) !important;
+  transform: translateY(-5px) scale(1.05);
+  position: relative;
+}
+
+.trap-selected::after {
+  content: '🕸️';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  font-size: 30px;
+  animation: trapPulse 1s ease-in-out infinite;
+}
+
+@keyframes trapPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.trap-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(139, 69, 19, 0.95);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 10000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  animation: hintFadeIn 0.3s ease-out;
+}
+
+@keyframes hintFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.trap-btn.selected {
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+  border-color: #d2691e;
+  box-shadow: 0 0 20px rgba(139, 69, 19, 0.6);
+  animation: trapBtnGlow 1s ease-in-out infinite;
+}
+
+@keyframes trapBtnGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 69, 19, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 69, 19, 0.9);
+  }
+}

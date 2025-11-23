@@ -15,14 +15,21 @@
   transform: translate(-50%, -110%);
 }
 
+/* Tooltip placement variants */
+.card-tooltip[data-placement="bottom"] {
+  transform: translate(-50%, 10px);
+}
+
+.card-tooltip[data-placement="right"] {
+  transform: translate(10px, -50%);
+}
+
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -105%);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -110%);
   }
 }
 

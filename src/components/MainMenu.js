@@ -4,6 +4,7 @@ import './MainMenu.css';
 const MainMenu = ({ 
   onPlayGame,
   onStoryMode,
+  onTutorialMode,
   onShowTutorial, 
   onShowStats, 
   onShowProfile,
@@ -91,10 +92,16 @@ const MainMenu = ({
                 <span className="btn-subtitle">Epic Campaign</span>
               </button>
 
+              <button className="menu-btn tutorial-btn" onClick={onTutorialMode}>
+                <span className="btn-icon">🎓</span>
+                <span className="btn-text">TUTORIAL MODE</span>
+                <span className="btn-subtitle">Learn By Playing</span>
+              </button>
+
               <button className="menu-btn" onClick={onShowTutorial}>
                 <span className="btn-icon">📖</span>
                 <span className="btn-text">HOW TO PLAY</span>
-                <span className="btn-subtitle">Learn the Basics</span>
+                <span className="btn-subtitle">Quick Guide</span>
               </button>
             </div>
           </div>

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import CardTooltip from './CardTooltip';
 import './Card.css';
+import '../utils/visualEffects.css';
+import '../utils/advancedCardMechanics.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
+import advancedMechanics from '../utils/advancedCardMechanics';
 
-const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
+const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isPlaying, setIsPlaying] = useState(false);
@@ -16,9 +19,35 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
   const handleMouseEnter = (e) => {
     if (card) {
       const rect = e.currentTarget.getBoundingClientRect();
+      // Calculate tooltip position, ensuring it stays within viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Position tooltip to the right of the card if near top, otherwise above
+      const spaceAbove = rect.top;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceRight = viewportWidth - rect.right;
+      
+      let x = rect.left + rect.width / 2;
+      let y = rect.top;
+      let placement = 'top'; // Default placement
+      
+      // If not enough space above, place below or to the side
+      if (spaceAbove < 200) {
+        if (spaceBelow > 200) {
+          y = rect.bottom;
+          placement = 'bottom';
+        } else if (spaceRight > 320) {
+          x = rect.right + 10;
+          y = rect.top + rect.height / 2;
+          placement = 'right';
+        }
+      }
+      
       setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top
+        x,
+        y,
+        placement
       });
       setShowTooltip(true);
     }
@@ -184,13 +213,25 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
 
   const getCardBackgroundImage = () => {
     const basePath = process.env.PUBLIC_URL || '';
+    
+    // Check if card has a custom image (for fusion cards, etc.)
+    if (card?.image) {
+      console.log(`✅ Using custom card image for ${card.name || 'card'}: ${card.image}`);
+      return `${basePath}/${card.image}`;
+    }
+    
+    // Log when a fusion card doesn't have an image (shouldn't happen)
+    if (card?.isFusion || card?.fusion) {
+      console.warn(`⚠️ Fusion card ${card.name} missing image property!`, card);
+    }
+    
     const elementImages = {
       'ELECTRICITY': `${basePath}/electricity-card.png`,
       'FIRE': `${basePath}/fire card.png`,
       'ICE': `${basePath}/ice-card.png`,
       'WATER': `${basePath}/water-card.png`,
-      'EARTH': `${basePath}/earth_card.png`,
-      'DARK': `${basePath}/moon-card.png`,
+      'EARTH': `${basePath}/earth-card.png`,
+      'DARK': `${basePath}/dark-card.png`,
       'LIGHT': `${basePath}/star-card.png`,
       'TECHNOLOGY': `${basePath}/tech-card.png`,
       'METEOR': `${basePath}/meteor.png`,
@@ -221,10 +262,20 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
 
   const backgroundImage = getCardBackgroundImage();
 
+  // Determine rarity class based on power or existing rarity
+  const getRarityClass = () => {
+    // Use existing rarity if present
+    if (card.rarity) return card.rarity.toLowerCase();
+    
+    // Otherwise determine from advancedMechanics
+    const rarity = advancedMechanics.determineRarity(card);
+    return rarity.toLowerCase();
+  };
+
   return (
     <>
       <div 
-        className={`card ${isPlayable ? 'playable' : ''} ${card.tier?.toLowerCase() || 'common'} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''}`}
+        className={`card ${isPlayable ? 'playable' : ''} ${getRarityClass()} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''} ${manaCost !== undefined && !canAfford ? (canOverdraft ? 'overdraft-available' : 'unaffordable-card') : ''} ${card.evolved ? 'evolved' : ''} ${card.counter ? 'counter' : ''} ${card.trap ? 'trap-card' : ''} ${card.isTrapSelected ? 'trap-selected' : ''}`}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -237,6 +288,7 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
         data-key={keyboardKey || ''}
         data-element={card.element}
         data-colorblind={accessibilitySettings.colorblindMode !== 'none' ? 'true' : 'false'}
+        data-fusion={(card.isFusion || card.fusion) ? 'true' : 'false'}
         role="button"
         tabIndex={isPlayable ? 0 : -1}
         aria-label={`${card.element} card with strength ${card.modifiedStrength || card.strength}`}
@@ -249,19 +301,30 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
       )}
       
       <div className="card-header">
-        <div className="card-element" style={{ color: getElementColorLocal(card.element) }}>
-          {getElementIcon(card.element)}
-        </div>
-        <div className="card-strength" style={{ 
-          background: card.modifiedStrength ? `linear-gradient(135deg, ${getTierColor(card.tier)} 0%, #fff 100%)` : undefined 
-        }}>
-          {card.modifiedStrength || card.strength}
-          {card.modifiedStrength && card.modifiedStrength !== card.strength && (
-            <span className="strength-modifier">+{card.modifiedStrength - card.strength}</span>
+          <div className="card-element" style={{ color: getElementColorLocal(card.element) }}>
+            {getElementIcon(card.element)}
+          </div>
+          {manaCost !== undefined && (
+            <div className={`mana-cost-badge ${!canAfford ? 'unaffordable' : ''}`}>
+              💎 {manaCost}
+            </div>
+          )}
+          {card.evolved && (
+            <div className="evolution-badge" title="Evolved Card">
+              🔗
+            </div>
+          )}
+          {card.counter && (
+            <div className="counter-badge" title={`Counter: ${card.counterType}`}>
+              ⚔️
+            </div>
+          )}
+          {card.fusion && (
+            <div className="fusion-badge" title="Fusion Card">
+              🔮
+            </div>
           )}
         </div>
-      </div>
-      
       <div className="card-center">
         <span className="element-icon-large" style={{ color: getElementColorLocal(card.element) }}>
           {getElementIcon(card.element)}
@@ -295,6 +358,19 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed }) => {
           <div className="tech-ability">
             {card.techAbility === 'SHIELD' ? '🛡️ Shield' : '⚙️ Create'}
           </div>
+        )}
+        {card.persistentAbility && card.abilityDuration > 0 && (
+          <>
+            <div className="persistent-ability-icon" title={`${card.persistentAbility} (${card.abilityDuration} turns left)`}>
+              🌟
+            </div>
+            <div className="ability-duration-bar">
+              <div 
+                className="ability-duration-fill" 
+                style={{ width: `${(card.abilityDuration / (card.maxAbilityDuration || 3)) * 100}%` }}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

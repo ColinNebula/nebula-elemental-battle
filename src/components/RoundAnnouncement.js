@@ -65,7 +65,7 @@ const RoundAnnouncement = ({ roundNumber, show, onComplete }) => {
         <div className="round-text-container">
           <div className="round-label">Round</div>
           <div className="round-number">{roundNumber}</div>
-          <div className="round-subtitle">Battle Begins!</div>
+          <div className="round-subtitle">⚔️ Unleash Your Power! ⚔️</div>
         </div>
 
         <div className="round-decorative-elements">

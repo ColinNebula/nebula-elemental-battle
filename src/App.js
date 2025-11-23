@@ -7,8 +7,10 @@ import StoryMode from './components/StoryMode';
 import GameBoard from './components/GameBoard';
 import CardSelection from './components/CardSelection';
 import CharacterSelection from './components/CharacterSelection';
+import VictoryRewards from './components/VictoryRewards';
 import Settings from './components/Settings';
 import Tutorial from './components/Tutorial';
+import TutorialMode from './components/TutorialMode';
 import Statistics from './components/Statistics';
 import PlayerProfile from './components/PlayerProfile';
 import InstallPrompt from './components/InstallPrompt';
@@ -18,8 +20,10 @@ import CoinToss from './components/CoinToss';
 import ThemeShop from './components/ThemeShop';
 import DonationBanner from './components/DonationBanner';
 import Inventory from './components/Inventory';
+import SecurityIndicator from './components/SecurityIndicator';
 import GameClient from './services/GameClient';
 import securityManager from './utils/security';
+import secureStorage from './utils/secureStorage';
 import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, getProfile, updateProfile, recoverStoryProgress, recoverProfile } from './utils/statistics';
 import { awardCoins, initializeThemes } from './utils/themes';
 import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
@@ -32,7 +36,7 @@ function App() {
   // Lobby music ref - persists across lobby, character selection, and card selection
   const lobbyMusicRef = useRef(null);
 
-  // Initialize security
+  // Initialize security and migrate storage
   useEffect(() => {
     try {
       // Initialize security manager
@@ -40,6 +44,24 @@ function App() {
         version: process.env.REACT_APP_VERSION || '1.0.0',
         environment: process.env.NODE_ENV || 'development'
       });
+
+      // Migrate existing data to secure storage (one-time migration)
+      const migrationKey = 'secureStorageMigrated';
+      if (!localStorage.getItem(migrationKey)) {
+        console.log('[APP] Running secure storage migration...');
+        secureStorage.migrateToSecureStorage();
+        localStorage.setItem(migrationKey, 'true');
+        console.log('[APP] Migration complete');
+      }
+
+      // Validate data integrity on startup
+      const integrity = secureStorage.validateIntegrity();
+      if (integrity.invalid.length > 0) {
+        console.warn('[APP] Corrupted data detected:', integrity.invalid);
+        securityManager.logSecurityEvent('corrupted_data_detected', {
+          keys: integrity.invalid
+        });
+      }
     } catch (error) {
       console.error('Security initialization failed:', error);
     }
@@ -66,6 +88,7 @@ function App() {
   const [gameState, setGameState] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showTutorialMode, setShowTutorialMode] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showThemeShop, setShowThemeShop] = useState(false);
@@ -73,18 +96,21 @@ function App() {
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [showVictoryRewards, setShowVictoryRewards] = useState(false);
+  const [victoryRewardsData, setVictoryRewardsData] = useState(null);
   const [playerProfile, setPlayerProfile] = useState(() => recoverProfile());
   const [gameStartTime, setGameStartTime] = useState(null);
   const [lastRoundWinner, setLastRoundWinner] = useState(null);
+  const [rewardsAwarded, setRewardsAwarded] = useState(false);
   const [playerInventory, setPlayerInventory] = useState(() => {
-    const saved = localStorage.getItem('playerInventory');
-    return saved ? PlayerInventory.fromJSON(JSON.parse(saved)) : createDefaultInventory();
+    const saved = secureStorage.getItem('playerInventory');
+    return saved ? PlayerInventory.fromJSON(saved) : createDefaultInventory();
   });
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('gameSettings');
+    const saved = secureStorage.getItem('gameSettings');
     const accessibilitySettings = initializeAccessibility();
-    return saved ? {
-      ...JSON.parse(saved),
+    const baseSettings = saved ? {
+      ...saved,
       ...accessibilitySettings
     } : {
       soundEnabled: true,
@@ -97,6 +123,11 @@ function App() {
       textSize: accessibilitySettings.textSize,
       showElementIcons: accessibilitySettings.showElementIcons
     };
+    
+    // Remove strategicMode from initial settings - it should only be set when explicitly choosing Strategic Mode
+    delete baseSettings.strategicMode;
+    
+    return baseSettings;
   });
 
   // Initialize themes on app startup
@@ -145,12 +176,12 @@ function App() {
   // Handler for settings changes that also persists to localStorage
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('gameSettings', JSON.stringify(newSettings));
+    secureStorage.setItem('gameSettings', newSettings);
   };
 
   // Persist inventory changes to localStorage
   useEffect(() => {
-    localStorage.setItem('playerInventory', JSON.stringify(playerInventory));
+    secureStorage.setItem('playerInventory', playerInventory);
   }, [playerInventory]);
 
   // Inventory handlers
@@ -185,14 +216,14 @@ function App() {
       
       // Preserve user data
       const playerThemes = localStorage.getItem('playerThemes');
-      const playerProfile = localStorage.getItem('playerProfile');
-      const storyProgress = localStorage.getItem('storyModeProgress');
+      const playerProfile = secureStorage.getItem('playerProfile');
+      const storyProgress = secureStorage.getItem('storyModeProgress');
       const storyBackup = localStorage.getItem('storyModeBackup');
       const tutorialCompleted = localStorage.getItem('tutorialCompleted');
-      const gameSettings = localStorage.getItem('gameSettings');
+      const gameSettings = secureStorage.getItem('gameSettings');
       
       // Clear only cache data
-      const keysToPreserve = ['playerThemes', 'playerProfile', 'storyModeProgress', 'storyModeBackup', 'tutorialCompleted', 'gameSettings'];
+      const keysToPreserve = ['playerThemes', 'playerProfile', 'storyModeProgress', 'storyModeBackup', 'tutorialCompleted', 'gameSettings', '_encKey', 'checksums'];
       const allKeys = Object.keys(localStorage);
       allKeys.forEach(key => {
         if (!keysToPreserve.includes(key)) {
@@ -202,11 +233,11 @@ function App() {
       
       // Restore preserved data
       if (playerThemes) localStorage.setItem('playerThemes', playerThemes);
-      if (playerProfile) localStorage.setItem('playerProfile', playerProfile);
-      if (storyProgress) localStorage.setItem('storyModeProgress', storyProgress);
+      if (playerProfile) secureStorage.setItem('playerProfile', playerProfile);
+      if (storyProgress) secureStorage.setItem('storyModeProgress', storyProgress);
       if (storyBackup) localStorage.setItem('storyModeBackup', storyBackup);
       if (tutorialCompleted) localStorage.setItem('tutorialCompleted', tutorialCompleted);
-      if (gameSettings) localStorage.setItem('gameSettings', gameSettings);
+      if (gameSettings) secureStorage.setItem('gameSettings', gameSettings);
       
       localStorage.setItem('appVersion', APP_VERSION);
       console.log('✅ User data preserved during version update');
@@ -253,7 +284,7 @@ function App() {
 
   // Save settings to localStorage
   useEffect(() => {
-    localStorage.setItem('gameSettings', JSON.stringify(settings));
+    secureStorage.setItem('gameSettings', settings);
   }, [settings]);
 
   // Global keyboard shortcuts
@@ -328,7 +359,7 @@ function App() {
     }
 
     // Record game end
-    if (gameState.gameOver && gameStartTime) {
+    if (gameState.gameOver && gameStartTime && !rewardsAwarded) {
       const humanPlayer = gameState.players?.find(p => !p.isAI);
       const aiPlayer = gameState.players?.find(p => p.isAI);
       
@@ -355,7 +386,7 @@ function App() {
           aiScore: aiPlayer.score
         });
         
-        // Award coins for winning
+        // Award coins for winning (only once per game)
         const coinReward = awardCoins({
           won: playerWon === true,
           lost: playerWon === false,
@@ -364,14 +395,18 @@ function App() {
           aiScore: aiPlayer.score
         }, !!storyModeStage);
         
+        // Mark rewards as awarded for this game
+        setRewardsAwarded(true);
+        
         if (coinReward.coinsEarned > 0) {
           console.log(`🪙 Earned ${coinReward.coinsEarned} coins! Total: ${coinReward.totalCoins}`);
         }
         
         // Award loot for winning or completing matches
+        let loot = [];
         if (playerWon === true || playerWon === null) {
           const playerLevel = Math.floor((playerProfile.gamesPlayed || 0) / 10) + 1;
-          const loot = generateLoot(playerLevel, playerWon === true);
+          loot = generateLoot(playerLevel, playerWon === true);
           
           loot.forEach(item => {
             if (item.type === 'currency') {
@@ -388,6 +423,15 @@ function App() {
         }
         
         setPlayerProfile(updatedProfile);
+        
+        // Show victory rewards screen
+        setVictoryRewardsData({
+          coinsEarned: coinReward.coinsEarned,
+          totalCoins: coinReward.totalCoins,
+          playerWon: playerWon,
+          loot: loot
+        });
+        setShowVictoryRewards(true);
         
         // Story mode progress tracking with enhanced autosave
         if (storyModeStage && playerWon === true && !completedStoryStages.includes(storyModeStage)) {
@@ -406,7 +450,7 @@ function App() {
             localStorage.setItem('storyModeBackup', JSON.stringify(backupData));
             
             // Save player profile state
-            localStorage.setItem('playerProfile', JSON.stringify(playerProfile));
+            secureStorage.setItem('playerProfile', playerProfile);
             
             // Log successful autosave
             console.log(`✅ Story Progress Autosaved: Stage ${storyModeStage} completed`);
@@ -437,11 +481,31 @@ function App() {
 
   const handleStoryMode = () => {
     setShowMainMenu(false);
-    setShowStoryMode(true);
+    setShowCharacterSelection(true);
   };
 
   const handleStoryModeBack = () => {
     setShowStoryMode(false);
+    setShowCharacterSelection(true);
+  };
+
+  const handleTutorialMode = () => {
+    console.log('🎓 Tutorial Mode clicked');
+    setShowMainMenu(false);
+    setShowSplash(false);
+    setShowTutorialMode(true);
+  };
+
+  const handleTutorialComplete = () => {
+    console.log('✅ Tutorial completed');
+    setShowTutorialMode(false);
+    setShowMainMenu(true);
+    localStorage.setItem('tutorialCompleted', 'true');
+  };
+
+  const handleTutorialExit = () => {
+    console.log('❌ Tutorial exited');
+    setShowTutorialMode(false);
     setShowMainMenu(true);
   };
 
@@ -449,6 +513,9 @@ function App() {
     setStoryModeStage(stageNumber);
     setCurrentOpponent(opponentKey);
     setShowStoryMode(false);
+    
+    // Reset rewards flag for new game
+    setRewardsAwarded(false);
     
     // Use player profile name for story mode
     const playerName = playerProfile.name || 'Player';
@@ -495,11 +562,25 @@ function App() {
     setShowMainMenu(true);
   };
 
-  const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS') => {
-    console.log('🎯 Single player mode selected:', { playerName, aiPersonality });
+  const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS', strategicMode = null) => {
+    console.log('🎯 Single player mode selected:', { playerName, aiPersonality, strategicMode });
     // Store selection info and show character selection
     setCurrentOpponent(aiPersonality);
     setPlayerProfile({ ...playerProfile, name: playerName });
+    
+    // Update settings - either set strategic mode or explicitly remove it
+    if (strategicMode && typeof strategicMode === 'object') {
+      console.log('✅ Setting strategic mode:', strategicMode);
+      setSettings(prev => ({ ...prev, strategicMode }));
+    } else {
+      console.log('❌ Clearing strategic mode');
+      setSettings(prev => {
+        const newSettings = { ...prev };
+        delete newSettings.strategicMode;
+        return newSettings;
+      });
+    }
+    
     setShowLobby(false);
     setShowCharacterSelection(true);
   };
@@ -507,6 +588,9 @@ function App() {
   const startSinglePlayerGame = async (playerName, aiPersonality) => {
     console.log('🎯 Starting single player game:', { playerName, aiPersonality });
     try {
+      // Reset rewards flag for new game
+      setRewardsAwarded(false);
+      
       const result = await gameClient.createRoom(aiPersonality);
       console.log('🏠 Room created:', result);
       if (result && result.roomId) {
@@ -531,7 +615,7 @@ function App() {
         if (playerName !== playerProfile.name) {
           const updatedProfile = { ...playerProfile, name: playerName };
           setPlayerProfile(updatedProfile);
-          localStorage.setItem('playerProfile', JSON.stringify(updatedProfile));
+          secureStorage.setItem('playerProfile', updatedProfile);
         }
       } else {
         console.error('🚨 No room ID returned from createRoom');
@@ -596,6 +680,9 @@ function App() {
 
   const handleStartGame = async () => {
     if (roomId) {
+      // Reset rewards flag for new game
+      setRewardsAwarded(false);
+      
       const started = await gameClient.startGame(roomId);
       if (!started) {
         alert('Failed to start game. Need at least 2 players.');
@@ -606,6 +693,7 @@ function App() {
   const handlePlayCard = async (cardIndex) => {
     if (roomId) {
       const currentPlayer = gameState?.players?.find(p => p.id === playerId);
+      
       const card = currentPlayer?.hand?.[cardIndex];
       
       console.log('🎴 Playing card:', { cardIndex, card, isMyTurn: currentPlayer?.active });
@@ -636,6 +724,55 @@ function App() {
         }, 6000); // After round resolves
       }
     }
+  };
+
+  const handleFuseCards = (cardIndex1, cardIndex2, fusedCard) => {
+    console.log('🔮 Fusing cards:', { cardIndex1, cardIndex2, fusedCard });
+    
+    // FIRST: Update the mock game state in gameClient synchronously
+    if (roomId && gameClient.mockState.rooms[roomId]) {
+      const mockRoom = gameClient.mockState.rooms[roomId];
+      const mockPlayer = mockRoom.players.find(p => p.id === playerId);
+      if (mockPlayer) {
+        // Remove the two fused cards (remove higher index first to avoid index shift)
+        const indices = [cardIndex1, cardIndex2].sort((a, b) => b - a);
+        indices.forEach(index => {
+          mockPlayer.hand.splice(index, 1);
+        });
+        
+        // Add the fused card to hand
+        mockPlayer.hand.push(fusedCard);
+        
+        // Update card count
+        mockPlayer.cardCount = mockPlayer.hand.length + (mockPlayer.deck?.length || 0);
+        
+        console.log('✅ Mock state updated with fusion (synchronous)');
+      }
+    }
+    
+    // THEN: Update React state to reflect changes in UI
+    setGameState(prevState => {
+      const newState = { ...prevState };
+      const currentPlayer = newState.players.find(p => p.id === playerId);
+      
+      if (currentPlayer) {
+        // Remove the two fused cards (remove higher index first to avoid index shift)
+        const indices = [cardIndex1, cardIndex2].sort((a, b) => b - a);
+        indices.forEach(index => {
+          currentPlayer.hand.splice(index, 1);
+        });
+        
+        // Add the fused card to hand
+        currentPlayer.hand.push(fusedCard);
+        
+        // Update card count
+        currentPlayer.cardCount = currentPlayer.hand.length + (currentPlayer.deck?.length || 0);
+        
+        console.log('✨ Updated hand after fusion:', currentPlayer.hand);
+      }
+      
+      return newState;
+    });
   };
 
   const handleSelectCards = async (selectedIndices) => {
@@ -677,6 +814,9 @@ function App() {
   };
 
   const handlePlayAgain = () => {
+    // Reset rewards flag for new game
+    setRewardsAwarded(false);
+    
     // Clear game state interval
     if (window.gameStateInterval) {
       clearInterval(window.gameStateInterval);
@@ -750,18 +890,37 @@ function App() {
     setSelectedCharacter(character);
     setShowCharacterSelection(false);
     
-    // Start the actual game after character selection
-    const playerName = playerProfile?.name || 'Player 1';
-    const aiPersonality = currentOpponent || 'CHAOS';
-    await startSinglePlayerGame(playerName, aiPersonality);
+    // Check if coming from lobby or story mode
+    if (currentOpponent) {
+      // From lobby - start the actual game
+      const playerName = playerProfile?.name || 'Player 1';
+      const aiPersonality = currentOpponent;
+      await startSinglePlayerGame(playerName, aiPersonality);
+    } else {
+      // From story mode - show story mode campaign screen
+      setShowStoryMode(true);
+    }
   };
 
   const handleBackFromCharacterSelection = () => {
-    // Return to lobby to choose mode again
     setShowCharacterSelection(false);
     setSelectedCharacter(null);
-    setShowLobby(true);
-    setCurrentOpponent(null);
+    
+    // Return to either lobby or main menu based on where we came from
+    if (currentOpponent) {
+      // Came from lobby
+      setShowLobby(true);
+      setCurrentOpponent(null);
+    } else {
+      // Came from story mode
+      setShowMainMenu(true);
+    }
+  };
+
+  const handleVictoryRewardsContinue = () => {
+    setShowVictoryRewards(false);
+    setVictoryRewardsData(null);
+    // Game over screen will now be visible
   };
 
   const handleForfeitTurn = async () => {
@@ -794,6 +953,15 @@ function App() {
       {/* PWA Install Prompt - Only show on main menu */}
       {!showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && <InstallPrompt />}
       
+      {/* Tutorial Mode */}
+      {showTutorialMode && (
+        <TutorialMode 
+          onComplete={handleTutorialComplete}
+          onExit={handleTutorialExit}
+          playerProfile={playerProfile}
+        />
+      )}
+
       {/* Credits */}
       {showCredits && (
         <Credits onClose={handleCloseCredits} />
@@ -851,6 +1019,7 @@ function App() {
         <MainMenu
           onPlayGame={handlePlayGame}
           onStoryMode={handleStoryMode}
+          onTutorialMode={handleTutorialMode}
           onShowTutorial={() => setShowTutorial(true)}
           onShowStats={() => setShowStats(true)}
           onShowProfile={() => setShowProfile(true)}
@@ -863,7 +1032,15 @@ function App() {
         <StoryMode
           onStartBattle={handleStartStoryBattle}
           onBack={handleStoryModeBack}
-          completedStages={completedStoryStages}
+          storyProgress={{
+            currentStage: completedStoryStages.length > 0 ? Math.max(...completedStoryStages) : 0,
+            completedStages: completedStoryStages,
+            unlockedChapters: [1],
+            choices: {},
+            unlockedBackstories: ['DONOVAN_RAGE'],
+            unlockedSecretBosses: [],
+            difficulty: 'warrior'
+          }}
         />
       ) : !showSplash && showLobby && !inGame ? (
         <Lobby 
@@ -876,8 +1053,8 @@ function App() {
         />
       ) : !showSplash ? (
         <>
-          {/* Top-right menu buttons - hide during active gameplay */}
-          {(!inGame || gameState?.gameOver || gameState?.cardSelectionPhase) && (
+          {/* Top-right menu buttons - hide during active gameplay, character selection, card selection, and tutorial mode */}
+          {(!inGame || gameState?.gameOver) && !showCharacterSelection && !gameState?.cardSelectionPhase && !showTutorialMode && (
             <div className="top-menu">
               <button className="menu-button" onClick={() => {
                 setShowMainMenu(true);
@@ -903,12 +1080,20 @@ function App() {
             </div>
           )}
 
-          {showCharacterSelection ? (
+          {/* Victory Rewards Screen */}
+          {showVictoryRewards && victoryRewardsData ? (
+            <VictoryRewards
+              coinsEarned={victoryRewardsData.coinsEarned}
+              totalCoins={victoryRewardsData.totalCoins}
+              playerWon={victoryRewardsData.playerWon}
+              onContinue={handleVictoryRewardsContinue}
+            />
+          ) : showCharacterSelection && !showTutorialMode ? (
             <CharacterSelection
               onSelectCharacter={handleCharacterSelect}
               onCancel={handleBackFromCharacterSelection}
             />
-          ) : gameState?.cardSelectionPhase && !gameState?.gameStarted ? (
+          ) : gameState?.cardSelectionPhase && !gameState?.gameStarted && !showTutorialMode ? (
             <CardSelection
               hand={gameState.players?.find(p => p.id === playerId)?.hand || []}
               onConfirmSelection={handleSelectCards}
@@ -932,6 +1117,7 @@ function App() {
               onSkipAbility={handleSkipAbility}
               onForfeit={handleForfeitTurn}
               onQuit={handleQuit}
+              onFuseCards={handleFuseCards}
               settings={settings}
               isStoryMode={!!storyModeStage}
               selectedCharacter={selectedCharacter}

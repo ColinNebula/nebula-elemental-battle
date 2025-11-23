@@ -20,9 +20,46 @@ import {
   createElementPlayAnimation,
   createEnhancedVictoryPose
 } from '../utils/animations';
+import {
+  handleCriticalHit,
+  handleMeteorStrike,
+  createElementalWeather,
+  applyCardRarityGlow,
+  createWinnerVictoryPose,
+  createDefeatAnimation,
+  applyElementalBackground,
+  createSlowMotionReplay,
+  isDecisivePlay,
+  createEpicMoment
+} from '../utils/visualEffects';
+import {
+  initializeMana,
+  regenerateMana,
+  spendMana,
+  calculateCardManaCost,
+  canAffordCard,
+  awardComboMana,
+  allowOverdraft,
+  canOverdraftCard,
+  initializeWeather,
+  updateWeather,
+  applyWeatherModifier,
+  initializeTerrain,
+  applyTerrainBonus,
+  WEATHER_TYPES,
+  TERRAIN_TYPES
+} from '../utils/strategicSystems';
+import ManaDisplay from './ManaDisplay';
+import WeatherDisplay from './WeatherDisplay';
+import TerrainDisplay from './TerrainDisplay';
 import soundManager from '../utils/sounds';
 import { getCurrentThemes, HAND_THEMES, ARENA_THEMES } from '../utils/themes';
+import advancedMechanics from '../utils/advancedCardMechanics';
+import powerUpSystem from '../utils/powerUpSystem';
 import './GameBoard.css';
+import '../utils/visualEffects.css';
+import '../utils/advancedCardMechanics.css';
+import '../utils/powerUpSystem.css';
 
 const GameBoard = ({ 
   gameState, 
@@ -34,8 +71,11 @@ const GameBoard = ({
   onSkipAbility,
   onForfeit,
   onQuit,
+  onFuseCards,
   settings,
   isStoryMode,
+  isTutorial,
+  tutorialStep,
   selectedCharacter
 }) => {
   const currentPlayer = gameState?.players?.find(p => p.id === currentPlayerId);
@@ -60,8 +100,10 @@ const GameBoard = ({
   const [pendingCardIndex, setPendingCardIndex] = useState(null);
   const [lastTurnInfo, setLastTurnInfo] = useState({ playerId: null, round: -1 });
   const [turnTimer, setTurnTimer] = useState(20);
+  const [hasQuit, setHasQuit] = useState(false);
   const [lastPlayedCards, setLastPlayedCards] = useState([]);
   const [hasAutoSkipped, setHasAutoSkipped] = useState(false);
+  const timerIntervalRef = useRef(null);
   
   // Sidebar visibility
   const [sidebarState, setSidebarState] = useState({
@@ -83,11 +125,62 @@ const GameBoard = ({
   
   const [sortBy, setSortBy] = useState('none');
   
+  // Strategic Systems State
+  const [manaState, setManaState] = useState(() => initializeMana());
+  const [weatherState, setWeatherState] = useState(() => initializeWeather());
+  const [terrainState, setTerrainState] = useState(null);
+  const [strategicSettings, setStrategicSettings] = useState({
+    manaEnabled: false,
+    weatherEnabled: false,
+    terrainEnabled: false,
+    selectedTerrain: 'NEUTRAL'
+  });
+  
+  // Advanced Mechanics State
+  const [evolutionTracker, setEvolutionTracker] = useState(advancedMechanics.initializeEvolutionTracker());
+  const [persistentAbilities, setPersistentAbilities] = useState(advancedMechanics.initializePersistentAbilities());
+  const [trapSystem, setTrapSystem] = useState(advancedMechanics.initializeTrapSystem());
+  const [comboHistory, setComboHistory] = useState([]);
+  const [fusionQueue, setFusionQueue] = useState([]);
+  const [showFusionUI, setShowFusionUI] = useState(false);
+  const [selectedFusionCards, setSelectedFusionCards] = useState([]);
+  const [avatarPersonality, setAvatarPersonality] = useState('warrior'); // warrior, mage, rogue, sage
+  const [showTrapUI, setShowTrapUI] = useState(false);
+  const [selectedTrapCard, setSelectedTrapCard] = useState(null);
+  
+  // Power-Up System State
+  const [boosterSystem, setBoosterSystem] = useState(() => powerUpSystem?.initializeBoosterSystem?.() || { activeBoosters: [], usedBoosters: [] });
+  const [ultimateSystem, setUltimateSystem] = useState(() => powerUpSystem?.initializeUltimateSystem?.('meteor_strike') || { id: 'meteor_strike', selectedUltimate: 'meteor_strike', currentCooldown: 5 });
+  const [sideboard, setSideboard] = useState(() => powerUpSystem?.initializeSideboard?.() || { cards: [], maxCards: 5, swapsUsed: 0, maxSwaps: 3 });
+  const [equipment, setEquipment] = useState(() => powerUpSystem?.initializeEquipment?.() || { slots: {}, inventory: [], unlockedItems: [], gold: 100 });
+  const [showBoosterPanel, setShowBoosterPanel] = useState(false);
+  const [showEquipmentPanel, setShowEquipmentPanel] = useState(false);
+  const [showEquipmentShop, setShowEquipmentShop] = useState(false);
+  const [swapMode, setSwapMode] = useState(false);
+  const [selectedSideboardCard, setSelectedSideboardCard] = useState(null);
+  const [showEquipmentStats, setShowEquipmentStats] = useState(false);
+  
   // Refs
   const gameBoardRef = useRef(null);
   const lastAnnouncedRoundRef = useRef(0);
   const hasShownInitialArenaRef = useRef(false);
   const handCardRefs = useRef({});
+  const shownMatchBonuses = useRef(new Set());
+  
+  // Check if player has any playable cards
+  const hasPlayableCards = () => {
+    if (!currentPlayer?.hand || currentPlayer.hand.length === 0) return false;
+    
+    // If mana system is disabled, all cards are playable
+    if (!strategicSettings?.manaEnabled) return true;
+    
+    // Check if at least one card is affordable or overdraftable
+    return currentPlayer.hand.some(card => {
+      const affordable = canAffordCard(manaState, card);
+      const overdraftable = !affordable && canOverdraftCard(manaState, card);
+      return affordable || overdraftable;
+    });
+  };
   
   // Derived values for backward compatibility
   const showTurnAnnouncement = uiState.showTurnAnnouncement;
@@ -114,6 +207,34 @@ const GameBoard = ({
   const setHandTheme = (val) => setThemeState(prev => ({ ...prev, hand: val }));
   const arenaTheme = themeState.arena;
   const setArenaTheme = (val) => setThemeState(prev => ({ ...prev, arena: val }));
+
+  // Initialize strategic systems from settings
+  useEffect(() => {
+    console.log('🎮 GameBoard settings:', settings);
+    console.log('⚙️ Strategic mode:', settings?.strategicMode);
+    
+    if (settings?.strategicMode && typeof settings.strategicMode === 'object') {
+      console.log('✅ Enabling strategic systems:', settings.strategicMode);
+      setStrategicSettings(settings.strategicMode);
+      if (settings.strategicMode.manaEnabled === true) {
+        setManaState(initializeMana());
+      }
+      if (settings.strategicMode.weatherEnabled === true) {
+        setWeatherState(initializeWeather());
+      }
+      if (settings.strategicMode.terrainEnabled === true) {
+        setTerrainState(initializeTerrain(settings.strategicMode.selectedTerrain));
+      }
+    } else {
+      console.log('❌ No strategic mode detected, using defaults (all disabled)');
+      setStrategicSettings({
+        manaEnabled: false,
+        weatherEnabled: false,
+        terrainEnabled: false,
+        selectedTerrain: 'NEUTRAL'
+      });
+    }
+  }, [settings]);
 
   // Load hand theme from localStorage and listen for changes
   useEffect(() => {
@@ -144,11 +265,73 @@ const GameBoard = ({
     };
   }, []);
 
-  // Calculate total strength from played cards
+  // Regenerate mana when turn changes (strategic mode)
+  useEffect(() => {
+    if (strategicSettings.manaEnabled && isMyTurn && gameState?.gameStarted && !gameState?.gameOver) {
+      const equipStats = powerUpSystem?.calculateEquipmentStats?.(equipment) || {};
+      const bonusRegen = equipStats.manaRegen || 0;
+      
+      setManaState(prev => {
+        const regenerated = regenerateMana(prev);
+        return {
+          ...regenerated,
+          current: Math.min(regenerated.max, regenerated.current + bonusRegen)
+        };
+      });
+    }
+  }, [isMyTurn, strategicSettings.manaEnabled, gameState?.gameStarted, gameState?.gameOver, equipment]);
+
+  // Process persistent abilities each turn
+  useEffect(() => {
+    if (isMyTurn && gameState?.gameStarted && !gameState?.gameOver) {
+      const result = advancedMechanics.processPersistentAbilities(persistentAbilities, currentPlayerId);
+      setPersistentAbilities(result.abilities);
+      
+      // Apply persistent ability effects
+      result.effects.forEach(effect => {
+        if (effect.type === 'STRENGTH_BOOST' && currentPlayer?.hand) {
+          // Boost all cards in hand
+          currentPlayer.hand.forEach(card => {
+            if (card) card.modifiedStrength = (card.modifiedStrength || card.strength) + effect.value;
+          });
+        }
+      });
+    }
+  }, [isMyTurn, gameState?.gameStarted, gameState?.gameOver, currentPlayerId]);
+
+  // Tick power-up systems each turn
+  useEffect(() => {
+    if (isMyTurn && gameState?.gameStarted && !gameState?.gameOver) {
+      // Tick booster durations
+      setBoosterSystem(prev => powerUpSystem?.tickBoosterSystem?.(prev, currentPlayerId) || prev);
+      
+      // Tick ultimate cooldown
+      setUltimateSystem(prev => powerUpSystem?.tickUltimateCooldown?.(prev) || prev);
+    }
+  }, [isMyTurn, gameState?.gameStarted, gameState?.gameOver, currentPlayerId]);
+
+  // Update weather every few rounds (strategic mode)
+  useEffect(() => {
+    if (strategicSettings.weatherEnabled && gameState?.currentRound > lastAnnouncedRoundRef.current) {
+      setWeatherState(prev => updateWeather(prev));
+    }
+  }, [gameState?.currentRound, strategicSettings.weatherEnabled]);
+
+  // Calculate total strength from played cards with strategic modifiers
   const calculateTotalStrength = (player) => {
     if (!player?.playedCards || player.playedCards.length === 0) return 0;
     return player.playedCards.reduce((total, card) => {
-      return total + (card.modifiedStrength || card.strength || 0);
+      let strength = card.modifiedStrength || card.strength || 0;
+      
+      // Apply strategic modifiers if enabled
+      if (strategicSettings.weatherEnabled && weatherState?.current) {
+        strength += applyWeatherModifier(card, weatherState.current);
+      }
+      if (strategicSettings.terrainEnabled && terrainState?.current) {
+        strength += applyTerrainBonus(card, terrainState.current);
+      }
+      
+      return total + strength;
     }, 0);
   };
 
@@ -192,12 +375,22 @@ const GameBoard = ({
           if (soundManager && cardPlay.card.element) {
             soundManager.playElementSound(cardPlay.card.element);
             soundManager.playSound('cardFlip');
+            
+            // Play voice line for card play (only for player cards)
+            if (cardPlay.playerId === humanPlayer?.id) {
+              soundManager.playVoiceLine(avatarPersonality, 'cardPlay');
+            }
           }
           
           // Card flip animation
           const cardElements = gameBoardRef.current.querySelectorAll('.played-card');
           if (cardElements[currentPlayedCount - 1 + idx]) {
-            createCardFlipAnimation(cardElements[currentPlayedCount - 1 + idx]);
+            const cardEl = cardElements[currentPlayedCount - 1 + idx];
+            createCardFlipAnimation(cardEl);
+            
+            // Apply rarity glow based on card power
+            const power = cardPlay.card.modifiedStrength || cardPlay.card.strength;
+            applyCardRarityGlow(cardEl, power);
           }
           
           // Particle effects
@@ -226,6 +419,18 @@ const GameBoard = ({
       setLastPlayedCards(gameState.playedCards);
     }
   }, [gameState?.playedCards?.length, gameBoardRef]);
+
+  // Dynamic music intensity based on game state
+  useEffect(() => {
+    if (!gameState?.gameStarted || gameState?.gameOver) return;
+    
+    const playerScore = humanPlayer?.score || 0;
+    const opponentScore = aiPlayer?.score || 0;
+    const currentRound = gameState?.round || 1;
+    const maxRounds = gameState?.maxRounds || 7;
+    
+    soundManager.updateMusicIntensity(playerScore, opponentScore, currentRound, maxRounds);
+  }, [humanPlayer?.score, aiPlayer?.score, gameState?.round, gameState?.maxRounds, gameState?.gameStarted, gameState?.gameOver]);
 
   // Auto-skip turn if player has no cards
   useEffect(() => {
@@ -264,6 +469,13 @@ const GameBoard = ({
     }
   }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, isStoryMode]);
 
+  // Reset hasQuit when game starts
+  useEffect(() => {
+    if (gameState?.gameStarted && !gameState?.gameOver) {
+      setHasQuit(false);
+    }
+  }, [gameState?.gameStarted, gameState?.gameOver]);
+
   // Countdown timer for defeat modal
   useEffect(() => {
     if (defeatCountdown === null) return;
@@ -272,6 +484,7 @@ const GameBoard = ({
       // Fade out and return to main menu
       setFadeOut(true);
       setTimeout(() => {
+        setHasQuit(true);
         onQuit();
       }, 1000);
       return;
@@ -299,14 +512,58 @@ const GameBoard = ({
         
         const winner = gameState.winner === 'Tie' ? 'Tie' : gameState.winner;
         
+        // Award equipment rewards for victory
+        if (winner === humanPlayer?.name) {
+          const goldReward = 50 + (gameState.currentRound * 10);
+          const randomReward = Math.random();
+          let itemReward = null;
+          
+          if (randomReward > 0.7) {
+            const availableItems = Object.keys(powerUpSystem.EQUIPMENT_ITEMS).filter(
+              id => !equipment.unlockedItems.includes(id)
+            );
+            if (availableItems.length > 0) {
+              itemReward = availableItems[Math.floor(Math.random() * availableItems.length)];
+            }
+          }
+          
+          const reward = powerUpSystem.awardEquipmentReward(equipment, itemReward, goldReward);
+          if (reward.success) {
+            setEquipment(reward.equipment);
+            
+            // Show reward notification
+            if (gameBoardRef.current) {
+              const rewardDiv = document.createElement('div');
+              rewardDiv.className = 'equipment-reward-notification';
+              rewardDiv.innerHTML = `
+                <div style="font-size: 24px; color: #ffd700; margin-bottom: 10px;">🏆 VICTORY REWARDS! 🏆</div>
+                <div style="font-size: 18px;">+${goldReward} Gold</div>
+                ${itemReward ? `<div style="font-size: 20px; color: #ff9800; margin-top: 10px;">🎁 ${powerUpSystem.EQUIPMENT_ITEMS[itemReward].name} UNLOCKED!</div>` : ''}
+              `;
+              rewardDiv.style.cssText = `
+                position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9); color: white; padding: 30px 50px;
+                border-radius: 15px; z-index: 10001; text-align: center;
+                border: 3px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+                animation: slideInDown 0.5s ease-out;
+              `;
+              gameBoardRef.current.appendChild(rewardDiv);
+              setTimeout(() => rewardDiv.remove(), 4000);
+            }
+          }
+        }
+        
         // Play victory or defeat sound
         if (soundManager) {
           if (winner === 'Tie') {
             soundManager.playSound('victory');
           } else if (winner === humanPlayer?.name) {
             soundManager.playSound('victory');
+            soundManager.playVoiceLine(avatarPersonality, 'victory');
+            soundManager.playCrowdReaction('cheer');
           } else {
             soundManager.playSound('defeat');
+            soundManager.playVoiceLine(avatarPersonality, 'defeat');
           }
           
           // Stop background music
@@ -395,7 +652,10 @@ const GameBoard = ({
       // After 6 seconds, show "Battle Begin!" phase transition
       const battleBeginTimer = setTimeout(() => {
         if (gameBoardRef.current) {
-          createPhaseTransition('Battle Begin!', gameBoardRef.current);
+          const battleTransition = createPhaseTransition('⚔️ BATTLE BEGIN! ⚔️', gameBoardRef.current);
+          if (battleTransition) {
+            battleTransition.classList.add('battle-start-epic');
+          }
         }
       }, 6000);
       
@@ -532,10 +792,21 @@ const GameBoard = ({
     }
   };
 
-  // Turn timer countdown - starts 1.5 seconds after turn announcement
+  // Turn timer countdown - starts after turn announcement finishes
   useEffect(() => {
+    // Clean up any existing timer
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+
     // Don't run timer if disabled or game conditions prevent it
-    if (!settings?.timerEnabled || gameState?.gameOver || gameState?.pendingAbility || isPaused || showRoundAnnouncement || showTurnAnnouncement) {
+    if (!settings?.timerEnabled || gameState?.gameOver || gameState?.pendingAbility || isPaused || showRoundAnnouncement) {
+      return;
+    }
+
+    // Don't start timer until turn announcement is finished
+    if (showTurnAnnouncement) {
       return;
     }
 
@@ -544,57 +815,61 @@ const GameBoard = ({
       return;
     }
     
-    // Wait 1.5 seconds before starting countdown
-    let timerStarted = false;
+    // Wait 1 second after turn announcement finishes before starting countdown
     const startDelay = setTimeout(() => {
-      timerStarted = true;
-    }, 1500);
-
-    const interval = setInterval(() => {
-      if (!timerStarted) return; // Don't count down until delay completes
-      
-      setTurnTimer((prev) => {
-        if (prev <= 1) {
-          // Check if player has no cards left
-          const hasCards = currentPlayer?.hand?.length > 0;
-          
-          if (!hasCards) {
-            // Player has no cards - automatically skip turn without forfeit
-            console.log('Turn timer expired - player has no cards, skipping turn');
-            
-            // Just let the turn pass naturally without forfeit announcement
-            if (onForfeit) {
-              onForfeit();
+      timerIntervalRef.current = setInterval(() => {
+        setTurnTimer((prev) => {
+          if (prev <= 1) {
+            // Clear the interval when timer expires
+            if (timerIntervalRef.current) {
+              clearInterval(timerIntervalRef.current);
+              timerIntervalRef.current = null;
             }
-          } else {
-            // Player has cards but didn't play - this is a forfeit
-            console.log('Turn timer expired - forfeiting turn');
             
-            // Show forfeit announcement
-            setShowForfeitAnnouncement(true);
-            setTimeout(() => {
-              setShowForfeitAnnouncement(false);
-            }, 2000);
+            // Check if player has no cards left
+            const hasCards = currentPlayer?.hand?.length > 0;
             
-            // Play timeout sound
-            if (soundManager) soundManager.playSound('defeat');
-            
-            if (onForfeit) {
-              onForfeit();
+            if (!hasCards) {
+              // Player has no cards - automatically skip turn without forfeit
+              console.log('Turn timer expired - player has no cards, skipping turn');
+              
+              // Just let the turn pass naturally without forfeit announcement
+              if (onForfeit) {
+                onForfeit();
+              }
+            } else {
+              // Player has cards but didn't play - this is a forfeit
+              console.log('Turn timer expired - forfeiting turn');
+              
+              // Show forfeit announcement
+              setShowForfeitAnnouncement(true);
+              setTimeout(() => {
+                setShowForfeitAnnouncement(false);
+              }, 2000);
+              
+              // Play timeout sound
+              if (soundManager) soundManager.playSound('defeat');
+              
+              if (onForfeit) {
+                onForfeit();
+              }
             }
+            return 20;
           }
-          return 20;
-        }
-        return prev - 1;
-      });
+          return prev - 1;
+        });
+      }, 1000);
     }, 1000);
 
     return () => {
       clearTimeout(startDelay);
-      clearInterval(interval);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement, turnTimer]);
+  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement]);
 
   // Keyboard shortcuts for card selection
   useEffect(() => {
@@ -617,16 +892,33 @@ const GameBoard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMyTurn, settings?.keyboardEnabled, gameState?.gameOver, gameState?.pendingAbility, currentPlayer?.hand]);
 
-  // Show element match bonus animation
+  // Show element match bonus animation - only once per unique bonus
   useEffect(() => {
     if (gameState?.lastMatchBonus) {
-      setShowMatchBonus(true);
-      const timer = setTimeout(() => {
-        setShowMatchBonus(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+      const bonusKey = `${gameState.lastMatchBonus.element}-${gameState.lastMatchBonus.player}-${gameState.currentRound}`;
+      
+      // Initialize ref if needed (for hot reload)
+      if (!shownMatchBonuses.current) {
+        shownMatchBonuses.current = new Set();
+      }
+      
+      if (!shownMatchBonuses.current.has(bonusKey)) {
+        shownMatchBonuses.current.add(bonusKey);
+        setShowMatchBonus(true);
+        const timer = setTimeout(() => {
+          setShowMatchBonus(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [gameState?.lastMatchBonus]);
+  }, [gameState?.lastMatchBonus, gameState?.currentRound]);
+
+  // Reset shown bonuses when game restarts
+  useEffect(() => {
+    if (gameState?.gameStarted && shownMatchBonuses.current) {
+      shownMatchBonuses.current.clear();
+    }
+  }, [gameState?.gameStarted]);
 
   // Victory pose for winning cards
   useEffect(() => {
@@ -645,20 +937,63 @@ const GameBoard = ({
       if (humanPower !== aiPower) {
         // Find the winning card element
         const isHumanWinner = humanPower > aiPower;
+        const winningCard = isHumanWinner ? humanCard : aiCard;
+        const losingCard = isHumanWinner ? aiCard : humanCard;
+        const winningElement = winningCard.element || 'FIRE';
+        
         const winningCardElements = gameBoardRef.current.querySelectorAll(
           isHumanWinner ? '.player-row .played-card-wrapper' : '.ai-row .played-card-wrapper'
         );
+        const losingCardElements = gameBoardRef.current.querySelectorAll(
+          isHumanWinner ? '.ai-row .played-card-wrapper' : '.player-row .played-card-wrapper'
+        );
         
         if (winningCardElements.length > 0) {
-          const lastCard = winningCardElements[winningCardElements.length - 1];
+          const winnerElement = winningCardElements[winningCardElements.length - 1];
+          const loserElement = losingCardElements.length > 0 ? losingCardElements[losingCardElements.length - 1] : null;
+          
           setTimeout(() => {
-            if (lastCard) {
-              createVictoryPose(lastCard);
+            if (winnerElement) {
+              // Check for decisive play
+              const decisive = isDecisivePlay(humanPower, aiPower, gameState?.gameOver);
+              
+              if (decisive) {
+                // Epic moment with all effects
+                createEpicMoment(winningCard, losingCard, winningElement, gameBoardRef.current);
+              } else {
+                // Standard victory effects
+                createVictoryPose(winnerElement);
+                
+                // Critical hit check - show on the card being hit (loser)
+                const winPower = winningCard.modifiedStrength || winningCard.strength;
+                if (winPower >= 8 && loserElement) {
+                  setTimeout(() => {
+                    handleCriticalHit(winningCard, loserElement, gameBoardRef.current);
+                  }, 300);
+                }
+                
+                // Elemental weather
+                setTimeout(() => {
+                  createElementalWeather(winningElement, gameBoardRef.current);
+                }, 600);
+                
+                // Enhanced victory pose for winner
+                setTimeout(() => {
+                  createWinnerVictoryPose(winnerElement);
+                }, 800);
+                
+                // Defeat animation for loser
+                if (loserElement) {
+                  setTimeout(() => {
+                    createDefeatAnimation(loserElement);
+                  }, 1000);
+                }
+              }
               
               // Add combo multiplier if match bonus
               if (gameState?.lastMatchBonus && gameBoardRef.current) {
                 try {
-                  const rect = lastCard.getBoundingClientRect();
+                  const rect = winnerElement.getBoundingClientRect();
                   const parentRect = gameBoardRef.current.getBoundingClientRect();
                   const x = rect.left - parentRect.left + rect.width / 2;
                   const y = rect.top - parentRect.top;
@@ -672,7 +1007,7 @@ const GameBoard = ({
         }
       }
     }
-  }, [gameState?.playedCards?.length, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState?.lastMatchBonus]);
+  }, [gameState?.playedCards?.length, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState?.lastMatchBonus, gameState?.gameOver]);
 
   // Display meteor damage events
   useEffect(() => {
@@ -700,6 +1035,12 @@ const GameBoard = ({
         // Add visual damage indicators
         latestEvent.damagedCards.forEach((damageInfo, idx) => {
           setTimeout(() => {
+            // Find the card element that was hit
+            const handElements = document.querySelectorAll('.hand .card');
+            if (handElements[damageInfo.cardIndex]) {
+              handleMeteorStrike(handElements[damageInfo.cardIndex], gameBoardRef.current);
+            }
+            
             // Create floating -1 damage number for each card
             if (gameBoardRef.current) {
               const rect = gameBoardRef.current.getBoundingClientRect();
@@ -795,9 +1136,8 @@ const GameBoard = ({
       
       return () => clearTimeout(watchdogTimer);
     }
-  }, [aiPlayer?.active, aiPlayer?.hand?.length, aiPlayer?.chosenCard, gameState?.battlePhase, 
-      gameState?.gameStarted, gameState?.gameOver, showRoundAnnouncement, showTurnAnnouncement, 
-      onPlayCard, aiPlayer?.id, showInitialArena]);
+  }, [aiPlayer, gameState?.battlePhase, gameState?.gameStarted, gameState?.gameOver, 
+      showRoundAnnouncement, showTurnAnnouncement, onPlayCard, showInitialArena]);
 
   // General game stuck detector - detects if game is in an invalid state
   useEffect(() => {
@@ -900,6 +1240,8 @@ const GameBoard = ({
   }, [humanPlayer?.hand?.length, aiPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.deck?.length, gameState?.gameStarted, gameState?.gameOver, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState, humanPlayer, aiPlayer, onPlayCard]);
 
   const handleCardClick = (cardIndex) => {
+    console.log('🎴 Card clicked:', { cardIndex, isMyTurn, gameOver: gameState?.gameOver, isPaused, pendingAbility: gameState?.pendingAbility });
+    
     // Block actions during initial arena display
     if (showInitialArena) {
       console.log('⏸️ Card click blocked - arena display in progress');
@@ -912,8 +1254,48 @@ const GameBoard = ({
       return;
     }
     
+    // Check if we're in trap selection mode (no trap UI shown yet)
+    if (isMyTurn && !showTrapUI) {
+      // Toggle trap card selection
+      if (selectedTrapCard === cardIndex) {
+        setSelectedTrapCard(null);
+        console.log('🕸️ Trap card deselected');
+      } else {
+        // Select or switch to different card
+        setSelectedTrapCard(cardIndex);
+        console.log('🕸️ Trap card selected:', cardIndex);
+      }
+    }
+    
     if (isMyTurn && onPlayCard && !gameState?.gameOver && !isPaused && !gameState?.pendingAbility) {
-      const card = currentPlayer.hand[cardIndex];
+      const card = currentPlayer?.hand[cardIndex];
+      
+      if (!card) {
+        console.error('❌ No card found at index:', cardIndex);
+        return;
+      }
+      
+      // Check mana cost only if strategic mode enabled AND mana system is active
+      if (strategicSettings?.manaEnabled === true && card) {
+        const cost = calculateCardManaCost(card);
+        const affordable = canAffordCard(manaState, card);
+        console.log('💎 Mana check:', { 
+          manaEnabled: strategicSettings.manaEnabled,
+          cost, 
+          current: manaState.current, 
+          affordable 
+        });
+        
+        if (!affordable) {
+          console.log(`❌ Not enough mana! Need ${cost}, have ${manaState.current}`);
+          // Don't show preview for unaffordable cards
+          return;
+        }
+      } else {
+        console.log('✅ Mana system disabled or not checking, card playable');
+      }
+      
+      console.log('✅ Card click allowed, showing preview');
       
       // Trigger particle effects
       if (gameBoardRef.current && card && card.element) {
@@ -926,12 +1308,180 @@ const GameBoard = ({
       // Show card preview and store pending card index for confirmation
       setCardPreview({ card, isPlayer: true });
       setPendingCardIndex(cardIndex);
+    } else {
+      console.log('⏸️ Card click blocked - conditions not met');
     }
   };
 
   const handleConfirmCardPlay = () => {
     if (pendingCardIndex !== null && currentPlayer) {
-      const card = currentPlayer.hand[pendingCardIndex];
+      const originalCard = currentPlayer.hand[pendingCardIndex];
+      
+      // Safety check - card might have been removed
+      if (!originalCard) {
+        console.error('❌ Card not found at pending index:', pendingCardIndex);
+        setCardPreview(null);
+        setPendingCardIndex(null);
+        return;
+      }
+      
+      let card = { ...originalCard };
+      
+      // Apply rarity bonus if not already set
+      if (!card.rarity) {
+        card.rarity = advancedMechanics.determineRarity(card);
+        card = advancedMechanics.applyRarityBonus(card);
+      }
+      
+      // Apply booster effects
+      card = powerUpSystem?.applyBoosterEffects?.(card, boosterSystem, currentPlayerId) || card;
+      
+      // Apply equipment bonuses
+      card = powerUpSystem?.applyEquipmentEffects?.(card, equipment, {
+        isFirstTurn: gameState.turn === 1,
+        comboCount: comboHistory.filter(c => Date.now() - (c.timestamp || 0) < 5000).length
+      });
+      
+      // Check for evolution
+      const evolutionResult = advancedMechanics.checkEvolution(card, evolutionTracker, {
+        playCount: (evolutionTracker[`${card.element}_${card.strength}`]?.playCount || 0) + 1,
+        wins: humanPlayer?.score || 0,
+        damage: card.strength
+      });
+      
+      if (evolutionResult?.evolved) {
+        card.evolved = true;
+        card.strength = evolutionResult.newStrength;
+        setEvolutionTracker(evolutionResult.tracker);
+        
+        // Show evolution animation
+        if (gameBoardRef.current) {
+          const cardElements = gameBoardRef.current.querySelectorAll('.hand .card');
+          const cardElement = cardElements[pendingCardIndex];
+          if (cardElement) {
+            cardElement.classList.add('evolution-glow');
+            setTimeout(() => cardElement.classList.remove('evolution-glow'), 1500);
+          }
+        }
+      }
+      
+      // Check for combos with previously played cards
+      const recentCards = [...(humanPlayer?.playedCards || []).slice(-2), card];
+      const comboResult = advancedMechanics.detectCombo(recentCards);
+      
+      if (comboResult?.combo) {
+        card = comboResult.card;
+        setComboHistory(prev => [...prev, comboResult.combo]);
+        
+        // Play combo chain sound based on recent combo count
+        const recentComboCount = comboHistory.filter(c => Date.now() - (c.timestamp || 0) < 5000).length + 1;
+        soundManager.playComboChain(recentComboCount);
+        
+        // Award combo mana bonus if strategic mode enabled
+        if (strategicSettings.manaEnabled && recentComboCount >= 3) {
+          setManaState(prev => awardComboMana(prev, recentComboCount));
+        }
+        
+        // Play combo voice line
+        soundManager.playVoiceLine(avatarPersonality, 'combo');
+        
+        // Show combo indicator
+        if (gameBoardRef.current) {
+          const comboDiv = document.createElement('div');
+          comboDiv.className = 'combo-indicator';
+          comboDiv.textContent = `${comboResult.combo.name} +${comboResult.combo.bonus}!`;
+          gameBoardRef.current.appendChild(comboDiv);
+          setTimeout(() => comboDiv.remove(), 2000);
+        }
+      }
+      
+      // Check for counter activation (if opponent has played cards)
+      if (card?.counter && aiPlayer?.playedCards?.length > 0) {
+        const lastOpponentCard = aiPlayer.playedCards[aiPlayer.playedCards.length - 1];
+        const counterResult = advancedMechanics.checkCounterActivation(card, lastOpponentCard, 'PLAY');
+        
+        if (counterResult?.activated) {
+          card = counterResult.card;
+          
+          // Play counter voice line and crowd gasp
+          soundManager.playVoiceLine(avatarPersonality, 'counter');
+          soundManager.playCrowdReaction('gasp');
+          
+          // Show counter activation
+          if (gameBoardRef.current) {
+            const counterDiv = document.createElement('div');
+            counterDiv.className = 'counter-burst';
+            gameBoardRef.current.appendChild(counterDiv);
+            setTimeout(() => counterDiv.remove(), 600);
+          }
+        }
+      }
+      
+      // Check for trap activation
+      const trapResult = advancedMechanics.checkTrapActivation(trapSystem, 'onPlay', { 
+        card, 
+        value: card.strength,
+        position: humanPlayer?.playedCards?.length || 0 
+      });
+      
+      if (trapResult?.activated) {
+        setTrapSystem(trapResult.system);
+        
+        // Process each activated trap
+        trapResult.traps.forEach((activatedTrap, index) => {
+          // Show trap activation message
+          if (gameBoardRef.current) {
+            const trapDiv = document.createElement('div');
+            trapDiv.className = 'trap-activation';
+            trapDiv.textContent = `🕸️ Trap Activated: ${activatedTrap.trapData.name}!`;
+            gameBoardRef.current.appendChild(trapDiv);
+            setTimeout(() => trapDiv.remove(), 2000 + (index * 500));
+          }
+          
+          // Apply trap effects to card
+          if (activatedTrap.type === 'WEAKNESS') {
+            card.strength = Math.max(1, (card.strength || 0) + (activatedTrap.trapData.power || -5));
+            console.log(`🕸️ Weakness trap activated! Card strength reduced to ${card.strength}`);
+          } else if (activatedTrap.type === 'EXPLOSIVE') {
+            // Visual explosion effect
+            triggerScreenShake(gameBoardRef.current);
+            console.log(`💥 Explosive trap! ${activatedTrap.trapData.damage} damage!`);
+          }
+        });
+      }
+      
+      // Activate persistent ability if card has one
+      if (card?.persistentAbility) {
+        const newAbilitySystem = advancedMechanics.activatePersistentAbility(
+          persistentAbilities, 
+          card.persistentAbility, 
+          currentPlayerId
+        );
+        setPersistentAbilities(newAbilitySystem);
+      }
+      
+      // Spend mana if strategic mode enabled
+      if (strategicSettings.manaEnabled && card) {
+        const cost = calculateCardManaCost(card);
+        const affordable = canAffordCard(manaState, card);
+        
+        if (affordable) {
+          // Normal mana spending
+          setManaState(prev => spendMana(prev, cost));
+        } else {
+          // Try overdraft
+          const overdraftResult = allowOverdraft(manaState, cost);
+          if (overdraftResult) {
+            setManaState(overdraftResult);
+            // Show overdraft warning
+            setShowMatchBonus({ 
+              message: '⚠️ OVERDRAFTED! No regen next turn',
+              type: 'warning'
+            });
+            setTimeout(() => setShowMatchBonus(false), 2500);
+          }
+        }
+      }
       
       // Trigger enhanced element play animation
       if (gameBoardRef.current && card) {
@@ -960,6 +1510,132 @@ const GameBoard = ({
     setPendingCardIndex(null);
   };
 
+  const handleFusionAttempt = () => {
+    if (selectedFusionCards.length === 2 && currentPlayer) {
+      const card1 = currentPlayer.hand[selectedFusionCards[0]];
+      const card2 = currentPlayer.hand[selectedFusionCards[1]];
+      
+      console.log('🔮 Attempting fusion:', {
+        card1: { element: card1?.element, strength: card1?.strength },
+        card2: { element: card2?.element, strength: card2?.strength }
+      });
+      
+      const fusionResult = advancedMechanics.fuseCards(card1, card2);
+      console.log('🔮 Fusion result:', fusionResult);
+      
+      if (fusionResult.success) {
+        // Show fusion animation
+        if (gameBoardRef.current) {
+          const fusionDiv = document.createElement('div');
+          fusionDiv.className = 'fusion-complete-banner';
+          fusionDiv.innerHTML = `
+            <div style="font-size: 28px; color: #ff9800;">✨ FUSION SUCCESS! ✨</div>
+            <div style="font-size: 24px; margin-top: 10px;">${fusionResult.fusedCard.name} Created!</div>
+            <div style="font-size: 18px; margin-top: 5px; color: #4caf50;">Strength: ${fusionResult.fusedCard.strength}</div>
+          `;
+          gameBoardRef.current.appendChild(fusionDiv);
+          setTimeout(() => fusionDiv.remove(), 3000);
+        }
+        
+        console.log('✨ Fusion successful:', fusionResult.fusionName, fusionResult.fusedCard);
+        
+        // Notify parent to update game state with fused card
+        if (onFuseCards) {
+          onFuseCards(selectedFusionCards[0], selectedFusionCards[1], fusionResult.fusedCard);
+        }
+        
+        // Close fusion UI but DON'T end turn - player can continue playing
+        setShowFusionUI(false);
+        setSelectedFusionCards([]);
+        
+        // Show a message that fusion is complete and player can continue
+        if (gameBoardRef.current) {
+          const continueDiv = document.createElement('div');
+          continueDiv.className = 'fusion-continue-message';
+          continueDiv.innerHTML = `
+            <div style="font-size: 20px; color: #4caf50;">✅ Fusion Complete!</div>
+            <div style="font-size: 16px; margin-top: 5px;">Select a card to play</div>
+          `;
+          continueDiv.style.cssText = `
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 9999;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: slideInUp 0.3s ease-out;
+          `;
+          gameBoardRef.current.appendChild(continueDiv);
+          setTimeout(() => continueDiv.remove(), 2000);
+        }
+        
+        return; // Exit early to prevent duplicate UI closing
+      } else {
+        // Show detailed error message
+        console.log('❌ Fusion failed:', fusionResult.message);
+        if (gameBoardRef.current) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'fusion-error-banner';
+          errorDiv.innerHTML = `
+            <div style="font-size: 24px; color: #f44336;">❌ Fusion Failed</div>
+            <div style="font-size: 18px; margin-top: 10px;">${fusionResult.message || 'Cards cannot be fused'}</div>
+            <div style="font-size: 14px; margin-top: 5px; opacity: 0.8;">Try different element combinations</div>
+          `;
+          errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(244, 67, 54, 0.95);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            z-index: 10000;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+          `;
+          gameBoardRef.current.appendChild(errorDiv);
+          setTimeout(() => errorDiv.remove(), 3000);
+        }
+      }
+      
+      // Only close UI if we didn't already return after success
+      setShowFusionUI(false);
+      setSelectedFusionCards([]);
+    }
+  };
+
+  const handleTrapPlacement = (position) => {
+    if (selectedTrapCard !== null && currentPlayer) {
+      const trapCard = currentPlayer.hand[selectedTrapCard];
+      
+      const newTrapSystem = advancedMechanics.setTrap(trapSystem, trapCard, position, currentPlayerId);
+      setTrapSystem(newTrapSystem);
+      
+      // Show trap placed notification
+      if (gameBoardRef.current) {
+        const trapDiv = document.createElement('div');
+        trapDiv.className = 'trap-activation';
+        trapDiv.textContent = 'Trap Card Set!';
+        gameBoardRef.current.appendChild(trapDiv);
+        setTimeout(() => trapDiv.remove(), 1500);
+      }
+      
+      setShowTrapUI(false);
+      setSelectedTrapCard(null);
+      
+      // End turn after setting trap
+      if (onPlayCard) {
+        onPlayCard(null); // Pass null to indicate special action (trap), not card play
+      }
+    }
+  };
+
   const handlePauseResume = () => {
     setIsPaused(false);
   };
@@ -974,6 +1650,7 @@ const GameBoard = ({
 
   const handlePauseQuit = () => {
     setIsPaused(false);
+    setHasQuit(true);
     // Quit to main menu
     if (onQuit) {
       onQuit();
@@ -1025,6 +1702,29 @@ const GameBoard = ({
     setSortBy(prevSort => prevSort === newSort ? 'none' : newSort);
   };
 
+  const handleSkipTurn = () => {
+    console.log('⏭️ Player manually skipped turn');
+    
+    // Show skip notification
+    if (gameBoardRef.current) {
+      const skipDiv = document.createElement('div');
+      skipDiv.className = 'skip-turn-notification';
+      skipDiv.textContent = 'Turn Skipped';
+      gameBoardRef.current.appendChild(skipDiv);
+      setTimeout(() => skipDiv.remove(), 1500);
+    }
+    
+    // Play sound effect
+    if (soundManager) {
+      soundManager.playSound('cardFlip');
+    }
+    
+    // End the turn
+    if (onForfeit) {
+      onForfeit();
+    }
+  };
+
   if (!gameState) {
     return <div className="game-board">Loading...</div>;
   }
@@ -1074,39 +1774,92 @@ const GameBoard = ({
       )}
 
       {/* Game Over Overlay */}
-      {gameState.gameOver && defeatCountdown === null && (
+      {gameState.gameOver && defeatCountdown === null && !hasQuit && (
         <div className="game-over-overlay">
+          {/* Victory Particles */}
+          <div className="victory-particles">
+            {Array(30).fill(null).map((_, i) => (
+              <div key={i} className="victory-particle" style={{
+                '--delay': `${Math.random() * 2}s`,
+                '--x': `${Math.random() * 100}vw`,
+                '--rotation': `${Math.random() * 360}deg`
+              }}></div>
+            ))}
+          </div>
+          
           <div className="game-over-container">
+            {/* Trophy Icon for Winner */}
+            {gameState.winner !== 'Tie' && (
+              <div className="trophy-icon">
+                {gameState.winner === humanPlayer?.name ? '🏆' : '💀'}
+              </div>
+            )}
+            
             <h1 className="game-over-title">GAME OVER!</h1>
-            <h2 className="winner-announcement">
+            <h2 className={`winner-announcement ${gameState.winner === humanPlayer?.name ? 'victory' : gameState.winner === 'Tie' ? 'tie' : 'defeat'}`}>
               {gameState.winner === 'Tie' ? (
                 "IT'S A TIE!"
               ) : (
                 <>{gameState.winner} WINS!</>
               )}
             </h2>
-            <div className="total-strength-display">
-              <span className="strength-label">Total Strength:</span>
-              <span className="strength-values">
-                {humanTotalStrength} vs {aiTotalStrength}
-              </span>
+            
+            {/* Battle Statistics */}
+            <div className="battle-stats">
+              <div className="stat-box">
+                <div className="stat-icon">⚔️</div>
+                <div className="stat-label">Total Strength</div>
+                <div className="stat-value">{humanTotalStrength} vs {aiTotalStrength}</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-icon">🎴</div>
+                <div className="stat-label">Rounds Played</div>
+                <div className="stat-value">{gameState.currentRound}</div>
+              </div>
             </div>
+            
             <div className="final-scores">
-              <div className="final-score-item">
+              <div className={`final-score-item ${gameState.winner === humanPlayer?.name ? 'winner' : gameState.winner === 'Tie' ? 'tie' : ''}`}>
+                <div className={`final-player-avatar ${gameState.winner === humanPlayer?.name ? 'winner-avatar' : ''}`}>
+                  {selectedCharacter?.image ? (
+                    <img 
+                      src={`${process.env.PUBLIC_URL}/${selectedCharacter?.image}`} 
+                      alt={selectedCharacter?.name || 'Player'}
+                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                    />
+                  ) : null}
+                  <span style={{ display: selectedCharacter?.image ? 'none' : 'block' }}>
+                    {selectedCharacter?.icon || '👤'}
+                  </span>
+                </div>
+                {gameState.winner === humanPlayer?.name && <div className="winner-crown">👑</div>}
                 <span className="player-name">{humanPlayer?.name}</span>
                 <span className="player-score">{humanPlayer?.score}</span>
+                <div className="score-badge">POINTS</div>
               </div>
               <div className="score-separator">vs</div>
-              <div className="final-score-item">
+              <div className={`final-score-item ${gameState.winner === aiPlayer?.name ? 'winner' : gameState.winner === 'Tie' ? 'tie' : ''}`}>
+                <div className={`final-player-avatar ${gameState.winner === aiPlayer?.name ? 'winner-avatar' : ''}`}>
+                  {aiPlayer?.avatarImage ? (
+                    <img src={`${process.env.PUBLIC_URL}/${aiPlayer.avatarImage}`} alt={aiPlayer.name} />
+                  ) : (
+                    <span>{aiPlayer?.avatar || '🤖'}</span>
+                  )}
+                </div>
+                {gameState.winner === aiPlayer?.name && <div className="winner-crown">👑</div>}
                 <span className="player-name">{aiPlayer?.name}</span>
                 <span className="player-score">{aiPlayer?.score}</span>
+                <div className="score-badge">POINTS</div>
               </div>
             </div>
+            
             <div className="game-over-buttons">
               <button className="play-again-button" onClick={onPlayAgain}>
+                <span className="button-icon">🔄</span>
                 {isStoryMode ? 'CONTINUE' : 'PLAY AGAIN'}
               </button>
-              <button className="quit-button" onClick={onQuit}>
+              <button className="quit-button" onClick={() => { setHasQuit(true); onQuit(); }}>
+                <span className="button-icon">🚪</span>
                 QUIT
               </button>
             </div>
@@ -1138,13 +1891,13 @@ const GameBoard = ({
       {showMeteorStrike && meteorStrikeInfo && (
         <div className="meteor-strike-overlay">
           <div className="meteor-strike-text">
-            ☄️ METEOR STRIKE! ☄️<br/>
-            <span style={{ fontSize: '32px', display: 'block', marginTop: '10px' }}>
+            ☄️ METEOR STRIKE! ☄️
+            <div style={{ fontSize: '18px', marginTop: '8px', fontWeight: '700' }}>
               {meteorStrikeInfo.cardsHit} EARTH {meteorStrikeInfo.cardsHit === 1 ? 'CARD' : 'CARDS'} HIT!
               {meteorStrikeInfo.cardsDestroyed > 0 && (
                 <span style={{ color: '#ff3300' }}> ({meteorStrikeInfo.cardsDestroyed} DESTROYED)</span>
               )}
-            </span>
+            </div>
           </div>
         </div>
       )}
@@ -1157,12 +1910,152 @@ const GameBoard = ({
           </div>
         </div>
       )}
+      
+      {/* Equipment Stats Display */}
+      {gameState.gameStarted && !gameState.gameOver && (() => {
+        const stats = powerUpSystem?.calculateEquipmentStats?.(equipment) || {};
+        const hasStats = Object.values(stats).some(v => v !== 0);
+        
+        return hasStats ? (
+          <div className="active-equipment-stats">
+            <div className="stats-header" onClick={() => setShowEquipmentStats(!showEquipmentStats)}>
+              ⚔️ Equipment Bonuses {showEquipmentStats ? '▼' : '▲'}
+            </div>
+            {showEquipmentStats && (
+              <div className="stats-list">
+                {Object.entries(stats).map(([stat, value]) => (
+                  value !== 0 && (
+                    <div key={stat} className="stat-item">
+                      <span className="stat-name">{stat.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                      <span className="stat-boost">+{value}</span>
+                    </div>
+                  )
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null;
+      })()}
 
       {/* Forfeit Announcement Overlay */}
       {showForfeitAnnouncement && (
         <div className="forfeit-announcement">
           <h1 className="forfeit-text">TIME'S UP!</h1>
           <p className="forfeit-subtext">Turn Forfeited</p>
+        </div>
+      )}
+
+      {/* Fusion UI */}
+      {showFusionUI && (
+        <div className="fusion-ui-overlay">
+          <div className="fusion-ui-container">
+            <h2>Card Fusion</h2>
+            <p>Select 2 cards to fuse</p>
+            <div className="fusion-card-selection">
+              {currentPlayer?.hand?.map((card, index) => (
+                <div
+                  key={index}
+                  className={`fusion-card ${selectedFusionCards.includes(index) ? 'selected' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    console.log('🔮 Fusion card clicked:', index, 'Current selection:', selectedFusionCards);
+                    if (selectedFusionCards.includes(index)) {
+                      setSelectedFusionCards(prev => prev.filter(i => i !== index));
+                      console.log('🔮 Card deselected');
+                    } else if (selectedFusionCards.length < 2) {
+                      setSelectedFusionCards(prev => [...prev, index]);
+                      console.log('🔮 Card selected');
+                    } else {
+                      console.log('🔮 Already have 2 cards selected');
+                    }
+                  }}
+                >
+                  <Card card={card} isPlayable={false} onClick={(e) => e.stopPropagation()} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Fusion Preview */}
+            {selectedFusionCards.length === 2 && (() => {
+              const card1 = currentPlayer?.hand[selectedFusionCards[0]];
+              const card2 = currentPlayer?.hand[selectedFusionCards[1]];
+              const compatibility = advancedMechanics.checkFusionCompatibility(card1, card2);
+              
+              return (
+                <div className="fusion-preview">
+                  {compatibility.canFuse ? (
+                    <div className="fusion-preview-success">
+                      <div className="preview-title">✨ Fusion Preview ✨</div>
+                      <div className="preview-name">{compatibility.recipe.result.name}</div>
+                      <div className="preview-element">Element: {compatibility.recipe.result.element}</div>
+                      <div className="preview-strength">
+                        Strength: {(card1?.strength || 0) + (card2?.strength || 0) + compatibility.recipe.result.strengthBonus}
+                        <span className="bonus"> (+{compatibility.recipe.result.strengthBonus} bonus)</span>
+                      </div>
+                      <div className="preview-abilities">
+                        Abilities: {compatibility.recipe.result.abilities.join(', ')}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="fusion-preview-fail">
+                      <div className="preview-title">❌ Incompatible</div>
+                      <div className="preview-message">{compatibility.message}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            
+            <div className="fusion-actions">
+              <button 
+                className="fusion-confirm-btn"
+                onClick={handleFusionAttempt}
+                disabled={selectedFusionCards.length !== 2}
+                title="Fuse Cards"
+              >
+                🔮
+              </button>
+              <button 
+                className="fusion-cancel-btn"
+                onClick={() => {
+                  setShowFusionUI(false);
+                  setSelectedFusionCards([]);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trap Placement UI */}
+      {showTrapUI && (
+        <div className="trap-ui-overlay">
+          <div className="trap-ui-container">
+            <h2>Place Trap Card</h2>
+            <p>Select position to place trap</p>
+            <div className="trap-positions">
+              {[0, 1, 2, 3, 4].map(position => (
+                <button
+                  key={position}
+                  className="trap-position-btn"
+                  onClick={() => handleTrapPlacement(position)}
+                >
+                  Position {position + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              className="trap-cancel-btn"
+              onClick={() => {
+                setShowTrapUI(false);
+                setSelectedTrapCard(null);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
@@ -1329,7 +2222,13 @@ const GameBoard = ({
           <h3>Player 2 (AI)</h3>
           {aiPlayer && (
             <div className="sidebar-player-info">
-              <div className="player-avatar">🤖</div>
+              <div className="player-avatar">
+                {aiPlayer.avatarImage ? (
+                  <img src={`${process.env.PUBLIC_URL}/${aiPlayer.avatarImage}`} alt={aiPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  aiPlayer.avatar || '🤖'
+                )}
+              </div>
               <p><strong>{aiPlayer.name}</strong></p>
               <p className={aiPlayer.active ? 'active-indicator' : ''}>
                 {aiPlayer.active && '⭐ '}Score: {aiPlayer.score}
@@ -1373,8 +2272,8 @@ const GameBoard = ({
               <div className="player-avatar">
                 {selectedCharacter?.image ? (
                   <img 
-                    src={`${process.env.PUBLIC_URL}/${selectedCharacter.image}`} 
-                    alt={selectedCharacter.name}
+                    src={`${process.env.PUBLIC_URL}/${selectedCharacter?.image}`} 
+                    alt={selectedCharacter?.name || 'Player'}
                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
                   />
                 ) : null}
@@ -1512,6 +2411,66 @@ const GameBoard = ({
               )}
             </>
           )}
+          
+          {/* Ultimate Ability Section in Sidebar */}
+          {gameState.gameStarted && !gameState.gameOver && !hasQuit && defeatCountdown === null && (
+            <>
+              <div className="sidebar-divider"></div>
+              
+              <div className="ultimate-sidebar-section">
+                <h3>⚡ Ultimate Ability</h3>
+                <div 
+                  className={`ultimate-sidebar-display ${ultimateSystem.currentCooldown === 0 ? 'ready' : 'cooldown'}`}
+                  onClick={() => {
+                    if (ultimateSystem.currentCooldown === 0) {
+                      const result = powerUpSystem?.useUltimate?.(ultimateSystem, humanPlayer, aiPlayer, gameState);
+                      if (result?.success) {
+                        setUltimateSystem(result.updatedSystem);
+                        
+                        // Apply ultimate effects
+                        if (result.effects) {
+                          result.effects.forEach(effect => {
+                            if (effect.type === 'DAMAGE') {
+                              console.log(`Ultimate dealt ${effect.amount} damage`);
+                            }
+                          });
+                        }
+                        
+                        // Visual feedback
+                        if (gameBoardRef.current) {
+                          triggerScreenShake(gameBoardRef.current);
+                          createElementalWeather('METEOR', gameBoardRef.current);
+                        }
+                        
+                        setShowMatchBonus({ 
+                          message: `⚡ ${result.ultimateData.name.toUpperCase()}!`,
+                          type: 'ultimate'
+                        });
+                        setTimeout(() => setShowMatchBonus(false), 2500);
+                        
+                        if (soundManager) {
+                          soundManager.playSound('powerPlay');
+                          soundManager.playVoiceLine(avatarPersonality, 'combo');
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <div className="ultimate-icon">
+                    {ultimateSystem.currentCooldown === 0 ? '⚡' : ultimateSystem.currentCooldown}
+                  </div>
+                  <div className="ultimate-info">
+                    <div className="ultimate-name">
+                      {powerUpSystem.ULTIMATE_ABILITIES[ultimateSystem.selectedUltimate || ultimateSystem.id || 'METEOR_STRIKE']?.name || 'Meteor Strike'}
+                    </div>
+                    <div className="ultimate-status">
+                      {ultimateSystem.currentCooldown === 0 ? '✅ READY!' : `Cooldown: ${ultimateSystem.currentCooldown}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1547,16 +2506,55 @@ const GameBoard = ({
           
           <h3 className="arena-title">⚔️ Battle Arena ⚔️</h3>
           
+          {/* Strategic Systems Displays */}
+          {(strategicSettings.manaEnabled || strategicSettings.weatherEnabled || strategicSettings.terrainEnabled) && (
+            <div className="strategic-systems-display">
+              {strategicSettings.manaEnabled && (
+                <ManaDisplay 
+                  current={manaState.current}
+                  max={manaState.max}
+                  regenRate={manaState.regenRate}
+                  surgeActive={manaState.surgeActive}
+                  emergencyRegen={manaState.emergencyRegen}
+                  overdrafted={manaState.overdrafted}
+                  lastComboBonus={manaState.lastComboBonus}
+                />
+              )}
+              {strategicSettings.weatherEnabled && weatherState?.current && (
+                <WeatherDisplay 
+                  weather={weatherState.current}
+                  roundsUntilChange={weatherState.roundsUntilChange}
+                />
+              )}
+              {strategicSettings.terrainEnabled && terrainState?.current && (
+                <TerrainDisplay 
+                  terrain={terrainState.current}
+                />
+              )}
+            </div>
+          )}
+          
           {/* AI's Played Cards - Top */}
           <div className="battle-card-row ai-row">
             <div className="played-cards-container">
               {aiPlayer?.playedCards && aiPlayer.playedCards.length > 0 ? (
-                aiPlayer.playedCards.map((card, index) => (
-                  <div key={index} className="played-card-wrapper ai-card">
-                    <Card card={card} isPlayable={false} />
-                    <div className="card-round-label">R{index + 1}</div>
-                  </div>
-                ))
+                aiPlayer.playedCards.map((card, index) => {
+                  // Debug: Log AI card properties
+                  console.log(`🎴 AI Card ${index + 1} in arena:`, {
+                    name: card.name,
+                    element: card.element,
+                    strength: card.strength,
+                    image: card.image,
+                    hasImage: !!card.image,
+                    isFusion: card.isFusion,
+                    allProps: Object.keys(card)
+                  });
+                  return (
+                    <div key={index} className="played-card-wrapper ai-card">
+                      <Card card={card} isPlayable={false} />
+                    </div>
+                  );
+                })
               ) : (
                 <div className="empty-card-slot">
                   {aiPlayer?.active ? 'AI is thinking...' : 'No cards played yet'}
@@ -1569,12 +2567,22 @@ const GameBoard = ({
           <div className="battle-card-row player-row">
             <div className="played-cards-container">
               {humanPlayer?.playedCards && humanPlayer.playedCards.length > 0 ? (
-                humanPlayer.playedCards.map((card, index) => (
-                  <div key={index} className="played-card-wrapper">
-                    <Card card={card} isPlayable={false} />
-                    <div className="card-round-label">R{index + 1}</div>
-                  </div>
-                ))
+                humanPlayer.playedCards.map((card, index) => {
+                  // Debug: Log Player card properties
+                  console.log(`👤 Player Card ${index + 1} in arena:`, {
+                    name: card.name,
+                    element: card.element,
+                    strength: card.strength,
+                    image: card.image,
+                    hasImage: !!card.image,
+                    isFusion: card.isFusion
+                  });
+                  return (
+                    <div key={index} className="played-card-wrapper">
+                      <Card card={card} isPlayable={false} />
+                    </div>
+                  );
+                })
               ) : (
                 <div className="empty-card-slot">
                   {humanPlayer?.active ? 'Choose your card...' : 'No cards played yet'}
@@ -1588,24 +2596,348 @@ const GameBoard = ({
       {/* Current Player's Hand (Bottom) */}
       {humanPlayer && gameState.gameStarted && !gameState.gameOver && (
         <div className="hand-container">
+          {isMyTurn && humanPlayer.hand?.length >= 2 && (
+            <div className="advanced-mechanics-controls">
+              <button 
+                className="fusion-btn"
+                onClick={() => setShowFusionUI(true)}
+                title="Fuse two cards together"
+              >
+                🔮 Fusion
+              </button>
+              <button 
+                className={`trap-btn ${selectedTrapCard !== null ? 'selected' : ''}`}
+                onClick={() => {
+                  if (selectedTrapCard !== null) {
+                    setShowTrapUI(true);
+                  } else {
+                    // Show hint to select a card first
+                    if (gameBoardRef.current) {
+                      const hint = document.createElement('div');
+                      hint.className = 'trap-hint';
+                      hint.textContent = '👆 Select a card from your hand first!';
+                      gameBoardRef.current.appendChild(hint);
+                      setTimeout(() => hint.remove(), 2000);
+                    }
+                  }
+                }}
+                title={selectedTrapCard !== null ? "Choose trap position" : "Select a card first, then click to set as trap"}
+              >
+                🕸️{selectedTrapCard !== null ? '✓' : ''}
+              </button>
+            </div>
+          )}
+          {/* Skip Turn Button - Show when player has no playable cards */}
+          {isMyTurn && humanPlayer.hand?.length > 0 && !hasPlayableCards() && (
+            <div className="skip-turn-container">
+              <button 
+                className="skip-turn-btn"
+                onClick={handleSkipTurn}
+                title="Skip Turn - No playable cards available"
+              >
+                ⏭️ Skip Turn
+              </button>
+              <p className="skip-turn-message">No playable cards - Not enough mana</p>
+            </div>
+          )}
           <div className={`hand ${isMyTurn ? 'your-turn' : ''}`} style={{
             background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
             boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`
           }}>
-            {getSortedHand(humanPlayer.hand).map((item, displayIndex) => (
-              <Card
-                key={`${item.card.element}-${item.card.strength}-${item.originalIndex}`}
-                card={item.card}
-                onClick={() => handleCardClick(item.originalIndex)}
-                isPlayable={isMyTurn && !gameState?.pendingAbility}
-                keyboardKey={settings?.keyboardEnabled ? String(displayIndex + 1) : null}
-              />
-            ))}
+            {getSortedHand(humanPlayer.hand).map((item, displayIndex) => {
+              const manaSystemActive = strategicSettings?.manaEnabled === true;
+              const cost = manaSystemActive ? calculateCardManaCost(item.card) : undefined;
+              const affordable = manaSystemActive ? canAffordCard(manaState, item.card) : true;
+              const overdraftable = manaSystemActive && !affordable ? canOverdraftCard(manaState, item.card) : false;
+              const playable = isMyTurn && !gameState?.pendingAbility && (affordable || overdraftable);
+              
+              if (displayIndex === 0) {
+                console.log('🎴 First card render:', { 
+                  element: item.card.element, 
+                  strength: item.card.strength,
+                  manaSystemActive,
+                  cost, 
+                  currentMana: manaSystemActive ? manaState.current : 'N/A',
+                  affordable,
+                  overdraftable, 
+                  isMyTurn,
+                  playable,
+                  strategicSettings: strategicSettings
+                });
+              }
+              
+              return (
+                <Card
+                  key={`${item.card.element}-${item.card.strength}-${item.originalIndex}`}
+                  card={{
+                    ...item.card,
+                    isTrapSelected: selectedTrapCard === item.originalIndex
+                  }}
+                  onClick={() => handleCardClick(item.originalIndex)}
+                  isPlayable={playable}
+                  keyboardKey={settings?.keyboardEnabled ? String(displayIndex + 1) : null}
+                  manaCost={cost}
+                  canAfford={affordable}
+                  canOverdraft={overdraftable}
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Score Tracker - Always visible during game */}
+
+      {/* Power-Up System UI */}
+      {gameState.gameStarted && !gameState.gameOver && !hasQuit && defeatCountdown === null && (
+        <>
+          {/* Active Boosts Display */}
+          {boosterSystem?.activeBoosters?.length > 0 && (
+            <div className="active-boosts">
+              {boosterSystem?.activeBoosters?.map((boost, idx) => (
+                <div key={idx} className="active-boost">
+                  <div className="active-boost-icon">{powerUpSystem?.BOOSTERS?.[boost.boosterId]?.icon}</div>
+                  <div className="active-boost-text">
+                    <div className="active-boost-name">{powerUpSystem?.BOOSTERS?.[boost.boosterId]?.name}</div>
+                    <div className="active-boost-turns">{boost.turnsRemaining} turns left</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Booster Panel Toggle Button */}
+          <button 
+            className="power-up-toggle booster-toggle"
+            onClick={() => setShowBoosterPanel(!showBoosterPanel)}
+            style={{
+              position: 'fixed',
+              top: '80px',
+              right: showBoosterPanel ? '280px' : '20px',
+              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.95) 0%, rgba(139, 195, 74, 0.95) 100%)',
+              border: '2px solid #4caf50',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              fontSize: '24px',
+              cursor: 'pointer',
+              zIndex: 1600,
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(76, 175, 80, 0.5)'
+            }}
+            title="Boosters"
+          >
+            💪
+          </button>
+
+          {/* Booster Panel */}
+          {showBoosterPanel && powerUpSystem?.BOOSTERS && (
+            <div className="booster-bar">
+              <h3>⚡ BOOSTERS</h3>
+              <div className="booster-list">
+                {Object.keys(powerUpSystem.BOOSTERS || {}).map(boosterId => {
+                  const booster = powerUpSystem.BOOSTERS[boosterId];
+                  const isActive = boosterSystem?.activeBoosters?.some(b => b.boosterId === boosterId);
+                  const isUsed = boosterSystem?.usedBoosters?.includes(boosterId);
+                  
+                  return (
+                    <div 
+                      key={boosterId}
+                      className={`booster-item ${isActive ? 'active' : ''} ${isUsed ? 'used' : ''}`}
+                      onClick={() => {
+                        if (!isUsed && !isActive) {
+                          const result = powerUpSystem?.activateBooster?.(boosterSystem, boosterId, currentPlayerId);
+                          if (result?.success) {
+                            setBoosterSystem(result.system);
+                            setShowMatchBonus({ 
+                              message: `💪 ${booster.name} ACTIVATED!`,
+                              type: 'booster'
+                            });
+                            setTimeout(() => setShowMatchBonus(false), 2000);
+                            soundManager.playElementSound('fire');
+                          }
+                        }
+                      }}
+                    >
+                      <div className="booster-icon">{booster.icon}</div>
+                      <div className="booster-info">
+                        <div className="booster-name">{booster.name}</div>
+                        <div className="booster-description">{booster.description}</div>
+                      </div>
+                      {isActive ? (
+                        <div className="booster-duration">
+                          {boosterSystem?.activeBoosters?.find(b => b.boosterId === boosterId)?.turnsRemaining}T
+                        </div>
+                      ) : (
+                        <div className="booster-cost">{booster.duration}T</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Equipment Panel Toggle Button */}
+          <button 
+            className="power-up-toggle equipment-toggle"
+            onClick={() => setShowEquipmentPanel(!showEquipmentPanel)}
+            style={{
+              position: 'fixed',
+              top: '140px',
+              right: showEquipmentPanel ? '310px' : '20px',
+              background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.95) 0%, rgba(255, 193, 7, 0.95) 100%)',
+              border: '2px solid #ff9800',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              fontSize: '24px',
+              cursor: 'pointer',
+              zIndex: 1600,
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(255, 152, 0, 0.5)'
+            }}
+            title="Equipment"
+          >
+            ⚔️
+          </button>
+
+          {/* Equipment Panel */}
+          {showEquipmentPanel && powerUpSystem?.EQUIPMENT_SLOTS && (
+            <div className="equipment-panel">
+              <div className="equipment-header">
+                <div className="equipment-title">⚔️ EQUIPMENT</div>
+                <div className="equipment-gold">💰 {equipment.gold} Gold</div>
+                <button 
+                  className="equipment-shop-btn"
+                  onClick={() => setShowEquipmentShop(!showEquipmentShop)}
+                >
+                  🛒 Shop
+                </button>
+              </div>
+              
+              {showEquipmentShop ? (
+                <div className="equipment-shop">
+                  <h4>🛒 Equipment Shop</h4>
+                  <div className="shop-items">
+                    {Object.entries(powerUpSystem.EQUIPMENT_ITEMS).map(([itemId, item]) => {
+                      const isUnlocked = equipment.unlockedItems.includes(itemId);
+                      const cost = item.rarity === 'LEGENDARY' ? 200 : item.rarity === 'EPIC' ? 150 : 100;
+                      const canAfford = equipment.gold >= cost;
+                      
+                      return (
+                        <div 
+                          key={itemId}
+                          className={`shop-item ${isUnlocked ? 'unlocked' : ''} ${!canAfford ? 'expensive' : ''}`}
+                          onClick={() => {
+                            if (!isUnlocked && canAfford) {
+                              const result = powerUpSystem.unlockEquipment(equipment, itemId, cost);
+                              if (result.success) {
+                                setEquipment(result.equipment);
+                                if (soundManager) soundManager.playSound('cardDraw');
+                              }
+                            }
+                          }}
+                        >
+                          <div className="shop-item-icon">{item.icon}</div>
+                          <div className="shop-item-name">{item.name}</div>
+                          <div className="shop-item-rarity">{item.rarity}</div>
+                          <div className="shop-item-cost">{isUnlocked ? '✅ OWNED' : `💰 ${cost}G`}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="equipment-slots">
+                    {powerUpSystem.EQUIPMENT_SLOTS.map(slot => {
+                      const equipped = equipment?.slots?.[slot];
+                      const item = equipped ? powerUpSystem?.EQUIPMENT_ITEMS?.[equipped] : null;
+                      
+                      return (
+                        <div 
+                          key={slot}
+                          className={`equipment-slot ${equipped ? 'equipped' : ''}`}
+                          onClick={() => {
+                            if (equipped && powerUpSystem?.unequipItem) {
+                              const result = powerUpSystem.unequipItem(equipment, slot);
+                              if (result.success) {
+                                setEquipment(result.equipment);
+                              }
+                            }
+                          }}
+                        >
+                          <div className="slot-label">{slot}</div>
+                          {item ? (
+                            <>
+                              <div className="slot-icon">{item.icon}</div>
+                              <div className="slot-name">{item.name}</div>
+                            </>
+                          ) : (
+                            <div className="slot-empty">Empty</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="equipment-inventory">
+                    <h4>📦 Unlocked Items</h4>
+                    <div className="inventory-items">
+                      {equipment.unlockedItems.map(itemId => {
+                        const item = powerUpSystem.EQUIPMENT_ITEMS[itemId];
+                        const isEquipped = Object.values(equipment.slots).includes(itemId);
+                        
+                        return (
+                          <div 
+                            key={itemId}
+                            className={`inventory-item ${isEquipped ? 'equipped' : ''}`}
+                            onClick={() => {
+                              if (!isEquipped) {
+                                const result = powerUpSystem.equipItem(equipment, itemId);
+                                if (result.success) {
+                                  setEquipment(result.equipment);
+                                  if (soundManager) soundManager.playSound('cardFlip');
+                                }
+                              }
+                            }}
+                          >
+                            <div className="inventory-icon">{item.icon}</div>
+                            <div className="inventory-name">{item.name}</div>
+                            {isEquipped && <div className="equipped-badge">✓</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  <div className="equipment-stats">
+                    <div className="equipment-stats-title">⭐ ACTIVE BONUSES</div>
+                    {(() => {
+                      const stats = powerUpSystem?.calculateEquipmentStats?.(equipment) || {};
+                      const hasStats = Object.values(stats).some(v => v !== 0);
+                      
+                      if (!hasStats) {
+                        return <div className="no-stats">No equipment equipped</div>;
+                      }
+                      
+                      return Object.entries(stats).map(([stat, value]) => (
+                        value !== 0 && (
+                          <div key={stat} className="stat-row">
+                            <span className="stat-label">{stat.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            <span className="stat-value">+{value}</span>
+                          </div>
+                        )
+                      ));
+                    })()}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

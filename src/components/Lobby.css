@@ -3,8 +3,9 @@
   background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .lobby-container {
@@ -15,6 +16,8 @@
   max-width: 900px;
   width: 100%;
   border: 2px solid rgba(255, 215, 0, 0.3);
+  margin: 20px auto;
+  max-height: none;
 }
 
 .lobby-header {
@@ -148,6 +151,16 @@
 .mode-card.multiplayer:hover {
   box-shadow: 0 10px 30px rgba(33, 150, 243, 0.5);
   border-color: #2196f3;
+}
+
+.mode-card.strategic {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.2) 0%, rgba(74, 20, 140, 0.2) 100%);
+  border-color: rgba(156, 39, 176, 0.5);
+}
+
+.mode-card.strategic:hover {
+  box-shadow: 0 10px 30px rgba(156, 39, 176, 0.5);
+  border-color: #9c27b0;
 }
 
 .mode-icon {
@@ -386,8 +399,13 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  .lobby {
+    padding: 10px;
+  }
+  
   .lobby-container {
-    padding: 25px;
+    padding: 20px;
+    margin: 10px auto;
   }
 
   .lobby-title {

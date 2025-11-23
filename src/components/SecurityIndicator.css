@@ -1,0 +1,136 @@
+.security-indicator {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  z-index: 9998;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  cursor: help;
+}
+
+.security-indicator:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.security-indicator.warning {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.security-indicator.danger {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+  animation: pulse-danger 1s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-danger {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.security-icon {
+  font-size: 16px;
+  animation: spin 3s linear infinite;
+}
+
+.security-indicator.warning .security-icon,
+.security-indicator.danger .security-icon {
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.security-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  min-width: 250px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.security-indicator:hover .security-tooltip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.security-tooltip h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #4caf50;
+}
+
+.security-tooltip ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.security-tooltip li {
+  margin: 3px 0;
+}
+
+/* Hide in production unless explicitly enabled */
+.security-indicator.production-hidden {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .security-indicator {
+    bottom: 60px;
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+  
+  .security-tooltip {
+    min-width: 200px;
+    font-size: 12px;
+    padding: 12px;
+  }
+}

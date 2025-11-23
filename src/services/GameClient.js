@@ -15,8 +15,9 @@
  * - Cache management with size limits
  */
 
-// Import AI personalities
+// Import AI personalities and fusion mechanics
 import { AI_PERSONALITIES } from '../utils/aiPersonalities';
+import { checkFusionCompatibility, fuseCards } from '../utils/advancedCardMechanics';
 
 // Performance optimization: Memoize element counter lookups
 const ELEMENT_COUNTERS = Object.freeze({
@@ -32,6 +33,67 @@ const ELEMENT_COUNTERS = Object.freeze({
   POWER: Object.freeze([]),
   NEUTRAL: Object.freeze([])
 });
+
+// AI Fusion Detection - checks if AI should fuse cards before playing
+const checkAIFusionOpportunity = (hand, strategy) => {
+  if (!hand || hand.length < 2) {
+    return null;
+  }
+
+  // Check all possible card combinations for fusion
+  const fusionOpportunities = [];
+  
+  for (let i = 0; i < hand.length; i++) {
+    for (let j = i + 1; j < hand.length; j++) {
+      const card1 = hand[i];
+      const card2 = hand[j];
+      
+      const compatibility = checkFusionCompatibility(card1, card2);
+      if (compatibility.canFuse) {
+        const fusionResult = fuseCards(card1, card2);
+        if (fusionResult.success) {
+          const originalStrength = (card1.strength || 0) + (card2.strength || 0);
+          const fusedStrength = fusionResult.fusedCard.strength;
+          const strengthGain = fusedStrength - originalStrength;
+          
+          fusionOpportunities.push({
+            index1: i,
+            index2: j,
+            card1,
+            card2,
+            fusedCard: fusionResult.fusedCard,
+            strengthGain,
+            fusionName: fusionResult.fusionName
+          });
+        }
+      }
+    }
+  }
+
+  if (fusionOpportunities.length === 0) {
+    return null;
+  }
+
+  // Sort by strength gain and pick the best one
+  fusionOpportunities.sort((a, b) => b.strengthGain - a.strengthGain);
+  
+  // AI personalities with higher aggressiveness are more likely to fuse
+  const fusionChance = (strategy?.aggressiveness || 0.5) * 0.8; // 80% max chance
+  
+  // Always fuse if it gives 10+ strength bonus
+  const bestFusion = fusionOpportunities[0];
+  if (bestFusion.strengthGain >= 10 || Math.random() < fusionChance) {
+    console.log('🔮 AI found fusion opportunity:', {
+      fusion: bestFusion.fusionName,
+      strengthGain: bestFusion.strengthGain,
+      originalCards: [bestFusion.card1.element, bestFusion.card2.element],
+      fusedCard: bestFusion.fusedCard.name
+    });
+    return bestFusion;
+  }
+
+  return null;
+};
 
 // Optimized AI selection function with performance enhancements
 const selectAICard = (hand, strategy, opponentLastCard, gameState) => {
@@ -151,6 +213,9 @@ class GameClient {
 
     switch (action) {
       case 'CREATE_ROOM':
+        const aiPersonalityParam = parts[1] || 'CHAOS'; // Get AI personality from command
+        const tutorialFlag = parts[2]; // Get tutorial flag from command
+        const isTutorial = tutorialFlag === 'true';
         const roomId = `room_${this.mockState.nextRoomId++}`;
         this.mockState.rooms[roomId] = {
           roomId,
@@ -161,8 +226,11 @@ class GameClient {
           playedCards: [],
           currentRound: 0,
           maxRounds: 5,
-          battlePhase: false
+          battlePhase: false,
+          aiPersonality: aiPersonalityParam, // Store the specified AI personality
+          isTutorial: isTutorial // Store tutorial flag for faster AI timing
         };
+        console.log('🎮 Room created with AI personality:', aiPersonalityParam);
         return { type: 'ROOM_CREATED', roomId };
 
       case 'JOIN_ROOM':
@@ -187,10 +255,17 @@ class GameClient {
           
           // Add AI
           if (room.players.length === 1) {
-            // Select a random AI personality
-            const personalityKeys = Object.keys(AI_PERSONALITIES);
-            const randomPersonality = personalityKeys[Math.floor(Math.random() * personalityKeys.length)];
-            const personality = AI_PERSONALITIES[randomPersonality];
+            // Use the specified AI personality from room creation, or random if not set
+            let selectedPersonality = room.aiPersonality || 'CHAOS';
+            
+            // If personality doesn't exist, fall back to random
+            if (!AI_PERSONALITIES[selectedPersonality]) {
+              const personalityKeys = Object.keys(AI_PERSONALITIES);
+              selectedPersonality = personalityKeys[Math.floor(Math.random() * personalityKeys.length)];
+              console.warn('⚠️ Invalid AI personality, using random:', selectedPersonality);
+            }
+            
+            const personality = AI_PERSONALITIES[selectedPersonality];
             const strategy = personality.strategy || {};
             
             room.players.push({
@@ -204,20 +279,22 @@ class GameClient {
               isAI: true,
               chosenCard: null,
               cardCount: 5,
-              personalityKey: randomPersonality,
+              personalityKey: selectedPersonality,
               aggressiveness: strategy.aggressiveness || 0.7,
               conservativeness: strategy.conservativeness || 0.2,
               counterPriority: strategy.counterPriority || 0.5,
               preferredElements: strategy.preferredElements || ['FIRE', 'EARTH'],
               comboFocus: strategy.comboFocus || 0.3,
               avatar: personality.avatar || '🤖',
+              avatarImage: personality.avatarImage,
               difficulty: personality.difficulty || 'Medium'
             });
             
             console.log('🤖 Created AI player:', {
               name: personality.name,
               difficulty: personality.difficulty,
-              personality: randomPersonality
+              personality: selectedPersonality,
+              avatarImage: personality.avatarImage
             });
           }
           
@@ -453,8 +530,21 @@ class GameClient {
             player.chosenCard = player.hand[actualCardIndex];
             player.hand.splice(actualCardIndex, 1);
             player.cardCount--;
-            player.active = false;
-            chooseRoom.battlePhase = true;
+            
+            // Check if opponent is out of cards BEFORE switching turns
+            const opponentOutOfCards = ai && (ai.outOfCards || (!ai.hand || ai.hand.length === 0) && (!ai.deck || ai.deck.length === 0));
+            
+            if (opponentOutOfCards) {
+              // Opponent is out - player keeps their turn
+              console.log('🏳️ Opponent is out of cards - Player keeps turn');
+              player.active = true; // Keep player active
+              ai.outOfCards = true;
+              chooseRoom.battlePhase = false;
+            } else {
+              // Normal turn switch
+              player.active = false;
+              chooseRoom.battlePhase = true;
+            }
             
             // Clear any stale pending abilities from previous rounds
             if (chooseRoom.pendingAbility && !chooseRoom.deferredAbility) {
@@ -471,21 +561,48 @@ class GameClient {
               round: chooseRoom.currentRound + 1
             });
             
-            console.log('🔄 Player card played, triggering AI...');
+            console.log('🔄 Player card played', opponentOutOfCards ? '- opponent out, player continues' : '- triggering AI');
             // Notify of game update
             this.notifyListeners('GAME_UPDATE', chooseRoom);
+            
+            // If opponent is out of cards, check if player is also out
+            if (opponentOutOfCards) {
+              if (player.hand.length === 0 && (!player.deck || player.deck.length === 0)) {
+                // Both out of cards - end game
+                chooseRoom.gameOver = true;
+                const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                
+                if (playerTotalStrength > aiTotalStrength) {
+                  chooseRoom.winner = player.name;
+                } else if (aiTotalStrength > playerTotalStrength) {
+                  chooseRoom.winner = ai.name;
+                } else {
+                  chooseRoom.winner = 'Tie';
+                }
+                console.log('🏁 Game over! Both players out of cards.');
+                this.notifyListeners('GAME_UPDATE', chooseRoom);
+              }
+              // Player continues - no AI activation needed
+              return { type: 'CARD_CHOSEN', success: true };
+            }
             
             console.log('🔍 About to start AI timeout chain. Current state:', {
               battlePhase: chooseRoom.battlePhase,
               playerActive: player.active,
               aiActive: ai?.active,
               aiExists: !!ai,
-              aiHandSize: ai?.hand?.length
+              aiHandSize: ai?.hand?.length,
+              isTutorial: chooseRoom.isTutorial
             });
             
             // AI plays after delay (give player time to see their card)
+            // Tutorial mode uses faster timing: 2s instead of 6s
+            const aiActivationDelay = chooseRoom.isTutorial ? 2000 : 6000;
             const aiActivationTimeout = setTimeout(() => {
-              console.log('⏰ AI activation timeout triggered (6000ms after player card)');
+              console.log(`⏰ AI activation timeout triggered (${aiActivationDelay}ms after player card)`);
               console.log('🔍 Checking AI availability:', {
                 aiExists: !!ai,
                 aiHandLength: ai?.hand?.length,
@@ -497,7 +614,54 @@ class GameClient {
                 } : 'null'
               });
               
-              if (ai && ai.hand.length > 0) {
+              if (ai) {
+                // Check if AI has cards, if not try to draw or skip turn
+                if (!ai.hand || ai.hand.length === 0) {
+                  console.log('⚠️ AI has no cards at activation');
+                  // Try to draw from reserve deck
+                  if (ai.deck && ai.deck.length > 0) {
+                    console.log('🎴 AI drawing from reserve deck at activation');
+                    const drawnCard = ai.deck.shift();
+                    ai.hand = ai.hand || [];
+                    ai.hand.push(drawnCard);
+                    ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
+                    console.log(`✅ AI drew card at activation, now has ${ai.hand.length} in hand`);
+                  } else {
+                    console.log('🚫 AI has no cards to play at activation');
+                    // Check if player also has no cards
+                    const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
+                    if (playerHasNoCards) {
+                      chooseRoom.gameOver = true;
+                      const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                        sum + (card.modifiedStrength || card.strength || 0), 0);
+                      
+                      if (playerTotalStrength > aiTotalStrength) {
+                        chooseRoom.winner = player.name;
+                      } else if (aiTotalStrength > playerTotalStrength) {
+                        chooseRoom.winner = ai.name;
+                      } else {
+                        chooseRoom.winner = 'Tie';
+                      }
+                      console.log('🏁 Game over! Both players out of cards.');
+                      this.notifyListeners('GAME_UPDATE', chooseRoom);
+                      return;
+                    }
+                    
+                    // AI has no cards but player does - mark AI as out
+                    console.log('🏳️ AI is out of cards - Player continues playing alone');
+                    ai.outOfCards = true;
+                    player.active = true;
+                    ai.active = false;
+                    chooseRoom.battlePhase = false;
+                    // Don't increment round - player keeps playing
+                    this.notifyListeners('GAME_UPDATE', chooseRoom);
+                    return;
+                  }
+                }
+                
+              if (ai.hand && ai.hand.length > 0) {
                 console.log('🤖 AI starting turn...', {
                   aiHandSize: ai.hand.length,
                   aiActive: ai.active,
@@ -506,10 +670,11 @@ class GameClient {
                 ai.active = true;
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
                 console.log('📤 AI activation notified');
-                console.log('⏱️ About to create AI card selection timeout (2000ms)...');
+                const aiCardDelay = chooseRoom.isTutorial ? 1000 : 2000;
+                console.log(`⏱️ About to create AI card selection timeout (${aiCardDelay}ms)...`);
                 
                 const aiCardSelectionTimeout = setTimeout(() => {
-                  console.log('⏰ AI card selection timeout fired (2000ms)');
+                  console.log(`⏰ AI card selection timeout fired (${aiCardDelay}ms)`);
                   try {
                     // Check if game is already over before processing AI turn
                     if (chooseRoom.gameOver) {
@@ -528,7 +693,7 @@ class GameClient {
                         ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
                         console.log(`✅ AI drew card, now has ${ai.hand.length} in hand`);
                       } else {
-                        console.log('🚫 AI has no cards in hand or deck, skipping turn...');
+                        console.log('🚫 AI has no cards in hand or deck');
                         
                         // Check if player also has no cards - if so, end game
                         const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
@@ -562,12 +727,13 @@ class GameClient {
                           return;
                         }
                         
-                        // AI has no cards but player does - skip AI turn
-                        console.log('⏭️ AI skipping turn (no cards), switching to player');
+                        // AI has no cards but player does - mark AI as permanently out
+                        console.log('🏳️ AI is out of cards - Player continues playing alone');
+                        ai.outOfCards = true; // Mark AI as out
                         player.active = true;
                         ai.active = false;
                         chooseRoom.battlePhase = false;
-                        chooseRoom.currentRound++;
+                        // Don't increment round - player keeps playing
                         this.notifyListeners('GAME_UPDATE', chooseRoom);
                         return;
                       }
@@ -610,6 +776,48 @@ class GameClient {
                     console.log('😴 AI Fatigue: Paid 1 score to play card');
                   }
                   
+                  // Check for fusion opportunities BEFORE selecting a card to play
+                  const strategy = {
+                    aggressiveness: ai.aggressiveness || 0.7,
+                    conservativeness: ai.conservativeness || 0.2,
+                    counterPriority: ai.counterPriority || 0.5,
+                    preferredElements: ai.preferredElements || ['FIRE', 'EARTH'],
+                    comboFocus: ai.comboFocus || 0.3
+                  };
+                  
+                  const fusionOpportunity = checkAIFusionOpportunity(ai.hand, strategy);
+                  if (fusionOpportunity) {
+                    console.log('🔮 AI executing fusion!');
+                    
+                    // Remove the two cards and add the fused card
+                    const indices = [fusionOpportunity.index1, fusionOpportunity.index2].sort((a, b) => b - a);
+                    indices.forEach(index => {
+                      ai.hand.splice(index, 1);
+                    });
+                    ai.hand.push(fusionOpportunity.fusedCard);
+                    ai.cardCount = ai.hand.length + (ai.deck?.length || 0);
+                    
+                    console.log('✨ AI fused cards:', {
+                      card1: fusionOpportunity.card1.element,
+                      card2: fusionOpportunity.card2.element,
+                      result: fusionOpportunity.fusedCard.name,
+                      strength: fusionOpportunity.fusedCard.strength,
+                      image: fusionOpportunity.fusedCard.image,
+                      hasImage: !!fusionOpportunity.fusedCard.image
+                    });
+                    
+                    // Notify listeners of fusion
+                    this.notifyListeners('GAME_UPDATE', chooseRoom);
+                    
+                    // Small delay to show fusion happened
+                    setTimeout(() => {
+                      // AI continues with card selection after fusion
+                      this.notifyListeners('GAME_UPDATE', chooseRoom);
+                    }, 1500);
+                    
+                    // Continue to card selection (may play the fused card)
+                  }
+                  
                   // Smart AI card selection using personality
                   let aiCardIndex;
                   const aiConfusionEffect = this.getActiveStatusEffects(chooseRoom, ai).find(e => e.type === 'CONFUSION');
@@ -620,13 +828,6 @@ class GameClient {
                   } else {
                     // Use smart AI selection
                     try {
-                      const strategy = {
-                        aggressiveness: ai.aggressiveness || 0.7,
-                        conservativeness: ai.conservativeness || 0.2,
-                        counterPriority: ai.counterPriority || 0.5,
-                        preferredElements: ai.preferredElements || ['FIRE', 'EARTH'],
-                        comboFocus: ai.comboFocus || 0.3
-                      };
                       
                       console.log('🤖 AI decision process:', {
                         aiName: ai.name,
@@ -687,6 +888,14 @@ class GameClient {
                   console.log('🤖 AI playing card at index:', aiCardIndex, 'from hand of', ai.hand.length);
                   
                   ai.chosenCard = ai.hand[aiCardIndex];
+                  console.log('🎴 AI chosen card details:', {
+                    name: ai.chosenCard.name,
+                    element: ai.chosenCard.element,
+                    strength: ai.chosenCard.strength,
+                    image: ai.chosenCard.image,
+                    hasImage: !!ai.chosenCard.image,
+                    isFusion: ai.chosenCard.isFusion
+                  });
                   ai.hand.splice(aiCardIndex, 1);
                   ai.cardCount--;
                   ai.active = false;
@@ -728,12 +937,13 @@ class GameClient {
                   
                   console.log('📢 AI card added to played cards, notifying listeners...');
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
-                  console.log('✅ Listeners notified, starting battle resolution timer (6000ms - 6 seconds)...');
+                  const battleDelay = chooseRoom.isTutorial ? 3000 : 6000;
+                  console.log(`✅ Listeners notified, starting battle resolution timer (${battleDelay}ms)...`);
                   console.log('⏱️ About to create setTimeout for battle resolution...');
                   
-                  // Resolve battle with advanced mechanics (6 second delay to view AI card)
+                  // Resolve battle with advanced mechanics (tutorial: 3s, normal: 6s delay to view AI card)
                   const battleTimeout = setTimeout(() => {
-                    console.log('⏰ Battle timeout triggered after 6 seconds');
+                    console.log(`⏰ Battle timeout triggered after ${battleDelay / 1000} seconds`);
                     
                     // Check if game is already over before processing battle
                     if (chooseRoom.gameOver) {
@@ -973,12 +1183,20 @@ class GameClient {
                       
                       console.log('🏁 Game over! All cards played. Winner:', chooseRoom.winner);
                       
-                      // Immediately notify listeners of game over
-                      console.log('📤 Notifying listeners of GAME OVER immediately...');
-                      this.notifyListeners('GAME_UPDATE', chooseRoom);
-                      console.log('✅ Game over notification sent');
+                      // Delay game over notification to let players see the final card played
+                      console.log('⏱️ Delaying game over notification to show final card...');
+                      setTimeout(() => {
+                        console.log('📤 Notifying listeners of GAME OVER after delay...');
+                        this.notifyListeners('GAME_UPDATE', chooseRoom);
+                        console.log('✅ Game over notification sent');
+                      }, 3000); // 3 second delay to show the winning card
                       
-                      // Don't proceed with battle result notification - game is over
+                      // Send immediate battle result update (without gameOver flag yet)
+                      const battleResultState = { ...chooseRoom };
+                      battleResultState.gameOver = false; // Temporarily hide game over
+                      this.notifyListeners('GAME_UPDATE', battleResultState);
+                      
+                      // Don't proceed with normal next round setup
                       return;
                     } else {
                       console.log('▶️ Setting up next round...', {
@@ -1093,7 +1311,7 @@ class GameClient {
                         console.log('📤 Notifying listeners for new round...');
                         this.notifyListeners('GAME_UPDATE', chooseRoom);
                         console.log('✅ New round notification sent');
-                      }, 6000); // Increased from 2000ms to 6000ms (6 seconds)
+                      }, battleDelay); // Tutorial: 3s, Normal: 6s delay for next round
                     }
                     console.log('📤 Notifying listeners of battle result...');
                     this.notifyListeners('GAME_UPDATE', chooseRoom);
@@ -1116,7 +1334,7 @@ class GameClient {
                     ai.active = false;
                     this.notifyListeners('GAME_UPDATE', chooseRoom);
                   }
-                  }, 6000); // 6 seconds to view AI card before battle
+                  }, battleDelay); // Tutorial: 3s, Normal: 6s to view AI card before battle
                 } catch (aiPlayError) {
                   console.error('❌ AI PLAY ERROR:', aiPlayError);
                   console.error('AI Play error stack:', aiPlayError.stack);
@@ -1126,47 +1344,10 @@ class GameClient {
                   chooseRoom.battlePhase = false;
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
                 }
-              }, 2000); // 2000ms for AI to "think" before selecting card
-              } else {
-                console.log('⏭️ AI has no cards, skipping turn...', {
-                  aiExists: !!ai,
-                  aiHandLength: ai?.hand?.length,
-                  aiDeckLength: ai?.deck?.length || 0
-                });
-                
-                // Check if player also has no cards - if so, end game
-                const playerHasNoCards = (player.hand.length === 0 && (!player.deck || player.deck.length === 0));
-                if (playerHasNoCards) {
-                  chooseRoom.gameOver = true;
-                  
-                  // Calculate total strength from all played cards
-                  const playerTotalStrength = player.playedCards.reduce((sum, card) => 
-                    sum + (card.modifiedStrength || card.strength || 0), 0);
-                  const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
-                    sum + (card.modifiedStrength || card.strength || 0), 0);
-                  
-                  // Determine winner by total strength
-                  if (playerTotalStrength > aiTotalStrength) {
-                    chooseRoom.winner = player.name;
-                  } else if (aiTotalStrength > playerTotalStrength) {
-                    chooseRoom.winner = ai.name;
-                  } else {
-                    chooseRoom.winner = 'Tie';
-                  }
-                  
-                  console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
-                  this.notifyListeners('GAME_UPDATE', chooseRoom);
-                } else {
-                  // AI has no cards but player does - skip AI turn
-                  console.log('⏭️ Skipping AI turn, returning control to player');
-                  player.active = true;
-                  ai.active = false;
-                  chooseRoom.battlePhase = false;
-                  chooseRoom.currentRound++;
-                  this.notifyListeners('GAME_UPDATE', chooseRoom);
-                }
+              }, aiCardDelay); // Tutorial: 1s, Normal: 2s for AI to "think" before selecting card
               }
-            }, 6000); // 6 seconds delay after player plays
+              }
+            }, aiActivationDelay); // Tutorial: 2s, Normal: 6s delay after player plays
             
             return { type: 'CARD_CHOSEN', success: true };
           } else {
@@ -1301,10 +1482,10 @@ class GameClient {
           const opponent = forfeitRoom.players.find(p => p.id !== forfeitPlayerId);
           
           if (forfeitPlayer && forfeitPlayer.active) {
-            console.log('⏭️ Player forfeited turn');
+            console.log('⏭️ Player forfeited turn (fusion/trap action)');
             
-            // Forfeit loses 1 point
-            forfeitPlayer.score = Math.max(0, forfeitPlayer.score - 1);
+            // Don't penalize for strategic actions like fusion
+            // forfeitPlayer.score = Math.max(0, forfeitPlayer.score - 1);
             
             // Switch turns without battle
             forfeitPlayer.active = false;
@@ -1313,11 +1494,28 @@ class GameClient {
             if (opponent) {
               opponent.active = true;
               opponent.chosenCard = null;
+              console.log('🔄 Switched to opponent:', {
+                opponentId: opponent.id,
+                opponentName: opponent.name,
+                isAI: opponent.isAI,
+                handSize: opponent.hand?.length,
+                active: opponent.active
+              });
             }
             
             forfeitRoom.battlePhase = false;
             
+            // Immediately trigger game update to notify all listeners
             this.notifyListeners('GAME_UPDATE', forfeitRoom);
+            
+            // After forfeit from fusion/trap, the turn has switched
+            // The opponent (AI) should now take their turn
+            // We don't need to auto-play here - the game will handle it through normal flow
+            console.log('✅ Forfeit complete - opponent is now active');
+            
+            // The game state notification will trigger the UI to show it's AI's turn
+            // The AI turn logic in GameBoard will handle playing the card
+            
             return { type: 'TURN_FORFEITED', success: true };
           }
         }
@@ -2235,10 +2433,10 @@ class GameClient {
     }
   }
 
-  createRoom(aiPersonality = 'CHAOS') {
+  createRoom(aiPersonality = 'CHAOS', isTutorial = false) {
     return new Promise((resolve) => {
       this.once('ROOM_CREATED', (data) => resolve(data));
-      this.send(`CREATE_ROOM ${aiPersonality}`);
+      this.send(`CREATE_ROOM ${aiPersonality} ${isTutorial}`);
     });
   }
 

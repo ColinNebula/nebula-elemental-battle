@@ -37,7 +37,8 @@ const CardTooltip = ({ card, position }) => {
 
   return (
     <div 
-      className="card-tooltip" 
+      className="card-tooltip"
+      data-placement={position?.placement || 'top'}
       style={{
         left: position?.x || 0,
         top: position?.y || 0

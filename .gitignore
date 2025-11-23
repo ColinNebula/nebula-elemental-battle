@@ -137,9 +137,13 @@ config/local.json
 *.db-shm
 
 # ==============================================
-# Large Media Files (Use CDN for production)
+# Large Media Files
 # ==============================================
-# NOTE: Game music MP3s in /public are tracked
+# ⚠️ WARNING: MP3 files in /public are 103MB total
+# Consider using Git LFS or hosting on CDN for production
+# Current MP3s are tracked but GitHub has 100MB file size limit
+
+# Video files (always too large for GitHub)
 *.mp4
 *.mov
 *.avi
@@ -147,8 +151,15 @@ config/local.json
 *.mkv
 *.wmv
 *.flv
+
+# Uncompressed audio (use MP3 instead)
 *.wav
 *.flac
+*.aiff
+*.aif
+
+# Very large audio files (>25MB)
+# Add specific large files here if needed
 
 # Large documents
 *.pdf
@@ -162,6 +173,22 @@ config/local.json
 *.tar.gz
 *.rar
 *.7z
+*.tar
+*.gz
+*.bz2
+
+# Large images (use optimized versions)
+*.psd
+*.ai
+*.sketch
+*.fig
+*.xcf
+
+# Backup files
+*.bak
+*.backup
+*_backup
+*.old
 
 # ==============================================
 # Reports & Documentation

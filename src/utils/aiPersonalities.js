@@ -1,9 +1,32 @@
 // AI Opponent Personalities with unique strategies
 
 export const AI_PERSONALITIES = {
+  DONOVAN_RAGE: {
+    name: 'Donovan Rage',
+    avatar: '😡',
+    avatarImage: 'rage-avatar.png',
+    difficulty: 'Easy',
+    element: 'FIRE',
+    description: 'A furious warrior consumed by uncontrollable rage',
+    strategy: {
+      preferredElements: ['FIRE', 'POWER', 'DARK'],
+      aggressiveness: 0.9, // Extremely aggressive
+      conservativeness: 0.1,
+      abilityUsage: 0.7,
+      counterPriority: 0.3
+    },
+    quotes: {
+      start: "FACE MY WRATH!",
+      win: "CRUSHED BY RAGE!",
+      lose: "My fury... fading...",
+      taunt: "YOU WILL SUFFER!"
+    }
+  },
+  
   EMBER: {
     name: 'Ember the Firestarter',
     avatar: '🔥',
+    avatarImage: 'ember-the-firestarter-avatar.png',
     difficulty: 'Easy',
     element: 'FIRE',
     description: 'A hot-headed warrior who loves aggressive plays',
@@ -25,6 +48,7 @@ export const AI_PERSONALITIES = {
   FROST: {
     name: 'Frost the Frozen',
     avatar: '❄️',
+    avatarImage: 'frost-the-frozen-avatar.png',
     difficulty: 'Medium',
     element: 'ICE',
     description: 'A calculated strategist who freezes opponents in their tracks',
@@ -46,6 +70,7 @@ export const AI_PERSONALITIES = {
   AQUA: {
     name: 'Aqua the Tidekeeper',
     avatar: '💧',
+    avatarImage: 'water-avatar.png',
     difficulty: 'Medium',
     element: 'WATER',
     description: 'A flowing fighter who adapts to any situation',
@@ -68,6 +93,7 @@ export const AI_PERSONALITIES = {
   VOLT: {
     name: 'Volt the Electrifier',
     avatar: '⚡',
+    avatarImage: 'vol- the-electrifier-avatar.png',
     difficulty: 'Hard',
     element: 'ELECTRICITY',
     description: 'A shocking speedster with lightning-fast combos',
@@ -90,6 +116,7 @@ export const AI_PERSONALITIES = {
   TERRA: {
     name: 'Terra the Earthshaker',
     avatar: '🌍',
+    avatarImage: 'terra-the-earthshaker-avatar.png',
     difficulty: 'Hard',
     element: 'EARTH',
     description: 'A defensive powerhouse who wears opponents down',
@@ -112,6 +139,7 @@ export const AI_PERSONALITIES = {
   LUMINA: {
     name: 'Lumina the Radiant',
     avatar: '☀️',
+    avatarImage: 'lumina-the-radiant-avatar.png',
     difficulty: 'Expert',
     element: 'LIGHT',
     description: 'A brilliant tactician with divine powers',
@@ -183,6 +211,7 @@ export const AI_PERSONALITIES = {
   CHAOS: {
     name: 'Chaos the Unpredictable',
     avatar: '🔮',
+    avatarImage: 'chaos-the-unpredictable-avatar.png',
     difficulty: 'Master',
     element: 'NEUTRAL',
     description: 'An erratic wildcard who defies all logic',
@@ -208,10 +237,10 @@ export const AI_PERSONALITIES = {
 export const STORY_MODE_CAMPAIGN = [
   {
     stage: 1,
-    name: 'Trial of Fire',
-    opponent: 'EMBER',
-    description: 'Face Ember in the volcanic arena to prove your worth',
-    reward: 'Unlock: Fire Mastery Badge'
+    name: 'Trial of Rage',
+    opponent: 'DONOVAN_RAGE',
+    description: 'Face Donovan Rage in the volcanic arena and survive his fury',
+    reward: 'Unlock: Rage Mastery Badge'
   },
   {
     stage: 2,

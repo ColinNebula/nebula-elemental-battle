@@ -1,9 +1,11 @@
 // Statistics tracking utility
+import secureStorage from './secureStorage';
+
 const STATS_KEY = 'elementalBattleStats';
 const PROFILE_KEY = 'playerProfile';
 
 export const getProfile = () => {
-  const stored = localStorage.getItem(PROFILE_KEY);
+  const stored = secureStorage.getItem(PROFILE_KEY);
   if (!stored) {
     return {
       avatar: '👤',
@@ -19,7 +21,8 @@ export const getProfile = () => {
       coins: 0
     };
   }
-  const profile = JSON.parse(stored);
+  // secureStorage already returns parsed object
+  const profile = stored;
   // Ensure coins property exists
   if (profile.coins === undefined) {
     profile.coins = 0;
@@ -28,15 +31,15 @@ export const getProfile = () => {
 };
 
 export const saveProfile = (profile) => {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  secureStorage.setItem(PROFILE_KEY, profile);
 };
 
 // Recovery function to restore from backup if main save is corrupted
 export const recoverStoryProgress = () => {
   try {
-    const mainProgress = localStorage.getItem('storyModeProgress');
+    const mainProgress = secureStorage.getItem('storyModeProgress');
     if (mainProgress) {
-      return JSON.parse(mainProgress);
+      return mainProgress;
     }
     
     // Try backup if main is corrupted
@@ -44,7 +47,7 @@ export const recoverStoryProgress = () => {
     if (backup) {
       const backupData = JSON.parse(backup);
       console.log('⚠️ Recovered story progress from backup:', backupData);
-      localStorage.setItem('storyModeProgress', JSON.stringify(backupData.progress));
+      secureStorage.setItem('storyModeProgress', backupData.progress);
       return backupData.progress;
     }
   } catch (error) {

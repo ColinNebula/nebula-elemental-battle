@@ -54,6 +54,7 @@
 
 - **Story Mode** - Battle through 20 progressive stages with unique opponents and challenges
 - **VS AI Mode** - Face off against AI opponents with 10 distinct personalities
+- **Strategic Mode** ⚡ **NEW** - Advanced tactical gameplay with mana, weather, and terrain systems
 - **Quick Match** - Jump straight into battle with random AI opponent
 - **Training Mode** - Practice against beginner-level AI
 
@@ -266,6 +267,30 @@ npm run deploy
 ---
 
 ## 🎯 Advanced Features
+
+### Strategic Depth Systems ⚡ **NEW**
+
+**Strategic Mode** adds advanced tactical gameplay with three core systems:
+
+**💎 Mana/Energy System**:
+- Cards cost 1-6 mana based on power level
+- Mana regenerates each turn (+1 per turn, max 10)
+- Strategic resource management required
+- Visual mana bar with real-time tracking
+
+**🌦️ Weather Effects System**:
+- 8 dynamic weather types (Clear, Rain, Storm, Drought, Blizzard, Windstorm, Fog, Eclipse)
+- Weather changes every 2-4 rounds
+- Element-specific modifiers (±1 to ±3 strength)
+- Tactical adaptation required
+
+**🏔️ Terrain Advantages System**:
+- 9 terrain types (Volcano, Ocean, Forest, Mountain, Glacier, Thunder Plains, Shadow Realm, Sanctuary, Neutral)
+- Pre-selected terrain persists entire match
+- +2 strength bonus to matching elements
+- Strategic terrain-deck synergy
+
+See [STRATEGIC_SYSTEMS_GUIDE.md](STRATEGIC_SYSTEMS_GUIDE.md) for complete documentation.
 
 ### Status Effects
 
