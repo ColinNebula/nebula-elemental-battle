@@ -107,7 +107,7 @@ class MobileScreenManager {
       if (document.visibilityState === 'visible') {
         // Force repaint when coming back to page
         document.body.style.display = 'none';
-        document.body.offsetHeight; // Trigger reflow
+        void document.body.offsetHeight; // Trigger reflow
         document.body.style.display = '';
       }
     });

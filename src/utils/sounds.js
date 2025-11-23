@@ -828,7 +828,7 @@ class SoundManager {
     }
   }
 
-  toggleMusic() {
+  toggleSound() {
     this.enabled = !this.enabled;
     return this.enabled;
   }
