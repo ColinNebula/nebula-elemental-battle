@@ -15,6 +15,7 @@ import Statistics from './components/Statistics';
 import PlayerProfile from './components/PlayerProfile';
 import InstallPrompt from './components/InstallPrompt';
 import Credits from './components/Credits';
+import BrandScreen from './components/BrandScreen';
 import SplashScreen from './components/SplashScreen';
 import CoinToss from './components/CoinToss';
 import ThemeShop from './components/ThemeShop';
@@ -70,7 +71,8 @@ function App() {
   const [gameClient] = useState(() => new GameClient());
   const hasConnected = useRef(false);
   const [connected, setConnected] = useState(true); // Start as true - mock server is always available
-  const [showSplash, setShowSplash] = useState(true);
+  const [showBrandScreen, setShowBrandScreen] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [isReturningToSplash, setIsReturningToSplash] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showStoryMode, setShowStoryMode] = useState(false);
@@ -947,6 +949,12 @@ function App() {
 
   return (
     <div className="App" data-testid="app-container">
+      {/* Brand Screen */}
+      {showBrandScreen && <BrandScreen onComplete={() => {
+        setShowBrandScreen(false);
+        setShowSplash(true);
+      }} />}
+      
       {/* Splash Screen */}
       {showSplash && <SplashScreen onComplete={handleSplashComplete} isReturning={isReturningToSplash} />}
       

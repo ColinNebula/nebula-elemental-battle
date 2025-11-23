@@ -1,0 +1,76 @@
+.brand-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: brandFadeIn 0.5s ease-out;
+}
+
+.brand-screen.fade-out {
+  animation: brandFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes brandFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes brandFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.brand-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: brandPulse 2s ease-in-out infinite;
+}
+
+.brand-logo {
+  max-width: 400px;
+  width: 80vw;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes brandPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .brand-logo {
+    max-width: 300px;
+    width: 70vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    max-width: 250px;
+    width: 60vw;
+  }
+}
