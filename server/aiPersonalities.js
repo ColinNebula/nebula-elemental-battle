@@ -1,6 +1,17 @@
 // AI Opponent Personalities - Server Version (Node.js compatible)
 
 const AI_PERSONALITIES = {
+  DONOVAN_RAGE: {
+    name: 'Donovan Rage',
+    avatar: '😡',
+    avatarImage: 'rage-avatar.png',
+    cardBackImage: 'rage-cards.png',
+    difficulty: 'Easy',
+    aggressiveness: 0.9,
+    conservativeness: 0.1,
+    counterPriority: 0.3,
+    preferredElements: ['FIRE', 'POWER', 'DARK']
+  },
   EMBER: {
     name: 'Ember',
     avatar: '🔥',
@@ -13,6 +24,8 @@ const AI_PERSONALITIES = {
   FROST: {
     name: 'Frost',
     avatar: '❄️',
+    avatarImage: 'frost-the-frozen-avatar.png',
+    cardBackImage: 'frost-the-frozen-card-back.png',
     difficulty: 'Medium',
     aggressiveness: 0.3,
     conservativeness: 0.7,
@@ -22,6 +35,7 @@ const AI_PERSONALITIES = {
   AQUA: {
     name: 'Aqua',
     avatar: '💧',
+    cardBackImage: 'aqua-th-tidekeeper-card-back.png',
     difficulty: 'Medium',
     aggressiveness: 0.5,
     conservativeness: 0.5,

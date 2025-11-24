@@ -1,35 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import './App.css';
 import './accessibility.css';
 import MainMenu from './components/MainMenu';
 import Lobby from './components/Lobby';
-import StoryMode from './components/StoryMode';
 import GameBoard from './components/GameBoard';
-import CardSelection from './components/CardSelection';
-import CharacterSelection from './components/CharacterSelection';
-import VictoryRewards from './components/VictoryRewards';
-import Settings from './components/Settings';
-import Tutorial from './components/Tutorial';
-import TutorialMode from './components/TutorialMode';
-import Statistics from './components/Statistics';
-import PlayerProfile from './components/PlayerProfile';
-import InstallPrompt from './components/InstallPrompt';
-import Credits from './components/Credits';
 import BrandScreen from './components/BrandScreen';
 import SplashScreen from './components/SplashScreen';
-import CoinToss from './components/CoinToss';
-import ThemeShop from './components/ThemeShop';
-import DonationBanner from './components/DonationBanner';
-import Inventory from './components/Inventory';
 import SecurityIndicator from './components/SecurityIndicator';
 import GameClient from './services/GameClient';
 import securityManager from './utils/security';
 import secureStorage from './utils/secureStorage';
 import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, getProfile, updateProfile, recoverStoryProgress, recoverProfile } from './utils/statistics';
-import { awardCoins, initializeThemes } from './utils/themes';
+import { awardCoins, initializeThemes, getStoryModeArenaTheme } from './utils/themes';
 import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
 import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/powerUps';
 import mobileScreenManager from './utils/mobileScreenManager';
+import soundManager from './utils/sounds';
+
+// Lazy load heavy components for code splitting
+const StoryMode = lazy(() => import('./components/StoryMode'));
+const CardSelection = lazy(() => import('./components/CardSelection'));
+const CharacterSelection = lazy(() => import('./components/CharacterSelection'));
+const VictoryRewards = lazy(() => import('./components/VictoryRewards'));
+const Settings = lazy(() => import('./components/Settings'));
+const Tutorial = lazy(() => import('./components/Tutorial'));
+const TutorialMode = lazy(() => import('./components/TutorialMode'));
+const Statistics = lazy(() => import('./components/Statistics'));
+const PlayerProfile = lazy(() => import('./components/PlayerProfile'));
+const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
+const Credits = lazy(() => import('./components/Credits'));
+const CoinToss = lazy(() => import('./components/CoinToss'));
+const ThemeShop = lazy(() => import('./components/ThemeShop'));
+const DonationBanner = lazy(() => import('./components/DonationBanner'));
+const Inventory = lazy(() => import('./components/Inventory'));
 
 function App() {
   // Donation banner state
@@ -38,9 +41,10 @@ function App() {
   // Lobby music ref - persists across lobby, character selection, and card selection
   const lobbyMusicRef = useRef(null);
 
-  // Initialize mobile screen manager
+  // Initialize mobile screen manager and sound system
   useEffect(() => {
     mobileScreenManager.init();
+    soundManager.init();
     
     return () => {
       mobileScreenManager.destroy();
@@ -167,23 +171,35 @@ function App() {
     window.dispatchEvent(new Event('settingsUpdated'));
   }, [settings.colorblindMode, settings.highContrast, settings.textSize, settings.showElementIcons]);
 
-  // Manage lobby music across lobby, character selection, and card selection screens
+  // Manage music across different game screens
   useEffect(() => {
     const isInCardSelection = gameState?.cardSelectionPhase && !gameState?.gameStarted;
     const shouldPlayLobbyMusic = (showLobby || showCharacterSelection || isInCardSelection) && !gameState?.gameStarted;
+    const shouldPlayMainMenuMusic = showMainMenu && !showLobby && !showCharacterSelection && !inGame;
     
     if (shouldPlayLobbyMusic && !lobbyMusicRef.current) {
       // Start lobby music
       lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
-      lobbyMusicRef.current.volume = 0.3;
+      lobbyMusicRef.current.volume = settings.musicEnabled ? 0.3 : 0;
       lobbyMusicRef.current.loop = true;
       lobbyMusicRef.current.play().catch(err => console.log('Lobby music autoplay prevented:', err));
     } else if (!shouldPlayLobbyMusic && lobbyMusicRef.current) {
-      // Stop lobby music when game actually starts
+      // Stop lobby music when leaving lobby screens
       lobbyMusicRef.current.pause();
       lobbyMusicRef.current = null;
     }
-  }, [showLobby, showCharacterSelection, gameState?.cardSelectionPhase, gameState?.gameStarted]);
+    
+    // Play main menu music (Cooler Heads Prevail only)
+    if (shouldPlayMainMenuMusic && settings.musicEnabled) {
+      // Play specific main menu track
+      const mainMenuAudio = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
+      mainMenuAudio.volume = 0.3;
+      mainMenuAudio.loop = true;
+      mainMenuAudio.play().catch(err => console.log('Main menu music autoplay prevented:', err));
+    } else if (!shouldPlayMainMenuMusic) {
+      soundManager.stopMusic();
+    }
+  }, [showLobby, showCharacterSelection, gameState?.cardSelectionPhase, gameState?.gameStarted, showMainMenu, inGame, settings.musicEnabled]);
 
   // Handler for settings changes that also persists to localStorage
   const handleSettingsChange = (newSettings) => {
@@ -528,6 +544,12 @@ function App() {
     
     // Reset rewards flag for new game
     setRewardsAwarded(false);
+    
+    // Set arena theme based on story mode opponent
+    const storyArenaTheme = getStoryModeArenaTheme(opponentKey);
+    const currentThemes = JSON.parse(localStorage.getItem('playerThemes')) || {};
+    currentThemes.arenaTheme = storyArenaTheme;
+    localStorage.setItem('playerThemes', JSON.stringify(currentThemes));
     
     // Use player profile name for story mode
     const playerName = playerProfile.name || 'Player';
@@ -957,6 +979,20 @@ function App() {
     );
   }
 
+  // Loading fallback for lazy-loaded components
+  const LoadingFallback = () => (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: '100vh',
+      fontSize: '1.5rem',
+      color: 'var(--primary-color, #4a9eff)'
+    }}>
+      Loading...
+    </div>
+  );
+
   return (
     <div className="App" data-testid="app-container">
       {/* Brand Screen */}
@@ -972,53 +1008,67 @@ function App() {
           {showSplash && <SplashScreen onComplete={handleSplashComplete} isReturning={isReturningToSplash} />}
           
           {/* PWA Install Prompt - Only show on main menu */}
-          {!showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && <InstallPrompt />}
+          {!showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && (
+            <Suspense fallback={null}>
+              <InstallPrompt />
+            </Suspense>
+          )}
       
       {/* Tutorial Mode */}
       {showTutorialMode && (
-        <TutorialMode 
-          onComplete={handleTutorialComplete}
-          onExit={handleTutorialExit}
-          playerProfile={playerProfile}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <TutorialMode 
+            onComplete={handleTutorialComplete}
+            onExit={handleTutorialExit}
+            playerProfile={playerProfile}
+          />
+        </Suspense>
       )}
 
       {/* Credits */}
       {showCredits && (
-        <Credits onClose={handleCloseCredits} />
+        <Suspense fallback={<LoadingFallback />}>
+          <Credits onClose={handleCloseCredits} />
+        </Suspense>
       )}
       
       {/* Overlay Components - Always Available */}
-      <Settings 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)}
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
-      />
-      <Tutorial 
-        isOpen={showTutorial} 
-        onClose={() => setShowTutorial(false)}
-      />
-      <Statistics 
-        isOpen={showStats} 
-        onClose={() => setShowStats(false)}
-      />
+      <Suspense fallback={null}>
+        <Settings 
+          isOpen={showSettings} 
+          onClose={() => setShowSettings(false)}
+          settings={settings}
+          onSettingsChange={handleSettingsChange}
+        />
+        <Tutorial 
+          isOpen={showTutorial} 
+          onClose={() => setShowTutorial(false)}
+        />
+        <Statistics 
+          isOpen={showStats} 
+          onClose={() => setShowStats(false)}
+        />
+      </Suspense>
       
       {/* Theme Shop Modal */}
       {showThemeShop && (
-        <ThemeShop onClose={() => setShowThemeShop(false)} />
+        <Suspense fallback={<LoadingFallback />}>
+          <ThemeShop onClose={() => setShowThemeShop(false)} />
+        </Suspense>
       )}
       
       {/* Inventory Modal */}
       {showInventory && (
-        <Inventory 
-          inventory={playerInventory}
-          onUseConsumable={handleUseConsumable}
-          onEquipItem={handleEquipItem}
-          onUnequipItem={handleUnequipItem}
-          onAddToActiveDeck={handleAddToActiveDeck}
-          onClose={() => setShowInventory(false)}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Inventory 
+            inventory={playerInventory}
+            onUseConsumable={handleUseConsumable}
+            onEquipItem={handleEquipItem}
+            onUnequipItem={handleUnequipItem}
+            onAddToActiveDeck={handleAddToActiveDeck}
+            onClose={() => setShowInventory(false)}
+          />
+        </Suspense>
       )}
       
       {/* Player Profile Modal */}
@@ -1026,11 +1076,13 @@ function App() {
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowProfile(false)}>✕</button>
-            <PlayerProfile 
-              player={gameState?.players?.find(p => !p.isAI) || { name: playerProfile.name || 'Player' }}
-              isAI={false}
-              stats={playerProfile}
-            />
+            <Suspense fallback={<LoadingFallback />}>
+              <PlayerProfile 
+                player={gameState?.players?.find(p => !p.isAI) || { name: playerProfile.name || 'Player' }}
+                isAI={false}
+                stats={playerProfile}
+              />
+            </Suspense>
           </div>
         </div>
       )}
@@ -1050,19 +1102,21 @@ function App() {
           onQuit={handleQuit}
         />
       ) : !showSplash && showStoryMode && !inGame ? (
-        <StoryMode
-          onStartBattle={handleStartStoryBattle}
-          onBack={handleStoryModeBack}
-          storyProgress={{
-            currentStage: completedStoryStages.length > 0 ? Math.max(...completedStoryStages) : 0,
-            completedStages: completedStoryStages,
-            unlockedChapters: [1],
-            choices: {},
-            unlockedBackstories: ['DONOVAN_RAGE'],
-            unlockedSecretBosses: [],
-            difficulty: 'warrior'
-          }}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <StoryMode
+            onStartBattle={handleStartStoryBattle}
+            onBack={handleStoryModeBack}
+            storyProgress={{
+              currentStage: completedStoryStages.length > 0 ? Math.max(...completedStoryStages) : 0,
+              completedStages: completedStoryStages,
+              unlockedChapters: [1],
+              choices: {},
+              unlockedBackstories: ['DONOVAN_RAGE'],
+              unlockedSecretBosses: [],
+              difficulty: 'warrior'
+            }}
+          />
+        </Suspense>
       ) : !showSplash && showLobby && !inGame ? (
         <Lobby 
           onSinglePlayer={handleSinglePlayer}
@@ -1103,30 +1157,39 @@ function App() {
 
           {/* Victory Rewards Screen */}
           {showVictoryRewards && victoryRewardsData ? (
-            <VictoryRewards
-              coinsEarned={victoryRewardsData.coinsEarned}
-              totalCoins={victoryRewardsData.totalCoins}
-              playerWon={victoryRewardsData.playerWon}
-              onContinue={handleVictoryRewardsContinue}
-            />
+            <Suspense fallback={<LoadingFallback />}>
+              <VictoryRewards
+                coinsEarned={victoryRewardsData.coinsEarned}
+                totalCoins={victoryRewardsData.totalCoins}
+                playerWon={victoryRewardsData.playerWon}
+                onContinue={handleVictoryRewardsContinue}
+              />
+            </Suspense>
           ) : showCharacterSelection && !showTutorialMode ? (
-            <CharacterSelection
-              onSelectCharacter={handleCharacterSelect}
-              onCancel={handleBackFromCharacterSelection}
-            />
+            <Suspense fallback={<LoadingFallback />}>
+              <CharacterSelection
+                onSelectCharacter={handleCharacterSelect}
+                onCancel={handleBackFromCharacterSelection}
+                isStoryMode={!currentOpponent}
+              />
+            </Suspense>
           ) : gameState?.cardSelectionPhase && !gameState?.gameStarted && !showTutorialMode ? (
-            <CardSelection
-              hand={gameState.players?.find(p => p.id === playerId)?.hand || []}
-              onConfirmSelection={handleSelectCards}
-              onBack={handleBackFromCardSelection}
-              selectedCharacter={selectedCharacter}
-            />
+            <Suspense fallback={<LoadingFallback />}>
+              <CardSelection
+                hand={gameState.players?.find(p => p.id === playerId)?.hand || []}
+                onConfirmSelection={handleSelectCards}
+                onBack={handleBackFromCardSelection}
+                selectedCharacter={selectedCharacter}
+              />
+            </Suspense>
           ) : showCoinToss ? (
-            <CoinToss
-              playerName={gameState?.players?.find(p => p.id === playerId)?.name || 'Player'}
-              opponentName={gameState?.players?.find(p => p.id !== playerId)?.name || 'Opponent'}
-              onComplete={handleCoinTossComplete}
-            />
+            <Suspense fallback={<LoadingFallback />}>
+              <CoinToss
+                playerName={gameState?.players?.find(p => p.id === playerId)?.name || 'Player'}
+                opponentName={gameState?.players?.find(p => p.id !== playerId)?.name || 'Opponent'}
+                onComplete={handleCoinTossComplete}
+              />
+            </Suspense>
           ) : (
             <GameBoard
               gameState={gameState}
@@ -1149,9 +1212,11 @@ function App() {
           
           {/* Donation Banner - Only show on main menu */}
           {showDonationBanner && !showSplash && showMainMenu && !inGame && !showSettings && !showTutorial && !showStats && !showProfile && !showThemeShop && !showStoryMode && !showCredits && !showLobby && (
-            <DonationBanner 
-              onClose={() => setShowDonationBanner(false)}
-            />
+            <Suspense fallback={null}>
+              <DonationBanner 
+                onClose={() => setShowDonationBanner(false)}
+              />
+            </Suspense>
           )}
         </>
       )}

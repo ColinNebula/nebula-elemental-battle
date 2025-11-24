@@ -1515,6 +1515,12 @@ const GameBoard = ({
     setPendingCardIndex(null);
   };
 
+  // Screen shake effect for dramatic moments
+  const triggerScreenShake = (element) => {
+    element.classList.add('screen-shake');
+    setTimeout(() => element.classList.remove('screen-shake'), 500);
+  };
+
   const handleFusionAttempt = () => {
     if (selectedFusionCards.length === 2 && currentPlayer) {
       const card1 = currentPlayer.hand[selectedFusionCards[0]];
@@ -1529,17 +1535,51 @@ const GameBoard = ({
       console.log('🔮 Fusion result:', fusionResult);
       
       if (fusionResult.success) {
-        // Show fusion animation
+        // Show enhanced fusion animation
         if (gameBoardRef.current) {
+          // Create particle burst effect
+          for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'fusion-particle';
+            const angle = (Math.PI * 2 * i) / 30;
+            const distance = 150 + Math.random() * 100;
+            particle.style.setProperty('--angle', `${angle}rad`);
+            particle.style.setProperty('--distance', `${distance}px`);
+            particle.style.left = '50%';
+            particle.style.top = '50%';
+            gameBoardRef.current.appendChild(particle);
+            setTimeout(() => particle.remove(), 1500);
+          }
+          
+          // Create fusion circle effect
+          const fusionCircle = document.createElement('div');
+          fusionCircle.className = 'fusion-circle-effect';
+          gameBoardRef.current.appendChild(fusionCircle);
+          setTimeout(() => fusionCircle.remove(), 2000);
+          
+          // Create main fusion banner
           const fusionDiv = document.createElement('div');
           fusionDiv.className = 'fusion-complete-banner';
           fusionDiv.innerHTML = `
-            <div style="font-size: 28px; color: #ff9800;">✨ FUSION SUCCESS! ✨</div>
-            <div style="font-size: 24px; margin-top: 10px;">${fusionResult.fusedCard.name} Created!</div>
-            <div style="font-size: 18px; margin-top: 5px; color: #4caf50;">Strength: ${fusionResult.fusedCard.strength}</div>
+            <div class="fusion-glow-ring"></div>
+            <div class="fusion-sparkle-container">
+              <span class="fusion-sparkle" style="--delay: 0s;">✨</span>
+              <span class="fusion-sparkle" style="--delay: 0.2s;">✨</span>
+              <span class="fusion-sparkle" style="--delay: 0.4s;">✨</span>
+            </div>
+            <div class="fusion-title">🔥 FUSION SUCCESS! 🔥</div>
+            <div class="fusion-card-name">${fusionResult.fusedCard.name}</div>
+            <div class="fusion-elements">${fusionResult.fusionName}</div>
+            <div class="fusion-stats">
+              <span class="fusion-stat">⚡ Strength: ${fusionResult.fusedCard.strength}</span>
+              ${fusionResult.fusedCard.element ? `<span class="fusion-stat">🌟 ${fusionResult.fusedCard.element}</span>` : ''}
+            </div>
           `;
           gameBoardRef.current.appendChild(fusionDiv);
-          setTimeout(() => fusionDiv.remove(), 3000);
+          setTimeout(() => fusionDiv.remove(), 3500);
+          
+          // Trigger screen shake
+          triggerScreenShake(gameBoardRef.current);
         }
         
         console.log('✨ Fusion successful:', fusionResult.fusionName, fusionResult.fusedCard);
@@ -2352,7 +2392,7 @@ const GameBoard = ({
                 <h4>Remaining Cards</h4>
                 <div className="vertical-card-stack">
                   {Array(aiPlayer.cardCount).fill(null).map((_, i) => (
-                    <div key={i} className="card-back-small" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
+                    <div key={i} className="card-back-small" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/${aiPlayer.cardBackImage || 'cards-back.png'})` }}></div>
                   ))}
                 </div>
               </div>
@@ -2362,7 +2402,7 @@ const GameBoard = ({
                   <h4>Reserve Deck ({aiPlayer.deck.length})</h4>
                   <div className="reserve-deck-stack">
                     {aiPlayer.deck.map((_, i) => (
-                      <div key={i} className="card-back-small" style={{ top: `${i * 2}px`, backgroundImage: `url(${process.env.PUBLIC_URL}/cards-back.png)` }}></div>
+                      <div key={i} className="card-back-small" style={{ top: `${i * 2}px`, backgroundImage: `url(${process.env.PUBLIC_URL}/${aiPlayer.cardBackImage || 'cards-back.png'})` }}></div>
                     ))}
                   </div>
                 </div>
@@ -2485,6 +2525,11 @@ const GameBoard = ({
       {gameState.gameStarted && (
         <div className="center-battle-area" style={{
           background: ARENA_THEMES[arenaTheme]?.background || ARENA_THEMES.cosmic.background,
+          backgroundImage: ARENA_THEMES[arenaTheme]?.backgroundImage || 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundBlendMode: 'overlay',
           boxShadow: ARENA_THEMES[arenaTheme]?.borderGlow || ARENA_THEMES.cosmic.borderGlow
         }}>
           {/* Arena overlay effect */}
@@ -2697,9 +2742,9 @@ const GameBoard = ({
       {gameState.gameStarted && !gameState.gameOver && !hasQuit && defeatCountdown === null && (
         <>
           {/* Active Boosts Display */}
-          {boosterSystem?.activeBoosters?.length > 0 && (
+          {boosterSystem?.activeBoosts?.length > 0 && (
             <div className="active-boosts">
-              {boosterSystem?.activeBoosters?.map((boost, idx) => (
+              {boosterSystem?.activeBoosts?.map((boost, idx) => (
                 <div key={idx} className="active-boost">
                   <div className="active-boost-icon">{powerUpSystem?.BOOSTERS?.[boost.boosterId]?.icon}</div>
                   <div className="active-boost-text">

@@ -396,6 +396,7 @@ export const ARENA_THEMES = {
     name: 'Volcanic Arena',
     cost: 75,
     background: 'radial-gradient(ellipse at center, rgba(50, 20, 10, 0.95) 0%, rgba(35, 15, 8, 0.97) 50%, rgba(20, 10, 5, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/trial-of-rage.png)`,
     overlay: 'linear-gradient(180deg, rgba(255, 69, 0, 0.25) 0%, rgba(255, 100, 30, 0.1) 25%, transparent 50%, rgba(255, 140, 0, 0.1) 75%, rgba(255, 140, 0, 0.2) 100%)',
     borderGlow: '0 0 55px rgba(255, 69, 0, 0.9), 0 0 85px rgba(255, 140, 0, 0.5), inset 0 0 60px rgba(255, 140, 0, 0.45)',
     particles: 'rgba(255, 140, 0, 1)',
@@ -407,6 +408,7 @@ export const ARENA_THEMES = {
     name: 'Frozen Tundra',
     cost: 75,
     background: 'radial-gradient(ellipse at center, rgba(20, 40, 60, 0.95) 0%, rgba(15, 30, 48, 0.97) 50%, rgba(10, 20, 35, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/frozen-fortress.png)`,
     overlay: 'linear-gradient(180deg, rgba(173, 216, 230, 0.25) 0%, rgba(135, 206, 250, 0.1) 25%, transparent 50%, rgba(100, 180, 220, 0.1) 75%, rgba(135, 206, 250, 0.2) 100%)',
     borderGlow: '0 0 55px rgba(0, 191, 255, 0.9), 0 0 85px rgba(173, 216, 230, 0.5), inset 0 0 60px rgba(173, 216, 230, 0.5)',
     particles: 'rgba(173, 216, 230, 1)',
@@ -418,6 +420,7 @@ export const ARENA_THEMES = {
     name: 'Enchanted Forest',
     cost: 80,
     background: 'radial-gradient(ellipse at center, rgba(20, 40, 20, 0.95) 0%, rgba(15, 32, 15, 0.97) 50%, rgba(10, 25, 10, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/earthquake-arena1-level.png)`,
     overlay: 'linear-gradient(180deg, rgba(34, 139, 34, 0.25) 0%, rgba(40, 180, 40, 0.1) 25%, transparent 50%, rgba(50, 205, 50, 0.1) 75%, rgba(50, 205, 50, 0.2) 100%)',
     borderGlow: '0 0 50px rgba(34, 139, 34, 0.9), 0 0 80px rgba(50, 205, 50, 0.5), inset 0 0 55px rgba(50, 205, 50, 0.45)',
     particles: 'rgba(144, 238, 144, 1)',
@@ -440,6 +443,7 @@ export const ARENA_THEMES = {
     name: 'Ocean Depths',
     cost: 85,
     background: 'radial-gradient(ellipse at center, rgba(10, 30, 50, 0.95) 0%, rgba(8, 23, 40, 0.97) 50%, rgba(5, 15, 30, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/aqua-the-tidekeeper-level.png)`,
     overlay: 'linear-gradient(180deg, rgba(0, 119, 190, 0.25) 0%, rgba(0, 140, 200, 0.1) 25%, transparent 50%, rgba(0, 150, 199, 0.1) 75%, rgba(0, 150, 199, 0.2) 100%)',
     borderGlow: '0 0 55px rgba(0, 119, 190, 0.9), 0 0 90px rgba(0, 191, 255, 0.5), inset 0 0 60px rgba(0, 191, 255, 0.5)',
     particles: 'rgba(64, 224, 208, 1)',
@@ -451,6 +455,7 @@ export const ARENA_THEMES = {
     name: 'Lightning Storm',
     cost: 90,
     background: 'radial-gradient(ellipse at center, rgba(30, 30, 50, 0.95) 0%, rgba(23, 23, 40, 0.97) 50%, rgba(15, 15, 30, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/lightning-storm.png)`,
     overlay: 'linear-gradient(180deg, rgba(255, 255, 0, 0.2) 0%, rgba(255, 255, 100, 0.08) 25%, transparent 50%, rgba(138, 43, 226, 0.08) 75%, rgba(138, 43, 226, 0.15) 100%)',
     borderGlow: '0 0 60px rgba(255, 255, 0, 1), 0 0 95px rgba(138, 43, 226, 0.6), inset 0 0 65px rgba(138, 43, 226, 0.6)',
     particles: 'rgba(255, 255, 0, 1)',
@@ -462,6 +467,7 @@ export const ARENA_THEMES = {
     name: 'Shadow Realm',
     cost: 95,
     background: 'radial-gradient(ellipse at center, rgba(15, 15, 20, 0.98) 0%, rgba(10, 10, 15, 0.99) 50%, rgba(5, 5, 10, 1) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/void-demension.png)`,
     overlay: 'linear-gradient(180deg, rgba(75, 0, 130, 0.25) 0%, rgba(100, 20, 150, 0.1) 25%, transparent 50%, rgba(138, 43, 226, 0.1) 75%, rgba(138, 43, 226, 0.2) 100%)',
     borderGlow: '0 0 55px rgba(75, 0, 130, 1), 0 0 85px rgba(138, 43, 226, 0.6), inset 0 0 60px rgba(138, 43, 226, 0.6)',
     particles: 'rgba(138, 43, 226, 1)',
@@ -484,6 +490,7 @@ export const ARENA_THEMES = {
     name: 'Demonic Inferno',
     cost: 110,
     background: 'radial-gradient(ellipse at center, rgba(60, 10, 10, 0.95) 0%, rgba(45, 8, 8, 0.97) 50%, rgba(30, 5, 5, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/chaos-unleached-level.png)`,
     overlay: 'linear-gradient(180deg, rgba(220, 20, 60, 0.3) 0%, rgba(240, 40, 70, 0.12) 25%, transparent 50%, rgba(255, 69, 0, 0.12) 75%, rgba(255, 69, 0, 0.25) 100%)',
     borderGlow: '0 0 65px rgba(220, 20, 60, 1), 0 0 100px rgba(255, 69, 0, 0.7), inset 0 0 70px rgba(255, 69, 0, 0.7)',
     particles: 'rgba(220, 20, 60, 1)',
@@ -628,6 +635,23 @@ export const applyArenaTheme = (themeId) => {
   root.style.setProperty('--arena-overlay', theme.overlay);
   root.style.setProperty('--arena-border-glow', theme.borderGlow);
   root.style.setProperty('--arena-particles', theme.particles);
+};
+
+// Map story mode opponents to arena themes with custom backgrounds
+export const getStoryModeArenaTheme = (opponentKey) => {
+  const storyThemeMap = {
+    'DONOVAN_RAGE': 'volcano',        // trial-of-rage.png
+    'FROST': 'ice',                   // frozen-fortress.png
+    'AQUA': 'ocean',                  // (no custom bg, uses default)
+    'VOLT': 'electric',               // lightning-storm.png
+    'TERRA': 'forest',                // earthquake-arena1-level.png
+    'LUMINA': 'celestial',            // (no custom bg, uses default)
+    'SHADOW': 'shadow',               // void-demension.png
+    'NEXUS': 'celestial',             // (no custom bg, uses default)
+    'CHAOS': 'inferno'                // chaos-unleached-level.png
+  };
+  
+  return storyThemeMap[opponentKey] || 'cosmic';
 };
 
 // Award coins for winning

@@ -185,6 +185,17 @@ public/audio-backup/
 *.backup
 *_backup
 *.old
+*.original
+
+# WebAssembly build artifacts
+emsdk/
+*.wasm
+*.wat
+
+# Optimization artifacts
+public/optimized/
+public/compressed/
+public/*-backup.*
 
 # ==============================================
 # Reports & Documentation

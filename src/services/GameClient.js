@@ -287,6 +287,7 @@ class GameClient {
               comboFocus: strategy.comboFocus || 0.3,
               avatar: personality.avatar || '🤖',
               avatarImage: personality.avatarImage,
+              cardBackImage: personality.cardImage,
               difficulty: personality.difficulty || 'Medium'
             });
             
@@ -294,7 +295,8 @@ class GameClient {
               name: personality.name,
               difficulty: personality.difficulty,
               personality: selectedPersonality,
-              avatarImage: personality.avatarImage
+              avatarImage: personality.avatarImage,
+              cardBackImage: personality.cardImage
             });
           }
           

@@ -662,14 +662,8 @@ class SoundManager {
       
       this.currentTrack = this.musicTracks[trackIndex];
       
-      // Create audio element with proper path for GitHub Pages
-      // In production, files are in /nebula-elemental-battle/
-      // In development, files are in /
-      const basePath = process.env.NODE_ENV === 'production' 
-        ? '/nebula-elemental-battle'
-        : '';
-      
-      this.backgroundMusic = new Audio(`${basePath}/${this.currentTrack}`);
+      // Create audio element with proper path using PUBLIC_URL
+      this.backgroundMusic = new Audio(`${process.env.PUBLIC_URL}/${this.currentTrack}`);
       this.backgroundMusic.volume = this.getMusicVolumeForIntensity(intensity);
       this.backgroundMusic.loop = true;
       

@@ -62,7 +62,10 @@
     "build:production": "cross-env NODE_ENV=production GENERATE_SOURCEMAP=false npm run build",
     "clean": "rimraf build node_modules/.cache",
     "postbuild": "echo 'Build complete! Check build/ folder'",
-    "prepare:deploy": "npm run security:audit && npm run build:production"
+    "prepare:deploy": "npm run security:audit && npm run build:production",
+    "github:prepare": "powershell -ExecutionPolicy Bypass -File ./scripts/quick-check.ps1",
+    "github:optimize": "powershell -ExecutionPolicy Bypass -File ./scripts/optimize-assets-simple.ps1",
+    "github:check": "npm run security:audit && npm run test -- --watchAll=false --passWithNoTests"
   },
   "eslintConfig": {
     "extends": [
