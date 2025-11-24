@@ -2650,14 +2650,41 @@ const GameBoard = ({
             <div className="advanced-mechanics-controls">
               <button 
                 className="fusion-btn"
-                onClick={() => setShowFusionUI(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowFusionUI(true);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowFusionUI(true);
+                }}
                 title="Fuse two cards together"
               >
                 🔮 Fusion
               </button>
               <button 
                 className={`trap-btn ${selectedTrapCard !== null ? 'selected' : ''}`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (selectedTrapCard !== null) {
+                    setShowTrapUI(true);
+                  } else {
+                    // Show hint to select a card first
+                    if (gameBoardRef.current) {
+                      const hint = document.createElement('div');
+                      hint.className = 'trap-hint';
+                      hint.textContent = '👆 Select a card from your hand first!';
+                      gameBoardRef.current.appendChild(hint);
+                      setTimeout(() => hint.remove(), 2000);
+                    }
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (selectedTrapCard !== null) {
                     setShowTrapUI(true);
                   } else {
@@ -2760,7 +2787,16 @@ const GameBoard = ({
           {/* Booster Panel Toggle Button */}
           <button 
             className="power-up-toggle booster-toggle"
-            onClick={() => setShowBoosterPanel(!showBoosterPanel)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowBoosterPanel(!showBoosterPanel);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowBoosterPanel(!showBoosterPanel);
+            }}
             style={{
               position: 'fixed',
               top: '80px',
@@ -2774,7 +2810,11 @@ const GameBoard = ({
               cursor: 'pointer',
               zIndex: 1600,
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 15px rgba(76, 175, 80, 0.5)'
+              boxShadow: '0 4px 15px rgba(76, 175, 80, 0.5)',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
             }}
             title="Boosters"
           >
@@ -2832,7 +2872,16 @@ const GameBoard = ({
           {/* Equipment Panel Toggle Button */}
           <button 
             className="power-up-toggle equipment-toggle"
-            onClick={() => setShowEquipmentPanel(!showEquipmentPanel)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowEquipmentPanel(!showEquipmentPanel);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowEquipmentPanel(!showEquipmentPanel);
+            }}
             style={{
               position: 'fixed',
               top: '140px',
@@ -2846,7 +2895,11 @@ const GameBoard = ({
               cursor: 'pointer',
               zIndex: 1600,
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 15px rgba(255, 152, 0, 0.5)'
+              boxShadow: '0 4px 15px rgba(255, 152, 0, 0.5)',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
             }}
             title="Equipment"
           >
