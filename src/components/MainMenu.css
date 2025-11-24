@@ -158,6 +158,94 @@
   }
 }
 
+.news-alert-btn {
+  position: relative;
+  margin-top: 20px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.2) 100%);
+  border: 2px solid #4caf50;
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 60px;
+  height: 60px;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.news-alert-btn:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.5) 0%, rgba(76, 175, 80, 0.3) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(76, 175, 80, 0.5);
+  border-color: #66bb6a;
+  padding: 12px 30px;
+  border-radius: 12px;
+  width: auto;
+  height: auto;
+}
+
+.news-alert-btn:hover .news-text {
+  max-width: 150px;
+  opacity: 1;
+  margin-left: 8px;
+}
+
+.news-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  transition: font-size 0.3s ease;
+}
+
+.news-alert-btn:hover .news-icon {
+  font-size: 20px;
+}
+
+.news-text {
+  font-size: 14px;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  margin-left: 0;
+}
+
+.news-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f44336;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 12px;
+  min-width: 24px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.8);
+  animation: pulse-badge 2s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 .title-subtitle {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
@@ -530,6 +618,30 @@
   .title-subtitle {
     font-size: 12px;
     letter-spacing: 2px;
+  }
+
+  .news-alert-btn {
+    width: 50px;
+    height: 50px;
+    padding: 10px;
+  }
+  
+  .news-alert-btn:hover {
+    width: auto;
+    height: auto;
+    padding: 10px 20px;
+  }
+
+  .news-icon {
+    font-size: 24px;
+  }
+  
+  .news-alert-btn:hover .news-icon {
+    font-size: 18px;
+  }
+
+  .news-text {
+    font-size: 12px;
   }
 
   .accordion-header {

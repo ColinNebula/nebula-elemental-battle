@@ -25,11 +25,15 @@ const DonationBanner = ({ onClose }) => {
       const donationData = {
         enabled: true,
         links: {
-          paypal: 'https://paypal.me/ColinNebulapaypal',
-          kofi: 'https://ko-fi.com/colinNebulakofi',
-          github: 'https://github.com/sponsors/ColinNebulagithub'
+          // TODO: Replace these with YOUR actual donation links:
+          // PayPal: https://paypal.me/YourPayPalUsername
+          // Ko-fi: https://ko-fi.com/YourKofiUsername
+          // GitHub Sponsors: https://github.com/sponsors/YourGitHubUsername
+          paypal: 'https://paypal.me/colinnebula',
+          kofi: 'https://ko-fi.com/colinebula',
+          github: 'https://github.com/sponsors/colinnebula'
         },
-        message: 'Support Nebula 3D Dev - Your contributions help keep this project alive!'
+        message: 'Support this game\'s development - Your contributions help keep this project alive!'
       };
 
       setDonationInfo(donationData);
@@ -124,7 +128,7 @@ const DonationBanner = ({ onClose }) => {
         </div>
       </div>
       <div className="developer-credit">
-        <small>Created by <strong>Developer Colin Nebula</strong> for Nebula 3D Dev</small>
+        <small>Created with ❤️ by <strong>Your Name Here</strong></small>
       </div>
     </div>
   );

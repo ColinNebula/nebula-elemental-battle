@@ -6,28 +6,49 @@ const PROFILE_KEY = 'playerProfile';
 
 export const getProfile = () => {
   const stored = secureStorage.getItem(PROFILE_KEY);
+  const stats = getStats(); // Get detailed stats
+  
   if (!stored) {
     return {
       avatar: '👤',
       name: 'Player',
-      totalGames: 0,
-      wins: 0,
-      losses: 0,
-      ties: 0,
-      winStreak: 0,
-      firstWin: false,
+      totalGames: stats.gamesPlayed || 0,
+      wins: stats.gamesWon || 0,
+      losses: stats.gamesLost || 0,
+      ties: stats.gamesTied || 0,
+      winStreak: stats.currentWinStreak || 0,
+      longestWinStreak: stats.longestWinStreak || 0,
+      firstWin: stats.gamesWon > 0,
       perfectGame: false,
       legendaryPlayed: false,
-      coins: 0
+      coins: 0,
+      cardsPlayed: stats.totalCardsPlayed || 0,
+      highScore: stats.highestScore || 0,
+      favoriteElement: getFavoriteElement(),
+      elementStats: stats.elementStats,
+      recentMatches: stats.recentMatches || [],
+      fastestWin: stats.fastestWin
     };
   }
   // secureStorage already returns parsed object
   const profile = stored;
-  // Ensure coins property exists
-  if (profile.coins === undefined) {
-    profile.coins = 0;
-  }
-  return profile;
+  // Ensure all properties exist and merge with stats
+  return {
+    ...profile,
+    coins: profile.coins !== undefined ? profile.coins : 0,
+    totalGames: stats.gamesPlayed || profile.totalGames || 0,
+    wins: stats.gamesWon || profile.wins || 0,
+    losses: stats.gamesLost || profile.losses || 0,
+    ties: stats.gamesTied || profile.ties || 0,
+    winStreak: stats.currentWinStreak || profile.winStreak || 0,
+    longestWinStreak: stats.longestWinStreak || profile.longestWinStreak || 0,
+    cardsPlayed: stats.totalCardsPlayed || profile.cardsPlayed || 0,
+    highScore: stats.highestScore || profile.highScore || 0,
+    favoriteElement: getFavoriteElement(),
+    elementStats: stats.elementStats,
+    recentMatches: stats.recentMatches || [],
+    fastestWin: stats.fastestWin
+  };
 };
 
 export const saveProfile = (profile) => {
@@ -144,22 +165,45 @@ export const getStats = () => {
       matchBonusCount: 0,
       specialAbilitiesUsed: 0,
       fastestWin: null, // in seconds
-      lastPlayed: null
+      lastPlayed: null,
+      recentMatches: [] // New field for match history
     };
   }
-  return JSON.parse(stored);
+  const stats = JSON.parse(stored);
+  // Ensure recentMatches exists
+  if (!stats.recentMatches) {
+    stats.recentMatches = [];
+  }
+  return stats;
 };
 
 export const saveStats = (stats) => {
   localStorage.setItem(STATS_KEY, JSON.stringify(stats));
 };
 
-export const recordGameEnd = (playerWon, playerScore, aiScore, roundsPlayed, startTime) => {
+export const recordGameEnd = (playerWon, playerScore, aiScore, roundsPlayed, startTime, opponentName = 'AI') => {
   const stats = getStats();
   const duration = startTime ? Math.floor((Date.now() - startTime) / 1000) : null;
   
   stats.gamesPlayed++;
   stats.totalRoundsPlayed += roundsPlayed;
+  
+  // Record match in history (keep last 20 matches)
+  const matchResult = {
+    result: playerWon === true ? 'win' : playerWon === false ? 'loss' : 'tie',
+    opponent: opponentName,
+    score: `${playerScore}-${aiScore}`,
+    timestamp: Date.now(),
+    duration: duration || 0
+  };
+  
+  if (!stats.recentMatches) {
+    stats.recentMatches = [];
+  }
+  stats.recentMatches.unshift(matchResult);
+  if (stats.recentMatches.length > 20) {
+    stats.recentMatches = stats.recentMatches.slice(0, 20);
+  }
   
   if (playerWon === true) {
     stats.gamesWon++;

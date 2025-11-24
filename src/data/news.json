@@ -1,0 +1,45 @@
+{
+  "news": [
+    {
+      "id": 1,
+      "date": "2025-11-24",
+      "title": "Enhanced Player Profiles!",
+      "type": "update",
+      "description": "Major profile update with 20 new avatar options, element mastery tracking, 12 achievements, enhanced match history with timestamps, and improved stats visualization!",
+      "icon": "✨",
+      "priority": "high",
+      "version": "v1.5.0"
+    },
+    {
+      "id": 2,
+      "date": "2025-11-20",
+      "title": "Performance Optimization",
+      "type": "improvement",
+      "description": "Code splitting implementation reduces initial load by 14%. Faster Time to Interactive with 23 lazy-loaded chunks. Better caching for improved performance.",
+      "icon": "⚡",
+      "priority": "medium",
+      "version": "v1.4.5"
+    },
+    {
+      "id": 3,
+      "date": "2025-11-15",
+      "title": "Story Mode & Tutorial",
+      "type": "feature",
+      "description": "New story mode with 10 chapters, comprehensive tutorial system, and strategic gameplay guides. Perfect for new players!",
+      "icon": "📖",
+      "priority": "medium",
+      "version": "v1.4.0"
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "title": "Coming Soon: Weekend Tournament",
+      "startDate": "2025-11-30",
+      "endDate": "2025-12-01",
+      "description": "Battle for glory! Top players win exclusive rewards including legendary cards, special badges, and bonus coins.",
+      "icon": "🏆",
+      "status": "upcoming"
+    }
+  ]
+}

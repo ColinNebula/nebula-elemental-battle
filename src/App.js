@@ -27,6 +27,7 @@ const Tutorial = lazy(() => import('./components/Tutorial'));
 const TutorialMode = lazy(() => import('./components/TutorialMode'));
 const Statistics = lazy(() => import('./components/Statistics'));
 const PlayerProfile = lazy(() => import('./components/PlayerProfile'));
+const NewsModal = lazy(() => import('./components/NewsModal'));
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
 const Credits = lazy(() => import('./components/Credits'));
 const CoinToss = lazy(() => import('./components/CoinToss'));
@@ -107,6 +108,7 @@ function App() {
   const [showTutorialMode, setShowTutorialMode] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showNews, setShowNews] = useState(false);
   const [showThemeShop, setShowThemeShop] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
@@ -1081,10 +1083,22 @@ function App() {
                 player={gameState?.players?.find(p => !p.isAI) || { name: playerProfile.name || 'Player' }}
                 isAI={false}
                 stats={playerProfile}
+                onUpdateProfile={(updates) => {
+                  const updatedProfile = { ...playerProfile, ...updates };
+                  setPlayerProfile(updatedProfile);
+                  updateProfile(updatedProfile);
+                }}
               />
             </Suspense>
           </div>
         </div>
+      )}
+
+      {/* News Modal */}
+      {showNews && (
+        <Suspense fallback={<LoadingFallback />}>
+          <NewsModal onClose={() => setShowNews(false)} />
+        </Suspense>
       )}
 
       {/* Main Menu */}
@@ -1096,6 +1110,7 @@ function App() {
           onShowTutorial={() => setShowTutorial(true)}
           onShowStats={() => setShowStats(true)}
           onShowProfile={() => setShowProfile(true)}
+          onShowNews={() => setShowNews(true)}
           onShowThemeShop={() => setShowThemeShop(true)}
           onShowInventory={() => setShowInventory(true)}
           onShowSettings={() => setShowSettings(true)}

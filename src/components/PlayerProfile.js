@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import './PlayerProfile.css';
 
-const PlayerProfile = ({ player, isAI, stats }) => {
+const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const [activeTab, setActiveTab] = useState('stats');
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  
+  const avatarOptions = ['👤', '🧙', '⚔️', '🛡️', '🏹', '🗡️', '⚡', '🔥', '❄️', '🌊', '🌍', '✨', '🌟', '💫', '👑', '🦸', '🧙‍♂️', '🧝', '🧚', '🦹'];
   
   if (!player) return null;
 
@@ -14,13 +17,24 @@ const PlayerProfile = ({ player, isAI, stats }) => {
 
   const getLevel = () => {
     const totalGames = stats?.totalGames || 0;
-    return Math.floor(totalGames / 5) + 1; // Level up every 5 games
+    const cardsPlayed = stats?.cardsPlayed || 0;
+    const wins = stats?.wins || 0;
+    // More comprehensive XP system: games + cards + bonus for wins
+    const xp = totalGames * 100 + cardsPlayed * 10 + wins * 150;
+    return Math.floor(Math.pow(xp / 500, 0.7)) + 1;
   };
 
   const getExperience = () => {
     const totalGames = stats?.totalGames || 0;
-    const currentLevelGames = totalGames % 5;
-    return { current: currentLevelGames, max: 5 };
+    const cardsPlayed = stats?.cardsPlayed || 0;
+    const wins = stats?.wins || 0;
+    const xp = totalGames * 100 + cardsPlayed * 10 + wins * 150;
+    const level = getLevel();
+    const xpForCurrentLevel = Math.pow((level - 1) * 500, 1 / 0.7);
+    const xpForNextLevel = Math.pow(level * 500, 1 / 0.7);
+    const current = Math.floor(xp - xpForCurrentLevel);
+    const max = Math.floor(xpForNextLevel - xpForCurrentLevel);
+    return { current, max, total: xp };
   };
 
   const getAvatar = () => {
@@ -58,12 +72,85 @@ const PlayerProfile = ({ player, isAI, stats }) => {
     const mostUsed = stats?.favoriteElement || 'FIRE';
     return elements[mostUsed] || elements.FIRE;
   };
+  
+  const getElementMastery = () => {
+    const elements = {
+      FIRE: { icon: '🔥', name: 'Fire', color: '#ff6b6b' },
+      ICE: { icon: '❄️', name: 'Ice', color: '#4ecdc4' },
+      WATER: { icon: '💧', name: 'Water', color: '#45b7d1' },
+      ELECTRICITY: { icon: '⚡', name: 'Electricity', color: '#f7b731' },
+      EARTH: { icon: '🌍', name: 'Earth', color: '#5f27cd' },
+      POWER: { icon: '⭐', name: 'Power', color: '#ffd700' },
+      LIGHT: { icon: '☀️', name: 'Light', color: '#fff59d' },
+      DARK: { icon: '🌙', name: 'Dark', color: '#5e35b1' }
+    };
+    
+    const elementStats = stats?.elementStats || {};
+    return Object.keys(elements).map(elem => {
+      const data = elementStats[elem] || { played: 0, won: 0 };
+      const winRate = data.played > 0 ? Math.round((data.won / data.played) * 100) : 0;
+      const masteryLevel = data.played >= 50 ? 'Master' : data.played >= 20 ? 'Expert' : data.played >= 10 ? 'Skilled' : 'Novice';
+      return {
+        ...elements[elem],
+        type: elem,
+        played: data.played,
+        won: data.won,
+        winRate,
+        masteryLevel
+      };
+    }).sort((a, b) => b.played - a.played);
+  };
 
   const getRecentMatches = () => {
-    return stats?.recentMatches || [
-      { result: 'win', opponent: 'Terra', score: '15-12' },
-      { result: 'loss', opponent: 'Ember', score: '10-14' },
-      { result: 'win', opponent: 'Zephyr', score: '16-9' }
+    const matches = stats?.recentMatches || [
+      { result: 'win', opponent: 'Terra', score: '15-12', timestamp: Date.now() - 86400000, duration: 420 },
+      { result: 'loss', opponent: 'Ember', score: '10-14', timestamp: Date.now() - 172800000, duration: 380 },
+      { result: 'win', opponent: 'Zephyr', score: '16-9', timestamp: Date.now() - 259200000, duration: 310 }
+    ];
+    return matches.map(m => ({
+      ...m,
+      timeAgo: getTimeAgo(m.timestamp),
+      durationText: formatDuration(m.duration)
+    }));
+  };
+  
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return 'Recently';
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
+  
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  const handleAvatarChange = (newAvatar) => {
+    if (onUpdateProfile && !isAI) {
+      onUpdateProfile({ avatar: newAvatar });
+      setShowAvatarSelector(false);
+    }
+  };
+  
+  const getAllAchievements = () => {
+    return [
+      { id: 'firstWin', icon: '🎉', name: 'First Victory', description: 'Win your first game', unlocked: stats?.firstWin },
+      { id: 'perfectGame', icon: '💯', name: 'Perfect Game', description: 'Win without losing a round', unlocked: stats?.perfectGame },
+      { id: 'hotStreak', icon: '🔥', name: 'Hot Streak', description: 'Win 3 games in a row', unlocked: stats?.winStreak >= 3 },
+      { id: 'legendary', icon: '⭐', name: 'Legendary', description: 'Play a legendary card', unlocked: stats?.legendaryPlayed },
+      { id: 'veteran', icon: '🎖️', name: 'Veteran', description: 'Reach level 10', unlocked: getLevel() >= 10 },
+      { id: 'champion', icon: '👑', name: 'Champion', description: 'Achieve 80% win rate', unlocked: getWinRate() >= 80 },
+      { id: 'centurion', icon: '💯', name: 'Centurion', description: 'Win 100 games', unlocked: (stats?.wins || 0) >= 100 },
+      { id: 'elementMaster', icon: '🌟', name: 'Element Master', description: 'Master 5 elements', unlocked: getElementMastery().filter(e => e.played >= 50).length >= 5 },
+      { id: 'speedster', icon: '⚡', name: 'Speedster', description: 'Win in under 2 minutes', unlocked: stats?.fastestWin && stats.fastestWin < 120 },
+      { id: 'cardShark', icon: '🎴', name: 'Card Shark', description: 'Play 500 cards', unlocked: (stats?.cardsPlayed || 0) >= 500 },
+      { id: 'elite', icon: '💎', name: 'Elite', description: 'Reach level 20', unlocked: getLevel() >= 20 },
+      { id: 'grandmaster', icon: '🏆', name: 'Grandmaster', description: 'Reach Grandmaster rank', unlocked: getRank().name === 'Grandmaster' }
     ];
   };
 
@@ -77,7 +164,27 @@ const PlayerProfile = ({ player, isAI, stats }) => {
       {/* Profile Header with Avatar and Basic Info */}
       <div className="profile-header">
         <div className="profile-avatar-container">
-          <div className="profile-avatar-large">{getAvatar()}</div>
+          <div 
+            className="profile-avatar-large" 
+            onClick={() => !isAI && setShowAvatarSelector(!showAvatarSelector)}
+            style={{ cursor: isAI ? 'default' : 'pointer' }}
+            title={isAI ? '' : 'Click to change avatar'}
+          >
+            {getAvatar()}
+          </div>
+          {showAvatarSelector && !isAI && (
+            <div className="avatar-selector">
+              {avatarOptions.map((avatar, idx) => (
+                <div 
+                  key={idx} 
+                  className="avatar-option"
+                  onClick={() => handleAvatarChange(avatar)}
+                >
+                  {avatar}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="profile-level-badge">
             <span className="level-icon">⚡</span>
             <span className="level-number">{level}</span>
@@ -118,6 +225,12 @@ const PlayerProfile = ({ player, isAI, stats }) => {
           onClick={() => setActiveTab('stats')}
         >
           📊 Stats
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'mastery' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mastery')}
+        >
+          ✨ Mastery
         </button>
         <button 
           className={`tab-button ${activeTab === 'achievements' ? 'active' : ''}`}
@@ -180,6 +293,10 @@ const PlayerProfile = ({ player, isAI, stats }) => {
                 <span className="stat-row-value">{stats?.winStreak || 0}</span>
               </div>
               <div className="stat-row">
+                <span className="stat-row-label">🏅 Best Streak:</span>
+                <span className="stat-row-value">{stats?.longestWinStreak || 0}</span>
+              </div>
+              <div className="stat-row">
                 <span className="stat-row-label">⭐ Best Score:</span>
                 <span className="stat-row-value">{stats?.highScore || 0}</span>
               </div>
@@ -187,63 +304,83 @@ const PlayerProfile = ({ player, isAI, stats }) => {
                 <span className="stat-row-label">🎴 Cards Played:</span>
                 <span className="stat-row-value">{stats?.cardsPlayed || 0}</span>
               </div>
+              <div className="stat-row">
+                <span className="stat-row-label">⚡ Total XP:</span>
+                <span className="stat-row-value">{exp.total || 0}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-row-label">⏱️ Fastest Win:</span>
+                <span className="stat-row-value">{stats?.fastestWin ? formatDuration(stats.fastestWin) : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'mastery' && (
+          <div className="element-mastery">
+            <div className="mastery-header">
+              <h3>Element Mastery</h3>
+              <p className="mastery-description">Track your proficiency with each element</p>
+            </div>
+            <div className="mastery-list">
+              {getElementMastery().map((element, idx) => (
+                <div key={idx} className="mastery-card" style={{ borderLeftColor: element.color }}>
+                  <div className="mastery-icon">{element.icon}</div>
+                  <div className="mastery-info">
+                    <div className="mastery-name" style={{ color: element.color }}>
+                      {element.name}
+                      <span className="mastery-level">{element.masteryLevel}</span>
+                    </div>
+                    <div className="mastery-stats">
+                      <span>Played: {element.played}</span>
+                      <span>Won: {element.won}</span>
+                      <span>Win Rate: {element.winRate}%</span>
+                    </div>
+                    <div className="mastery-bar">
+                      <div 
+                        className="mastery-bar-fill" 
+                        style={{ 
+                          width: `${Math.min(element.played * 2, 100)}%`,
+                          background: `linear-gradient(90deg, ${element.color}, ${element.color}88)`
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {activeTab === 'achievements' && (
           <div className="profile-achievements">
+            <div className="achievements-summary">
+              <div className="achievement-progress">
+                <span className="progress-text">
+                  {getAllAchievements().filter(a => a.unlocked).length} / {getAllAchievements().length} Unlocked
+                </span>
+                <div className="progress-bar-mini">
+                  <div 
+                    className="progress-bar-mini-fill" 
+                    style={{ width: `${(getAllAchievements().filter(a => a.unlocked).length / getAllAchievements().length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
             <div className="achievements-grid">
-              {stats?.firstWin && (
-                <div className="achievement-badge unlocked" title="First Victory">
-                  <div className="badge-icon">🎉</div>
-                  <div className="badge-name">First Win</div>
+              {getAllAchievements().map((achievement, idx) => (
+                <div 
+                  key={idx} 
+                  className={`achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'}`}
+                  title={achievement.description}
+                >
+                  <div className="badge-icon">{achievement.unlocked ? achievement.icon : '🔒'}</div>
+                  <div className="badge-name">{achievement.name}</div>
+                  {!achievement.unlocked && (
+                    <div className="badge-description">{achievement.description}</div>
+                  )}
                 </div>
-              )}
-              {stats?.perfectGame && (
-                <div className="achievement-badge unlocked" title="Perfect Game">
-                  <div className="badge-icon">💯</div>
-                  <div className="badge-name">Perfect</div>
-                </div>
-              )}
-              {stats?.winStreak >= 3 && (
-                <div className="achievement-badge unlocked" title="Win Streak">
-                  <div className="badge-icon">🔥</div>
-                  <div className="badge-name">Hot Streak</div>
-                </div>
-              )}
-              {stats?.legendaryPlayed && (
-                <div className="achievement-badge unlocked" title="Legendary Player">
-                  <div className="badge-icon">⭐</div>
-                  <div className="badge-name">Legendary</div>
-                </div>
-              )}
-              {getLevel() >= 10 && (
-                <div className="achievement-badge unlocked" title="Veteran">
-                  <div className="badge-icon">🎖️</div>
-                  <div className="badge-name">Veteran</div>
-                </div>
-              )}
-              {getWinRate() >= 80 && (
-                <div className="achievement-badge unlocked" title="Champion">
-                  <div className="badge-icon">👑</div>
-                  <div className="badge-name">Champion</div>
-                </div>
-              )}
-              
-              {/* Locked achievements */}
-              {!stats?.firstWin && (
-                <div className="achievement-badge locked" title="Play your first game">
-                  <div className="badge-icon">🔒</div>
-                  <div className="badge-name">First Win</div>
-                </div>
-              )}
-              {!stats?.perfectGame && (
-                <div className="achievement-badge locked" title="Win with full HP">
-                  <div className="badge-icon">🔒</div>
-                  <div className="badge-name">Perfect</div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -257,8 +394,14 @@ const PlayerProfile = ({ player, isAI, stats }) => {
                     {match.result === 'win' ? '🏆' : '💔'}
                   </div>
                   <div className="match-info">
-                    <div className="match-opponent">vs {match.opponent}</div>
-                    <div className="match-score">{match.score}</div>
+                    <div className="match-header">
+                      <div className="match-opponent">vs {match.opponent}</div>
+                      <div className="match-time">{match.timeAgo}</div>
+                    </div>
+                    <div className="match-details">
+                      <span className="match-score">{match.score}</span>
+                      <span className="match-duration">⏱️ {match.durationText}</span>
+                    </div>
                   </div>
                   <div className={`match-result-badge ${match.result}`}>
                     {match.result === 'win' ? 'VICTORY' : 'DEFEAT'}

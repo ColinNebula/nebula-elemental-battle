@@ -42,6 +42,7 @@
   max-height: 90vh;
   overflow: auto;
   animation: modalSlideIn 0.3s ease;
+  box-sizing: border-box;
 }
 
 @keyframes modalSlideIn {
@@ -56,24 +57,25 @@
 }
 
 .modal-close {
-  position: absolute;
-  top: -15px;
-  right: -15px;
-  width: 40px;
-  height: 40px;
+  position: fixed;
+  top: calc(5vh + 30px);
+  right: calc(5vw + 10px);
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  border: 2px solid #fff;
+  border: 3px solid #fff;
   color: white;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-  z-index: 10001;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  z-index: 99999;
+  pointer-events: auto;
 }
 
 .modal-close:hover {
@@ -174,32 +176,7 @@
   }
 }
 
-.modal-close {
-  position: absolute;
-  top: -15px;
-  right: -15px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  border: 2px solid white;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 10001;
-}
 
-.modal-close:hover {
-  transform: scale(1.1) rotate(90deg);
-  background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
-  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
-}
 
 /* ========================================
    MOBILE & TABLET RESPONSIVE STYLES
@@ -261,11 +238,11 @@
   }
   
   .modal-close {
-    width: 35px;
-    height: 35px;
-    font-size: 18px;
-    top: -10px;
-    right: -10px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    top: calc(5vh + 20px);
+    right: calc(5vw + 10px);
   }
 }
 
@@ -293,11 +270,11 @@
   }
   
   .modal-close {
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
-    top: -8px;
-    right: -8px;
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+    top: calc(5vh + 10px);
+    right: calc(5vw + 5px);
   }
   
   .connecting h2 {

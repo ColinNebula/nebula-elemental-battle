@@ -11,14 +11,31 @@ const MainMenu = ({
   onShowThemeShop,
   onShowInventory,
   onShowSettings,
+  onShowNews,
   onQuit 
 }) => {
   const menuMusicRef = useRef(null);
   const [expandedSection, setExpandedSection] = useState('gameplay');
+  const [unreadNewsCount, setUnreadNewsCount] = useState(0);
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
+
+  useEffect(() => {
+    // Check for unread news
+    const checkUnreadNews = async () => {
+      try {
+        const newsData = await import('../data/news.json');
+        const readNews = JSON.parse(localStorage.getItem('readNews') || '[]');
+        const unread = newsData.default.news.filter(n => !readNews.includes(n.id)).length;
+        setUnreadNewsCount(unread);
+      } catch (error) {
+        console.error('Error loading news:', error);
+      }
+    };
+    checkUnreadNews();
+  }, []);
 
   useEffect(() => {
     // Play menu music when component mounts
@@ -66,6 +83,15 @@ const MainMenu = ({
             <span className="title-battle">BATTLE</span>
           </h1>
           <p className="title-subtitle">Master the Elements • Conquer the Arena</p>
+          
+          {/* News Alert Button */}
+          <button className="news-alert-btn" onClick={onShowNews} title="What's New">
+            <span className="news-icon">📰</span>
+            <span className="news-text">What's New</span>
+            {unreadNewsCount > 0 && (
+              <span className="news-badge">{unreadNewsCount}</span>
+            )}
+          </button>
         </div>
 
         <div className="menu-accordion">
