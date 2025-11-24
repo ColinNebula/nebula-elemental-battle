@@ -2692,7 +2692,8 @@ const GameBoard = ({
           )}
           <div className={`hand ${isMyTurn ? 'your-turn' : ''}`} style={{
             background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
-            boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`
+            boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`,
+            borderImage: `url(${process.env.PUBLIC_URL}/hand-frame1.png) 50 stretch`
           }}>
             {getSortedHand(humanPlayer.hand).map((item, displayIndex) => {
               const manaSystemActive = strategicSettings?.manaEnabled === true;

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Generator - Nebula Elemental Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-section.dragover {
+            border-color: #4ade80;
+            background: #f0fdf4;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .preview-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+        
+        .preview-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: transform 0.2s;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .icons-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .icon-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .icon-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            background: white;
+            padding: 10px;
+        }
+        
+        .icon-label {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .icon-size {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .download-all-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            transition: transform 0.2s;
+        }
+        
+        .download-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
+        }
+        
+        .instructions {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #d97706;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            color: #666;
+        }
+        
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Logo Generator</h1>
+        <p class="subtitle">Generate all required logo sizes for browsers and mobile devices</p>
+        
+        <div class="upload-section" id="uploadSection">
+            <p style="font-size: 48px; margin-bottom: 20px;">📤</p>
+            <p style="font-size: 18px; color: #667eea; margin-bottom: 20px;">
+                Drag & Drop your logo here or click to browse
+            </p>
+            <p style="color: #999; font-size: 14px; margin-bottom: 20px;">
+                Supported: PNG, JPG (Transparent PNG recommended)
+            </p>
+            <label for="fileInput" class="upload-btn">
+                Choose Logo File
+            </label>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg">
+        </div>
+        
+        <div class="preview-section" id="previewSection">
+            <h3 style="color: #667eea; margin-bottom: 15px;">Preview</h3>
+            <img id="previewImage" class="preview-image" alt="Logo preview">
+            <button class="generate-btn" id="generateBtn">Generate All Icons</button>
+        </div>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+        
+        <div class="icons-grid" id="iconsGrid"></div>
+        
+        <button class="download-all-btn" id="downloadAllBtn" style="display: none;">
+            📥 Download All Icons
+        </button>
+        
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Upload your logo (PNG with transparent background recommended)</li>
+                <li>Click "Generate All Icons" to create all required sizes</li>
+                <li>Download individual icons or use "Download All"</li>
+                <li>Replace the icons in your <code>public/</code> folder</li>
+                <li>Test your PWA installation to see the new icons</li>
+            </ol>
+        </div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const previewSection = document.getElementById('previewSection');
+        const previewImage = document.getElementById('previewImage');
+        const generateBtn = document.getElementById('generateBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const iconsGrid = document.getElementById('iconsGrid');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let sourceImage = null;
+        let generatedIcons = [];
+        
+        // Icon sizes to generate
+        const iconSizes = [
+            {size: 16, name: 'favicon-16x16.png', desc: 'Browser favicon (small)'},
+            {size: 32, name: 'favicon-32x32.png', desc: 'Browser favicon (large)'},
+            {size: 72, name: 'logo72.png', desc: 'iOS app icon'},
+            {size: 96, name: 'logo96.png', desc: 'Android Chrome'},
+            {size: 128, name: 'logo128.png', desc: 'Android Chrome'},
+            {size: 144, name: 'logo144.png', desc: 'Windows tile'},
+            {size: 152, name: 'logo152.png', desc: 'iOS app icon (retina)'},
+            {size: 180, name: 'logo180.png', desc: 'iOS app icon (retina HD)'},
+            {size: 192, name: 'logo192.png', desc: 'Android Chrome'},
+            {size: 384, name: 'logo384.png', desc: 'Android Chrome (high-res)'},
+            {size: 512, name: 'logo512.png', desc: 'PWA splash screen'},
+            {size: 180, name: 'apple-touch-icon.png', desc: 'Apple touch icon'}
+        ];
+        
+        // Drag and drop handlers
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        });
+        
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                sourceImage = new Image();
+                sourceImage.onload = () => {
+                    previewImage.src = e.target.result;
+                    previewSection.style.display = 'block';
+                    uploadSection.style.display = 'none';
+                };
+                sourceImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        generateBtn.addEventListener('click', async () => {
+            if (!sourceImage) return;
+            
+            generateBtn.disabled = true;
+            progress.style.display = 'block';
+            iconsGrid.innerHTML = '';
+            iconsGrid.style.display = 'grid';
+            generatedIcons = [];
+            
+            for (let i = 0; i < iconSizes.length; i++) {
+                const icon = iconSizes[i];
+                const percentage = Math.round(((i + 1) / iconSizes.length) * 100);
+                progressFill.style.width = percentage + '%';
+                progressFill.textContent = percentage + '%';
+                
+                const dataUrl = await generateIcon(icon.size);
+                generatedIcons.push({...icon, dataUrl});
+                
+                // Add to grid
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                iconItem.innerHTML = `
+                    <img src="${dataUrl}" alt="${icon.name}">
+                    <div class="icon-label">${icon.name}</div>
+                    <div class="icon-size">${icon.size}x${icon.size}px</div>
+                    <div class="icon-size" style="color: #667eea;">${icon.desc}</div>
+                    <button onclick="downloadIcon('${icon.name}', '${dataUrl}')" 
+                            style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Download
+                    </button>
+                `;
+                iconsGrid.appendChild(iconItem);
+                
+                // Small delay for UI update
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            progress.style.display = 'none';
+            downloadAllBtn.style.display = 'block';
+            generateBtn.disabled = false;
+        });
+        
+        function generateIcon(size) {
+            return new Promise((resolve) => {
+                canvas.width = size;
+                canvas.height = size;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, size, size);
+                
+                // Calculate scaling to fit the image within the canvas while maintaining aspect ratio
+                const scale = Math.min(size / sourceImage.width, size / sourceImage.height);
+                const x = (size - sourceImage.width * scale) / 2;
+                const y = (size - sourceImage.height * scale) / 2;
+                
+                // Draw image centered
+                ctx.drawImage(sourceImage, x, y, sourceImage.width * scale, sourceImage.height * scale);
+                
+                // Convert to data URL
+                resolve(canvas.toDataURL('image/png'));
+            });
+        }
+        
+        window.downloadIcon = function(name, dataUrl) {
+            const link = document.createElement('a');
+            link.download = name;
+            link.href = dataUrl;
+            link.click();
+        };
+        
+        downloadAllBtn.addEventListener('click', async () => {
+            downloadAllBtn.disabled = true;
+            downloadAllBtn.textContent = '📦 Creating ZIP...';
+            
+            const zip = new JSZip();
+            
+            // Add all icons to zip
+            for (const icon of generatedIcons) {
+                const base64Data = icon.dataUrl.split(',')[1];
+                zip.file(icon.name, base64Data, {base64: true});
+            }
+            
+            // Generate and download zip
+            const blob = await zip.generateAsync({type: 'blob'});
+            saveAs(blob, 'nebula-elemental-battle-icons.zip');
+            
+            downloadAllBtn.disabled = false;
+            downloadAllBtn.textContent = '📥 Download All Icons';
+        });
+    </script>
+</body>
+</html>
