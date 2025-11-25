@@ -109,6 +109,68 @@
   text-align: center;
 }
 
+/* Equipment stats display */
+.active-equipment-stats {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 140;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 30, 30, 0.9) 100%);
+  border: 2px solid rgba(255, 193, 7, 0.6);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5),
+              0 0 20px rgba(255, 193, 7, 0.3);
+}
+
+.active-equipment-stats .stats-header {
+  cursor: pointer;
+  padding: 8px 12px;
+  background: rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffc107;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.active-equipment-stats .stats-header:hover {
+  background: rgba(255, 193, 7, 0.3);
+  transform: scale(1.02);
+}
+
+.active-equipment-stats .stats-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-equipment-stats .stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.active-equipment-stats .stat-name {
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: capitalize;
+}
+
+.active-equipment-stats .stat-boost {
+  color: #4caf50;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+}
+
 /* Forfeit announcement styles */
 .forfeit-announcement {
   position: absolute;
@@ -1378,6 +1440,12 @@
     pointer-events: none !important;
   }
   
+  /* Hide equipment bonuses when sidebars are open to prevent overlap */
+  .game-board:has(.left-sidebar.visible) .active-equipment-stats,
+  .game-board:has(.right-sidebar.visible) .active-equipment-stats {
+    display: none !important;
+  }
+  
   .game-board {
     font-size: 12px;
     height: 100dvh;
@@ -1743,6 +1811,25 @@
     padding: 6px 12px;
   }
   
+  .active-equipment-stats {
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 180px;
+    max-width: 250px;
+    padding: 6px;
+  }
+  
+  .active-equipment-stats .stats-header {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .active-equipment-stats .stat-item {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  
   .game-info {
     padding: 12px 15px;
   }
@@ -1807,6 +1894,12 @@
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
+  }
+  
+  /* Hide equipment bonuses when sidebars are open to prevent overlap */
+  .game-board:has(.left-sidebar.visible) .active-equipment-stats,
+  .game-board:has(.right-sidebar.visible) .active-equipment-stats {
+    display: none !important;
   }
   
   /* Optimize layout for wide short screens */
@@ -1997,6 +2090,12 @@
 
 /* Extra compact landscape for very short screens */
 @media (max-width: 915px) and (max-height: 400px) and (orientation: landscape) {
+  /* Hide equipment bonuses when sidebars are open to prevent overlap */
+  .game-board:has(.left-sidebar.visible) .active-equipment-stats,
+  .game-board:has(.right-sidebar.visible) .active-equipment-stats {
+    display: none !important;
+  }
+  
   .center-battle-area {
     padding: 6px 12px;
     max-height: 65vh;
@@ -2360,6 +2459,12 @@
 
 /* Landscape mobile optimization */
 @media (max-height: 500px) and (orientation: landscape) {
+  /* Hide equipment bonuses when sidebars are open to prevent overlap */
+  .game-board:has(.left-sidebar.visible) .active-equipment-stats,
+  .game-board:has(.right-sidebar.visible) .active-equipment-stats {
+    display: none !important;
+  }
+  
   .game-board {
     height: 100vh;
   }
@@ -5316,6 +5421,12 @@
 @media only screen 
   and (max-height: 430px) 
   and (orientation: landscape) {
+  
+  /* Hide equipment bonuses when sidebars are open to prevent overlap */
+  .game-board:has(.left-sidebar.visible) .active-equipment-stats,
+  .game-board:has(.right-sidebar.visible) .active-equipment-stats {
+    display: none !important;
+  }
   
   .hand-container {
     left: 50% !important;

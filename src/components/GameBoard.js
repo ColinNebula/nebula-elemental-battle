@@ -2772,15 +2772,18 @@ const GameBoard = ({
           {/* Active Boosts Display */}
           {boosterSystem?.activeBoosts?.length > 0 && (
             <div className="active-boosts">
-              {boosterSystem?.activeBoosts?.map((boost, idx) => (
-                <div key={idx} className="active-boost">
-                  <div className="active-boost-icon">{powerUpSystem?.BOOSTERS?.[boost.boosterId]?.icon}</div>
-                  <div className="active-boost-text">
-                    <div className="active-boost-name">{powerUpSystem?.BOOSTERS?.[boost.boosterId]?.name}</div>
-                    <div className="active-boost-turns">{boost.turnsRemaining} turns left</div>
+              {boosterSystem?.activeBoosts?.filter(boost => boost?.boosterId && powerUpSystem?.BOOSTERS?.[boost.boosterId]).map((boost, idx) => {
+                const boosterData = powerUpSystem.BOOSTERS[boost.boosterId];
+                return (
+                  <div key={idx} className="active-boost">
+                    <div className="active-boost-icon">{boosterData?.icon || '💪'}</div>
+                    <div className="active-boost-text">
+                      <div className="active-boost-name">{boosterData?.name || 'Boost'}</div>
+                      <div className="active-boost-turns">{boost.turnsRemaining || 0} turns left</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -2850,17 +2853,17 @@ const GameBoard = ({
                         }
                       }}
                     >
-                      <div className="booster-icon">{booster.icon}</div>
+                      <div className="booster-icon">{booster?.icon || '💪'}</div>
                       <div className="booster-info">
-                        <div className="booster-name">{booster.name}</div>
-                        <div className="booster-description">{booster.description}</div>
+                        <div className="booster-name">{booster?.name || 'Booster'}</div>
+                        <div className="booster-description">{booster?.description || ''}</div>
                       </div>
                       {isActive ? (
                         <div className="booster-duration">
-                          {boosterSystem?.activeBoosters?.find(b => b.boosterId === boosterId)?.turnsRemaining}T
+                          {boosterSystem?.activeBoosters?.find(b => b?.boosterId === boosterId)?.turnsRemaining || 0}T
                         </div>
                       ) : (
-                        <div className="booster-cost">{booster.duration}T</div>
+                        <div className="booster-cost">{booster?.duration || 0}T</div>
                       )}
                     </div>
                   );
@@ -2943,9 +2946,9 @@ const GameBoard = ({
                             }
                           }}
                         >
-                          <div className="shop-item-icon">{item.icon}</div>
-                          <div className="shop-item-name">{item.name}</div>
-                          <div className="shop-item-rarity">{item.rarity}</div>
+                          <div className="shop-item-icon">{item?.icon || '⚔️'}</div>
+                          <div className="shop-item-name">{item?.name || 'Item'}</div>
+                          <div className="shop-item-rarity">{item?.rarity || 'Common'}</div>
                           <div className="shop-item-cost">{isUnlocked ? '✅ OWNED' : `💰 ${cost}G`}</div>
                         </div>
                       );
@@ -2975,8 +2978,8 @@ const GameBoard = ({
                           <div className="slot-label">{slot}</div>
                           {item ? (
                             <>
-                              <div className="slot-icon">{item.icon}</div>
-                              <div className="slot-name">{item.name}</div>
+                              <div className="slot-icon">{item?.icon || '⚔️'}</div>
+                              <div className="slot-name">{item?.name || 'Item'}</div>
                             </>
                           ) : (
                             <div className="slot-empty">Empty</div>
@@ -2989,7 +2992,7 @@ const GameBoard = ({
                   <div className="equipment-inventory">
                     <h4>📦 Unlocked Items</h4>
                     <div className="inventory-items">
-                      {equipment.unlockedItems.map(itemId => {
+                      {equipment.unlockedItems.filter(itemId => powerUpSystem?.EQUIPMENT_ITEMS?.[itemId]).map(itemId => {
                         const item = powerUpSystem.EQUIPMENT_ITEMS[itemId];
                         const isEquipped = Object.values(equipment.slots).includes(itemId);
                         
@@ -3007,8 +3010,8 @@ const GameBoard = ({
                               }
                             }}
                           >
-                            <div className="inventory-icon">{item.icon}</div>
-                            <div className="inventory-name">{item.name}</div>
+                            <div className="inventory-icon">{item?.icon || '⚔️'}</div>
+                            <div className="inventory-name">{item?.name || 'Item'}</div>
                             {isEquipped && <div className="equipped-badge">✓</div>}
                           </div>
                         );

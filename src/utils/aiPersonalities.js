@@ -97,6 +97,7 @@ export const AI_PERSONALITIES = {
     name: 'Volt the Electrifier',
     avatar: '⚡',
     avatarImage: 'vol- the-electrifier-avatar.png',
+    cardBackImage: 'volt- the-electrifier-card-back.png',
     difficulty: 'Hard',
     element: 'ELECTRICITY',
     description: 'A shocking speedster with lightning-fast combos',
