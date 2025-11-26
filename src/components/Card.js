@@ -235,16 +235,20 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
       'LIGHT': `${basePath}/star-card.png`,
       'TECHNOLOGY': `${basePath}/tech-card.png`,
       'METEOR': `${basePath}/meteor.png`,
-      'NATURE': null, // No image yet
-      'POWER': null // No image yet
+      'NATURE': `${basePath}/nature-card.png`,
+      'POWER': `${basePath}/power-card.png`
     };
     
     const element = card?.element || null;
     const imagePath = elementImages[element] !== undefined ? elementImages[element] : null;
     
     // Debug logging
-    if (element && imagePath) {
-      console.log(`Card element: ${element}, Image path: ${imagePath}`);
+    if (element) {
+      if (imagePath) {
+        console.log(`✅ Card ${card.name || element} - Image found: ${imagePath}`);
+      } else {
+        console.log(`⚠️ Card ${card.name || element} - No image found for element: ${element}`);
+      }
     }
     
     return imagePath;

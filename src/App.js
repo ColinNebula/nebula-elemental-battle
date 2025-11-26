@@ -120,9 +120,39 @@ function App() {
       const integrity = secureStorage.validateIntegrity();
       if (integrity.invalid.length > 0) {
         console.warn('[APP] Corrupted data detected:', integrity.invalid);
-        securityManager.logSecurityEvent('corrupted_data_detected', {
+        console.log('[APP] Attempting to recover corrupted data...');
+        
+        // Attempt to recover corrupted data by removing and reinitializing
+        integrity.invalid.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+            console.log(`[APP] Removed corrupted key: ${key}`);
+            
+            // Reinitialize playerProfile if it was corrupted
+            if (key === 'playerProfile') {
+              const defaultProfile = {
+                name: 'Player',
+                gamesPlayed: 0,
+                gamesWon: 0,
+                tutorialCompleted: false,
+                settings: {
+                  soundEnabled: true,
+                  musicEnabled: true
+                }
+              };
+              secureStorage.setItem('playerProfile', JSON.stringify(defaultProfile));
+              console.log('[APP] Reinitialized playerProfile with defaults');
+            }
+          } catch (err) {
+            console.error(`[APP] Failed to recover ${key}:`, err);
+          }
+        });
+        
+        securityManager.logSecurityEvent('corrupted_data_recovered', {
           keys: integrity.invalid
         });
+        
+        console.log('[APP] Data recovery complete');
       }
     } catch (error) {
       console.error('Security initialization failed:', error);

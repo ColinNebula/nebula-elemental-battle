@@ -17,7 +17,6 @@
   position: relative;
   background: var(--theme-background);
   color: var(--theme-text-color);
-  overflow: hidden;
   touch-action: manipulation;
 }
 

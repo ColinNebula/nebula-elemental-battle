@@ -2789,17 +2789,23 @@ const GameBoard = ({
               </button>
             </div>
           )}
-          {/* Skip Turn Button - Show when player has no playable cards */}
-          {isMyTurn && humanPlayer.hand?.length > 0 && !hasPlayableCards() && (
+          {/* Skip Turn Button - Always show when it's player's turn */}
+          {isMyTurn && (
             <div className="skip-turn-container">
               <button 
                 className="skip-turn-btn"
                 onClick={handleSkipTurn}
-                title="Skip Turn - No playable cards available"
+                title={humanPlayer.hand?.length === 0 ? "Skip Turn - No cards in hand" : !hasPlayableCards() ? "Skip Turn - No playable cards available" : "Skip Turn - Pass this round"}
               >
                 ⏭️ Skip Turn
               </button>
-              <p className="skip-turn-message">No playable cards - Not enough mana</p>
+              {humanPlayer.hand?.length === 0 ? (
+                <p className="skip-turn-message">No cards in hand</p>
+              ) : !hasPlayableCards() ? (
+                <p className="skip-turn-message">No playable cards - Not enough mana</p>
+              ) : (
+                <p className="skip-turn-message">Pass this round</p>
+              )}
             </div>
           )}
           <div className={`hand ${isMyTurn ? 'your-turn' : ''}`} style={{

@@ -1510,13 +1510,41 @@ class GameClient {
             // Immediately trigger game update to notify all listeners
             this.notifyListeners('GAME_UPDATE', forfeitRoom);
             
-            // After forfeit from fusion/trap, the turn has switched
-            // The opponent (AI) should now take their turn
-            // We don't need to auto-play here - the game will handle it through normal flow
-            console.log('✅ Forfeit complete - opponent is now active');
-            
-            // The game state notification will trigger the UI to show it's AI's turn
-            // The AI turn logic in GameBoard will handle playing the card
+            // If opponent is AI and has cards, make them play immediately
+            if (opponent && opponent.isAI && opponent.hand && opponent.hand.length > 0) {
+              console.log('🤖 AI turn activated after player skip - triggering AI move');
+              
+              // Small delay to let UI update, then trigger AI move
+              setTimeout(() => {
+                if (opponent.active && opponent.hand.length > 0) {
+                  const aiCardIndex = Math.floor(Math.random() * opponent.hand.length);
+                  console.log(`🎴 AI playing card at index ${aiCardIndex}`);
+                  
+                  opponent.chosenCard = opponent.hand[aiCardIndex];
+                  opponent.hand.splice(aiCardIndex, 1);
+                  opponent.playedCards.push(opponent.chosenCard);
+                  opponent.cardCount = opponent.hand.length + (opponent.deck?.length || 0);
+                  
+                  forfeitRoom.playedCards.push({
+                    playerId: opponent.id,
+                    playerName: opponent.name,
+                    card: opponent.chosenCard,
+                    round: forfeitRoom.currentRound + 1
+                  });
+                  
+                  // Switch back to player
+                  opponent.active = false;
+                  forfeitPlayer.active = true;
+                  forfeitRoom.battlePhase = false;
+                  forfeitRoom.currentRound++;
+                  
+                  console.log('✅ AI move complete - switching back to player');
+                  this.notifyListeners('GAME_UPDATE', forfeitRoom);
+                }
+              }, 500);
+            } else {
+              console.log('✅ Forfeit complete - opponent is now active');
+            }
             
             return { type: 'TURN_FORFEITED', success: true };
           }
@@ -1901,7 +1929,7 @@ class GameClient {
   
   // Generate advanced cards with element abilities and tiers
   generateAdvancedCards(count) {
-    const elements = ['FIRE', 'ICE', 'WATER', 'ELECTRICITY', 'EARTH', 'POWER', 'LIGHT', 'DARK', 'NEUTRAL', 'TECHNOLOGY', 'METEOR'];
+    const elements = ['FIRE', 'ICE', 'WATER', 'ELECTRICITY', 'EARTH', 'POWER', 'NATURE', 'LIGHT', 'DARK', 'NEUTRAL', 'TECHNOLOGY', 'METEOR'];
     const tiers = ['COMMON', 'UNCOMMON', 'RARE', 'LEGENDARY'];
     const tierWeights = [0.5, 0.3, 0.15, 0.05]; // Common most likely
     

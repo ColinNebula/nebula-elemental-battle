@@ -217,12 +217,28 @@ p, span, div, label, button, input, select, textarea {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  /* Disable only decorative animations, keep gameplay animations */
+  .cosmic-particle,
+  .particle,
+  .menu-background,
+  .splash-background,
+  *:not(.damage-number):not(.played-card):not(.card):not(.turn-text)::before,
+  *:not(.damage-number):not(.played-card):not(.card):not(.turn-text)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  }
+  
+  /* Keep essential game animations but reduce duration */
+  .damage-number,
+  .played-card,
+  .card,
+  .turn-text {
+    animation-duration: 0.3s !important;
+  }
+  
+  /* Reduce transition durations for all elements */
+  * {
+    transition-duration: 0.1s !important;
   }
 }
 

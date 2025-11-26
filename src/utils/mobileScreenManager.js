@@ -19,19 +19,15 @@ class MobileScreenManager {
     this.performanceMode = true;
     document.body.classList.add('performance-mode');
     
-    // Reduce CSS animations
+    // Only hide decorative particles, keep game animations
     const style = document.createElement('style');
     style.id = 'performance-mode-style';
     style.textContent = `
-      .performance-mode * {
-        animation-duration: 0.2s !important;
-        transition-duration: 0.2s !important;
-      }
-      .performance-mode .particle {
-        display: none !important;
-      }
       .performance-mode .cosmic-particle {
         display: none !important;
+      }
+      .performance-mode .menu-background {
+        animation: none !important;
       }
     `;
     document.head.appendChild(style);
@@ -100,10 +96,8 @@ class MobileScreenManager {
       this.requestWakeLock();
     }
 
-    // Auto-enable performance mode on mobile devices
-    if (this.isMobile()) {
-      this.enablePerformanceMode();
-    }
+    // Performance mode is now opt-in via settings
+    // Users can enable it manually if needed
 
     // Prevent mobile browser from hiding content
     this.preventMobileBlank();
@@ -133,7 +127,6 @@ class MobileScreenManager {
         height: 100%;
         min-height: 100vh;
         min-height: -webkit-fill-available;
-        overflow: hidden;
       }
       #root {
         height: 100%;

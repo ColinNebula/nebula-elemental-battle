@@ -989,7 +989,6 @@
              matchTextPulse 0.4s ease-in-out 0.6s 3,
              matchGradientShift 2s ease-in-out infinite,
              matchTextFadeOut 0.5s ease-in 2s forwards;
-  will-change: transform, opacity;
   transform-origin: center center;
   letter-spacing: 4px;
   filter: drop-shadow(0 0 15px rgba(255, 235, 59, 1)) 
@@ -1470,7 +1469,6 @@
     display: flex !important;
     position: fixed !important;
     z-index: 999999 !important;
-    will-change: transform;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
@@ -6795,6 +6793,19 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
+  /* Enable GPU acceleration for animated elements only */
+  .turn-text,
+  .particle,
+  .cosmic-particle,
+  .damage-number,
+  .card,
+  .played-card {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
   /* Optimize keyframe animations */
   @keyframes turnBounce {
     0% { 
@@ -6828,17 +6839,14 @@
   
   .particle {
     animation-duration: 0.8s !important;
-    will-change: transform, opacity;
   }
   
   .cosmic-particle {
     animation-duration: 1.2s !important;
-    will-change: transform, opacity;
   }
   
   .damage-number {
     animation-duration: 0.5s !important;
-    will-change: transform, opacity;
   }
   
   /* Disable expensive filters on mobile */
@@ -6850,7 +6858,7 @@
   /* Simplify transforms */
   .card:hover,
   .card:active {
-    transform: translateY(-5px) translateZ(0) !important;
+    transform: translateY(-5px) !important;
   }
   
   /* Reduce shadow complexity */
@@ -6858,12 +6866,6 @@
   .played-card,
   .hand {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-  }
-  
-  /* Optimize transitions */
-  * {
-    transition-property: transform, opacity !important;
-    transition-timing-function: ease-out !important;
   }
 }
 
