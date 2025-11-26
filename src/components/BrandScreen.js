@@ -4,9 +4,43 @@ import './BrandScreen.css';
 const BrandScreen = ({ onComplete }) => {
   const [fadeOut, setFadeOut] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [soundPlayed, setSoundPlayed] = useState(false);
+
+  const playBrandSound = () => {
+    if (!soundPlayed) {
+      const brandSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-terror-sweep-of-darkness-2630.wav`);
+      brandSound.volume = 0.7;
+      
+      const playPromise = brandSound.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('✅ NebulaMedia brand sound playing');
+            setSoundPlayed(true);
+          })
+          .catch(err => {
+            console.log('⏸️ Brand sound autoplay prevented:', err);
+          });
+      }
+    }
+  };
 
   useEffect(() => {
     console.log('BrandScreen mounted, PUBLIC_URL:', process.env.PUBLIC_URL);
+    
+    // Try to play brand sound immediately
+    playBrandSound();
+    
+    // Also set up click/touch listener for autoplay fallback
+    const handleInteraction = () => {
+      playBrandSound();
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+    
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
     
     // Show for 3.5 seconds then fade out
     const timer = setTimeout(() => {
@@ -23,6 +57,8 @@ const BrandScreen = ({ onComplete }) => {
     return () => {
       clearTimeout(timer);
       clearTimeout(completeTimer);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
     };
   }, [onComplete]);
 
@@ -33,6 +69,8 @@ const BrandScreen = ({ onComplete }) => {
 
   const handleImageLoad = () => {
     console.log('Brand image loaded successfully');
+    // Play sound when image loads
+    playBrandSound();
   };
 
   return (

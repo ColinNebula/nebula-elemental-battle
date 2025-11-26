@@ -6,8 +6,11 @@ class SoundManager {
     this.music = null;
     this.enabled = true;
     this.musicEnabled = true;
-    this.volume = 0.5;
-    this.musicVolume = 0.3;
+    // Load saved volumes from localStorage or use defaults
+    const savedVolume = localStorage.getItem('soundVolume');
+    const savedMusicVolume = localStorage.getItem('musicVolume');
+    this.volume = savedVolume !== null ? parseFloat(savedVolume) : 0.5;
+    this.musicVolume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.3;
     this.currentMusicIntensity = 'calm';
     this.backgroundMusic = null;
     this.currentTrack = null;
@@ -527,13 +530,41 @@ class SoundManager {
 
   // Play a sound effect
   playSound(soundName, volumeMultiplier = 1) {
-    if (!this.enabled || !this.sounds[soundName]) return;
+    if (!this.enabled) return;
     
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.sounds[soundName](audioContext);
-    } catch (error) {
-      console.error('Error playing sound:', error);
+    // Map of sound names to audio files
+    const audioFiles = {
+      'fire': 'audio/mixkit-fire-swoosh-burning-1328.wav',
+      'fireball': 'audio/mixkit-fireball-spell-1347.wav',
+      'ice': 'audio/mixkit-thin-icicles-spell-882.wav',
+      'magic': 'audio/mixkit-magic-sparkle-whoosh-2350.wav',
+      'light': 'audio/mixkit-shot-light-energy-flowing-2589.wav',
+      'swoosh': 'audio/mixkit-soft-woosh-fire-1346.wav',
+      'fairy': 'audio/mixkit-spellcaster-fairy-swoosh-1463.wav',
+      'victory': 'audio/mixkit-game-success-alert-2039.wav',
+      'crowdCheer': 'audio/mixkit-huge-crowd-cheering-victory-462.wav'
+    };
+    
+    // If there's an audio file for this sound, use it
+    if (audioFiles[soundName]) {
+      try {
+        const audio = new Audio(`${process.env.PUBLIC_URL}/${audioFiles[soundName]}`);
+        audio.volume = this.volume * volumeMultiplier;
+        audio.play().catch(err => console.log('Sound play prevented:', err));
+        return;
+      } catch (error) {
+        console.error('Error playing audio file:', error);
+      }
+    }
+    
+    // Fall back to Web Audio API synthesized sound
+    if (this.sounds[soundName]) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.sounds[soundName](audioContext);
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
     }
   }
 
@@ -543,14 +574,14 @@ class SoundManager {
       'FIRE': 'fire',
       'ICE': 'ice',
       'WATER': 'water',
-      'ELECTRICITY': 'electricity',
+      'ELECTRICITY': 'light',
       'EARTH': 'earth',
-      'POWER': 'power',
+      'POWER': 'magic',
       'LIGHT': 'light',
-      'DARK': 'dark',
+      'DARK': 'swoosh',
       'NEUTRAL': 'neutral',
       'TECHNOLOGY': 'technology',
-      'METEOR': 'meteor'
+      'METEOR': 'fireball'
     };
     
     const soundName = elementMap[element];
@@ -620,11 +651,14 @@ class SoundManager {
   playCrowdReaction(reactionType = 'cheer') {
     if (!this.enabled) return;
     
+    if (reactionType === 'cheer') {
+      this.playSound('crowdCheer', 0.8);
+      return;
+    }
+    
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      if (reactionType === 'cheer') {
-        this.createCrowdCheerSound(audioContext);
-      } else if (reactionType === 'gasp') {
+      if (reactionType === 'gasp') {
         this.createCrowdGaspSound(audioContext);
       }
     } catch (error) {
@@ -785,10 +819,12 @@ class SoundManager {
 
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume));
+    localStorage.setItem('soundVolume', this.volume.toString());
   }
 
   setMusicVolume(volume) {
     this.musicVolume = Math.max(0, Math.min(1, volume));
+    localStorage.setItem('musicVolume', this.musicVolume.toString());
     
     // Update legacy oscillator music
     if (this.music && this.music.gainNode) {

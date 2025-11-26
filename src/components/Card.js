@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import CardTooltip from './CardTooltip';
 import './Card.css';
 import '../utils/visualEffects.css';
@@ -6,7 +6,7 @@ import '../utils/advancedCardMechanics.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 import advancedMechanics from '../utils/advancedCardMechanics';
 
-const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false }) => {
+const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isPlaying, setIsPlaying] = useState(false);
@@ -379,6 +379,18 @@ const Card = ({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canA
     )}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memoization
+  // Only re-render if these props change
+  return (
+    prevProps.card?.id === nextProps.card?.id &&
+    prevProps.card?.strength === nextProps.card?.strength &&
+    prevProps.card?.modifiedStrength === nextProps.card?.modifiedStrength &&
+    prevProps.isPlayable === nextProps.isPlayable &&
+    prevProps.canAfford === nextProps.canAfford &&
+    prevProps.canOverdraft === nextProps.canOverdraft &&
+    prevProps.manaCost === nextProps.manaCost
+  );
+});
 
 export default Card;

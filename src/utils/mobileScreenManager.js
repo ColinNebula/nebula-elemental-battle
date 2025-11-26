@@ -4,6 +4,47 @@ class MobileScreenManager {
   constructor() {
     this.wakeLock = null;
     this.isSupported = 'wakeLock' in navigator;
+    this.performanceMode = false;
+  }
+
+  // Detect if device is mobile
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           ('ontouchstart' in window) ||
+           (navigator.maxTouchPoints > 0);
+  }
+
+  // Enable performance optimizations for low-end devices
+  enablePerformanceMode() {
+    this.performanceMode = true;
+    document.body.classList.add('performance-mode');
+    
+    // Reduce CSS animations
+    const style = document.createElement('style');
+    style.id = 'performance-mode-style';
+    style.textContent = `
+      .performance-mode * {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+      }
+      .performance-mode .particle {
+        display: none !important;
+      }
+      .performance-mode .cosmic-particle {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+    console.log('🚀 Performance mode enabled');
+  }
+
+  // Disable performance mode
+  disablePerformanceMode() {
+    this.performanceMode = false;
+    document.body.classList.remove('performance-mode');
+    const style = document.getElementById('performance-mode-style');
+    if (style) style.remove();
+    console.log('✨ Performance mode disabled');
   }
 
   // Request wake lock to prevent screen from turning off
@@ -57,6 +98,11 @@ class MobileScreenManager {
 
       // Request initial wake lock
       this.requestWakeLock();
+    }
+
+    // Auto-enable performance mode on mobile devices
+    if (this.isMobile()) {
+      this.enablePerformanceMode();
     }
 
     // Prevent mobile browser from hiding content

@@ -1,7 +1,15 @@
 // Animation utilities for game effects
 
+// Detect if device is mobile for performance optimization
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         ('ontouchstart' in window) ||
+         (navigator.maxTouchPoints > 0);
+};
+
 export const createParticles = (element, x, y, container) => {
-  const particleCount = 20; // Increased from 12
+  // Reduce particles on mobile for better performance
+  const particleCount = isMobile() ? 8 : 20;
   const particles = [];
   
   const elementEmojis = {
@@ -27,21 +35,23 @@ export const createParticles = (element, x, y, container) => {
     
     // More varied and dynamic particle trajectories
     const angle = (i / particleCount) * Math.PI * 2;
-    const distance = 150 + Math.random() * 100;
+    const baseDistance = isMobile() ? 80 : 150;
+    const distance = baseDistance + Math.random() * (isMobile() ? 50 : 100);
     const tx = Math.cos(angle) * distance;
     const ty = Math.sin(angle) * distance;
     
     particle.style.setProperty('--tx', `${tx}px`);
     particle.style.setProperty('--ty', `${ty}px`);
     particle.style.animationDelay = `${Math.random() * 0.2}s`;
-    particle.style.fontSize = `${16 + Math.random() * 12}px`; // Varied sizes
+    particle.style.fontSize = `${16 + Math.random() * (isMobile() ? 6 : 12)}px`; // Varied sizes
     
     container.appendChild(particle);
     particles.push(particle);
 
+    const duration = isMobile() ? 1500 : 2500;
     setTimeout(() => {
       particle.remove();
-    }, 2500); // Increased from 1800
+    }, duration);
   }
 
   return particles;

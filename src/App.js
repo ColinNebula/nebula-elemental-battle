@@ -41,6 +41,8 @@ function App() {
   
   // Lobby music ref - persists across lobby, character selection, and card selection
   const lobbyMusicRef = useRef(null);
+  const mainMenuMusicRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
 
   // Initialize mobile screen manager and sound system
   useEffect(() => {
@@ -49,6 +51,50 @@ function App() {
     
     return () => {
       mobileScreenManager.destroy();
+    };
+  }, []);
+
+  // Unlock audio on first user interaction (required for mobile)
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (!audioUnlockedRef.current) {
+        // Create and play a silent audio to unlock audio context on mobile
+        const silentAudio = new Audio();
+        silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAABhADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dX//////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYTs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV';
+        silentAudio.volume = 0;
+        
+        const playPromise = silentAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            console.log('🔊 Audio context unlocked for mobile');
+            audioUnlockedRef.current = true;
+            
+            // Now try to play any pending music
+            if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
+              lobbyMusicRef.current.play().catch(err => console.log('Music play after unlock:', err));
+            }
+            
+            // Try to start background music if it exists
+            if (soundManager.backgroundMusic && soundManager.backgroundMusic.paused) {
+              soundManager.backgroundMusic.play().catch(err => console.log('Background music play after unlock:', err));
+            }
+          }).catch(err => {
+            console.log('Audio unlock attempt failed:', err);
+          });
+        }
+      }
+    };
+
+    // Listen for first user interaction - use more events for better mobile coverage
+    const events = ['touchstart', 'touchend', 'mousedown', 'keydown', 'click'];
+    events.forEach(event => {
+      document.addEventListener(event, unlockAudio, { once: true, passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, unlockAudio);
+      });
     };
   }, []);
 
@@ -179,26 +225,52 @@ function App() {
     const shouldPlayLobbyMusic = (showLobby || showCharacterSelection || isInCardSelection) && !gameState?.gameStarted;
     const shouldPlayMainMenuMusic = showMainMenu && !showLobby && !showCharacterSelection && !inGame;
     
-    if (shouldPlayLobbyMusic && !lobbyMusicRef.current) {
+    if (shouldPlayLobbyMusic && !lobbyMusicRef.current && settings.musicEnabled) {
       // Start lobby music
       lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
-      lobbyMusicRef.current.volume = settings.musicEnabled ? 0.3 : 0;
+      lobbyMusicRef.current.volume = 0.3;
       lobbyMusicRef.current.loop = true;
-      lobbyMusicRef.current.play().catch(err => console.log('Lobby music autoplay prevented:', err));
+      
+      // Try to play, but handle mobile autoplay restrictions gracefully
+      const playPromise = lobbyMusicRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.log('Lobby music autoplay prevented (will play on user interaction):', err);
+          // Music will automatically play after first user interaction via unlockAudio
+        });
+      }
     } else if (!shouldPlayLobbyMusic && lobbyMusicRef.current) {
       // Stop lobby music when leaving lobby screens
       lobbyMusicRef.current.pause();
       lobbyMusicRef.current = null;
     }
     
+    // Update volume if music is already playing
+    if (lobbyMusicRef.current && !lobbyMusicRef.current.paused) {
+      lobbyMusicRef.current.volume = settings.musicEnabled ? 0.3 : 0;
+    }
+    
     // Play main menu music (Cooler Heads Prevail only)
-    if (shouldPlayMainMenuMusic && settings.musicEnabled) {
+    if (shouldPlayMainMenuMusic && settings.musicEnabled && !mainMenuMusicRef.current) {
       // Play specific main menu track
-      const mainMenuAudio = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
-      mainMenuAudio.volume = 0.3;
-      mainMenuAudio.loop = true;
-      mainMenuAudio.play().catch(err => console.log('Main menu music autoplay prevented:', err));
-    } else if (!shouldPlayMainMenuMusic) {
+      mainMenuMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
+      mainMenuMusicRef.current.volume = 0.3;
+      mainMenuMusicRef.current.loop = true;
+      
+      const playPromise = mainMenuMusicRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.log('Main menu music autoplay prevented (will play on user interaction):', err);
+        });
+      }
+    } else if (!shouldPlayMainMenuMusic && mainMenuMusicRef.current) {
+      // Stop main menu music when leaving main menu
+      mainMenuMusicRef.current.pause();
+      mainMenuMusicRef.current = null;
+    }
+    
+    // Stop soundManager music when not in game
+    if (!inGame && !gameState?.gameStarted) {
       soundManager.stopMusic();
     }
   }, [showLobby, showCharacterSelection, gameState?.cardSelectionPhase, gameState?.gameStarted, showMainMenu, inGame, settings.musicEnabled]);
@@ -907,6 +979,20 @@ function App() {
     }
   };
 
+  const handleReviveFromGraveyard = async (cardIndex) => {
+    if (roomId) {
+      const result = await gameClient.reviveFromGraveyard(roomId, playerId, cardIndex);
+      if (result?.success) {
+        // Immediately fetch updated game state to show the revived card
+        gameClient.getGameState(roomId);
+        return result;
+      } else {
+        return { success: false, error: result?.error || 'Failed to revive card' };
+      }
+    }
+    return { success: false, error: 'No room ID' };
+  };
+
   const handleBackFromCardSelection = () => {
     // Clear game state interval
     if (window.gameStateInterval) {
@@ -1214,6 +1300,7 @@ function App() {
               onPlayAgain={handlePlayAgain}
               onDrawFromReserve={handleDrawFromReserve}
               onSkipAbility={handleSkipAbility}
+              onReviveFromGraveyard={handleReviveFromGraveyard}
               onForfeit={handleForfeitTurn}
               onQuit={handleQuit}
               onFuseCards={handleFuseCards}

@@ -63,6 +63,12 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
   const [ownedThemes, setOwnedThemes] = useState(['cosmic']);
   const [availableAvatars, setAvailableAvatars] = useState(BASE_AVATARS);
 
+  const playSelectSound = () => {
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-arcade-player-select-2036.wav`);
+    selectSound.volume = 0.5;
+    selectSound.play().catch(err => console.log('Sound play prevented:', err));
+  };
+
   // Load owned themes and unlocked characters from localStorage
   useEffect(() => {
     const themesData = localStorage.getItem('playerThemes');
@@ -114,6 +120,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
 
   const handleConfirm = () => {
     if (selectedAvatar) {
+      playSelectSound();
       // Handle random avatar selection
       let finalAvatar = selectedAvatar;
       if (selectedAvatar.isRandom) {
@@ -154,7 +161,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
             <div
               key={avatar.id}
               className={`avatar-card ${selectedAvatar?.id === avatar.id ? 'selected' : ''} ${hoveredAvatar?.id === avatar.id ? 'hovered' : ''}`}
-              onClick={() => setSelectedAvatar(avatar)}
+              onClick={() => { playSelectSound(); setSelectedAvatar(avatar); }}
               onMouseEnter={() => setHoveredAvatar(avatar)}
               onMouseLeave={() => setHoveredAvatar(null)}
             >
@@ -220,7 +227,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
             <div
               key="random"
               className={`arena-theme-card arena-theme-random ${selectedArenaTheme === 'random' ? 'selected' : ''}`}
-              onClick={() => setSelectedArenaTheme('random')}
+              onClick={() => { playSelectSound(); setSelectedArenaTheme('random'); }}
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%)',
                 backgroundSize: '200% 200%',
@@ -248,6 +255,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
                   className={`arena-theme-card ${selectedArenaTheme === themeId ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
                   onClick={() => {
                     if (isOwned) {
+                      playSelectSound();
                       setSelectedArenaTheme(themeId);
                     }
                   }}

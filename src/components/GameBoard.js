@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Card from './Card';
 import PauseMenu from './PauseMenu';
 import RoundAnnouncement from './RoundAnnouncement';
@@ -72,15 +72,29 @@ const GameBoard = ({
   onForfeit,
   onQuit,
   onFuseCards,
+  onReviveFromGraveyard,
   settings,
   isStoryMode,
   isTutorial,
   tutorialStep,
   selectedCharacter
 }) => {
-  const currentPlayer = gameState?.players?.find(p => p.id === currentPlayerId);
-  const humanPlayer = gameState?.players?.find(p => !p.isAI);
-  const aiPlayer = gameState?.players?.find(p => p.isAI);
+  // Memoize expensive player lookups
+  const currentPlayer = useMemo(() => 
+    gameState?.players?.find(p => p.id === currentPlayerId),
+    [gameState?.players, currentPlayerId]
+  );
+  
+  const humanPlayer = useMemo(() => 
+    gameState?.players?.find(p => !p.isAI),
+    [gameState?.players]
+  );
+  
+  const aiPlayer = useMemo(() => 
+    gameState?.players?.find(p => p.isAI),
+    [gameState?.players]
+  );
+  
   const isMyTurn = currentPlayer?.active;
   
   // UI State - Consolidated announcements and overlays
@@ -318,7 +332,7 @@ const GameBoard = ({
   }, [gameState?.currentRound, strategicSettings.weatherEnabled]);
 
   // Calculate total strength from played cards with strategic modifiers
-  const calculateTotalStrength = (player) => {
+  const calculateTotalStrength = useCallback((player) => {
     if (!player?.playedCards || player.playedCards.length === 0) return 0;
     return player.playedCards.reduce((total, card) => {
       let strength = card.modifiedStrength || card.strength || 0;
@@ -333,10 +347,10 @@ const GameBoard = ({
       
       return total + strength;
     }, 0);
-  };
+  }, [strategicSettings.weatherEnabled, strategicSettings.terrainEnabled, weatherState?.current, terrainState?.current]);
 
-  const humanTotalStrength = calculateTotalStrength(humanPlayer);
-  const aiTotalStrength = calculateTotalStrength(aiPlayer);
+  const humanTotalStrength = useMemo(() => calculateTotalStrength(humanPlayer), [humanPlayer?.playedCards, calculateTotalStrength]);
+  const aiTotalStrength = useMemo(() => calculateTotalStrength(aiPlayer), [aiPlayer?.playedCards, calculateTotalStrength]);
 
   // ESC key to toggle pause menu
   useEffect(() => {
@@ -393,25 +407,29 @@ const GameBoard = ({
             applyCardRarityGlow(cardEl, power);
           }
           
-          // Particle effects
-          if (cardPlay.card.element) {
+          // Particle effects (only if animations enabled)
+          if (cardPlay.card.element && settings?.particleEffects !== false) {
             createParticles(cardPlay.card.element, x, y, gameBoardRef.current);
           }
           
           // Power play and combo sounds
           if (cardStrength >= 10) {
             if (soundManager) soundManager.playSound('powerPlay');
-            createDamageNumber(
-              cardPlay.card.modifiedStrength || cardPlay.card.strength, 
-              x, 
-              y - 50, 
-              gameBoardRef.current,
-              false,
-              false
-            );
+            if (settings?.animationsEnabled !== false) {
+              createDamageNumber(
+                cardPlay.card.modifiedStrength || cardPlay.card.strength, 
+                x, 
+                y - 50, 
+                gameBoardRef.current,
+                false,
+                false
+              );
+            }
             
             // Screen shake for powerful plays
-            triggerScreenShake(gameBoardRef.current);
+            if (settings?.screenShake !== false) {
+              triggerScreenShake(gameBoardRef.current);
+            }
           }
         }, idx * 200);
       });
@@ -1239,7 +1257,7 @@ const GameBoard = ({
     }
   }, [humanPlayer?.hand?.length, aiPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.deck?.length, gameState?.gameStarted, gameState?.gameOver, humanPlayer?.playedCards, aiPlayer?.playedCards, gameState, humanPlayer, aiPlayer, onPlayCard]);
 
-  const handleCardClick = (cardIndex) => {
+  const handleCardClick = useCallback((cardIndex) => {
     console.log('🎴 Card clicked:', { cardIndex, isMyTurn, gameOver: gameState?.gameOver, isPaused, pendingAbility: gameState?.pendingAbility });
     
     // Try to start music on first user interaction
@@ -1316,7 +1334,7 @@ const GameBoard = ({
     } else {
       console.log('⏸️ Card click blocked - conditions not met');
     }
-  };
+  }, [isMyTurn, gameState?.gameOver, gameState?.pendingAbility, isPaused, showInitialArena, showRoundAnnouncement, showTrapUI, selectedTrapCard, onPlayCard, currentPlayer, strategicSettings?.manaEnabled, manaState]);
 
   const handleConfirmCardPlay = () => {
     if (pendingCardIndex !== null && currentPlayer) {
@@ -1515,6 +1533,48 @@ const GameBoard = ({
     setPendingCardIndex(null);
   };
 
+  // Revive card from graveyard
+  const handleReviveCard = useCallback(async (cardIndex) => {
+    if (!isMyTurn || !humanPlayer) {
+      console.log('❌ Cannot revive: Not your turn or no player');
+      return;
+    }
+
+    // Check if player has enough score (costs 1 point)
+    if (humanPlayer.score < 1) {
+      alert('❌ Need at least 1 score point to revive a card!');
+      return;
+    }
+
+    try {
+      console.log('👻 Attempting to revive card at index:', cardIndex);
+      const result = await onReviveFromGraveyard(cardIndex);
+      
+      if (result?.success) {
+        console.log('✅ Card revived successfully:', result.card);
+        // Close the graveyard preview
+        setCardPreview(null);
+        // Show success notification
+        if (gameBoardRef.current) {
+          const notification = document.createElement('div');
+          notification.className = 'revive-notification';
+          notification.innerHTML = `
+            <div class="revive-text">👻 CARD REVIVED!</div>
+            <div class="revive-subtext">${result.card?.name || 'Card'} returned to your hand</div>
+          `;
+          gameBoardRef.current.appendChild(notification);
+          setTimeout(() => notification.remove(), 3000);
+        }
+      } else {
+        console.log('❌ Revive failed:', result?.reason);
+        alert(`❌ Revive failed: ${result?.reason || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error reviving card:', error);
+      alert('❌ Error reviving card. Please try again.');
+    }
+  }, [isMyTurn, humanPlayer, onReviveFromGraveyard]);
+
   // Screen shake effect for dramatic moments
   const triggerScreenShake = (element) => {
     element.classList.add('screen-shake');
@@ -1703,7 +1763,7 @@ const GameBoard = ({
   };
 
   // Sort hand cards
-  const getSortedHand = (hand) => {
+  const getSortedHand = useCallback((hand) => {
     if (!hand || hand.length === 0) return [];
     
     // Filter out any undefined/null cards before mapping
@@ -1741,7 +1801,7 @@ const GameBoard = ({
     }
     
     return sortedWithIndices;
-  };
+  }, [sortBy]);
 
   const handleSortChange = (newSort) => {
     setSortBy(prevSort => prevSort === newSort ? 'none' : newSort);
@@ -1769,6 +1829,12 @@ const GameBoard = ({
       onForfeit();
     }
   };
+
+  // Memoize sorted hand to prevent unnecessary recalculations
+  const sortedHumanHand = useMemo(() => 
+    humanPlayer?.hand ? getSortedHand(humanPlayer.hand) : [],
+    [humanPlayer?.hand, getSortedHand]
+  );
 
   if (!gameState) {
     return <div className="game-board">Loading...</div>;
@@ -2179,6 +2245,12 @@ const GameBoard = ({
             <div className="graveyard-preview-container">
               <div className="graveyard-header">
                 <h2>⚰️ Graveyard - {cardPreview.isPlayer ? 'Your' : "Opponent's"} Cards</h2>
+                {cardPreview.isPlayer && humanPlayer && (
+                  <div className="graveyard-info">
+                    <span className="revive-cost">💀 Revive Cost: 1 Score Point</span>
+                    <span className="current-score">Your Score: {humanPlayer.score}</span>
+                  </div>
+                )}
                 <button className="close-preview" onClick={() => setCardPreview(null)}>✕</button>
               </div>
               <div className="graveyard-cards-grid">
@@ -2186,12 +2258,25 @@ const GameBoard = ({
                   cardPreview.cards.map((card, index) => (
                     <div key={index} className="graveyard-card-wrapper">
                       <Card card={card} isPlayable={false} />
+                      {cardPreview.isPlayer && isMyTurn && (
+                        <button
+                          className="revive-card-btn"
+                          onClick={() => handleReviveCard(index)}
+                          disabled={!humanPlayer || humanPlayer.score < 1}
+                          title={humanPlayer?.score < 1 ? 'Need 1 score point to revive' : 'Revive this card (costs 1 point)'}
+                        >
+                          👻 Revive
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
                   <p className="no-cards-message">No cards in graveyard</p>
                 )}
               </div>
+              {cardPreview.isPlayer && !isMyTurn && (
+                <p className="graveyard-note">⏳ Wait for your turn to revive cards</p>
+              )}
             </div>
           ) : (
             <div className={`card-preview-container ${cardPreview.isPlayer ? 'player-preview' : 'ai-preview'}`}>
@@ -2722,7 +2807,7 @@ const GameBoard = ({
             boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`,
             borderImage: `url(${process.env.PUBLIC_URL}/hand-frame1.png) 50 stretch`
           }}>
-            {getSortedHand(humanPlayer.hand).map((item, displayIndex) => {
+            {sortedHumanHand.map((item, displayIndex) => {
               const manaSystemActive = strategicSettings?.manaEnabled === true;
               const cost = manaSystemActive ? calculateCardManaCost(item.card) : undefined;
               const affordable = manaSystemActive ? canAffordCard(manaState, item.card) : true;

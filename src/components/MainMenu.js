@@ -18,6 +18,12 @@ const MainMenu = ({
   const [expandedSection, setExpandedSection] = useState('gameplay');
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
 
+  const playSelectSound = () => {
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-arcade-player-select-2036.wav`);
+    selectSound.volume = 0.5;
+    selectSound.play().catch(err => console.log('Sound play prevented:', err));
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -106,25 +112,25 @@ const MainMenu = ({
               <span className="accordion-arrow">{expandedSection === 'gameplay' ? '▼' : '▶'}</span>
             </button>
             <div className={`accordion-content ${expandedSection === 'gameplay' ? 'expanded' : ''}`}>
-              <button className="menu-btn primary-btn" onClick={onPlayGame}>
+              <button className="menu-btn primary-btn" onClick={() => { playSelectSound(); onPlayGame(); }}>
                 <span className="btn-icon">⚔️</span>
                 <span className="btn-text">QUICK PLAY</span>
                 <span className="btn-subtitle">Single Match</span>
               </button>
 
-              <button className="menu-btn story-btn" onClick={onStoryMode}>
+              <button className="menu-btn story-btn" onClick={() => { playSelectSound(); onStoryMode(); }}>
                 <span className="btn-icon">📜</span>
                 <span className="btn-text">STORY MODE</span>
                 <span className="btn-subtitle">Epic Campaign</span>
               </button>
 
-              <button className="menu-btn tutorial-btn" onClick={onTutorialMode}>
+              <button className="menu-btn tutorial-btn" onClick={() => { playSelectSound(); onTutorialMode(); }}>
                 <span className="btn-icon">🎓</span>
                 <span className="btn-text">TUTORIAL MODE</span>
                 <span className="btn-subtitle">Learn By Playing</span>
               </button>
 
-              <button className="menu-btn" onClick={onShowTutorial}>
+              <button className="menu-btn" onClick={() => { playSelectSound(); onShowTutorial(); }}>
                 <span className="btn-icon">📖</span>
                 <span className="btn-text">HOW TO PLAY</span>
                 <span className="btn-subtitle">Quick Guide</span>
@@ -143,13 +149,13 @@ const MainMenu = ({
               <span className="accordion-arrow">{expandedSection === 'progress' ? '▼' : '▶'}</span>
             </button>
             <div className={`accordion-content ${expandedSection === 'progress' ? 'expanded' : ''}`}>
-              <button className="menu-btn" onClick={onShowProfile}>
+              <button className="menu-btn" onClick={() => { playSelectSound(); onShowProfile(); }}>
                 <span className="btn-icon">👤</span>
                 <span className="btn-text">PROFILE</span>
                 <span className="btn-subtitle">Player Info</span>
               </button>
 
-              <button className="menu-btn" onClick={onShowStats}>
+              <button className="menu-btn" onClick={() => { playSelectSound(); onShowStats(); }}>
                 <span className="btn-icon">📊</span>
                 <span className="btn-text">STATISTICS</span>
                 <span className="btn-subtitle">View Your Records</span>
@@ -168,13 +174,13 @@ const MainMenu = ({
               <span className="accordion-arrow">{expandedSection === 'custom' ? '▼' : '▶'}</span>
             </button>
             <div className={`accordion-content ${expandedSection === 'custom' ? 'expanded' : ''}`}>
-              <button className="menu-btn inventory-btn" onClick={onShowInventory}>
+              <button className="menu-btn inventory-btn" onClick={() => { playSelectSound(); onShowInventory(); }}>
                 <span className="btn-icon">📦</span>
                 <span className="btn-text">INVENTORY</span>
                 <span className="btn-subtitle">Power-Ups & Equipment</span>
               </button>
 
-              <button className="menu-btn theme-shop-btn" onClick={onShowThemeShop}>
+              <button className="menu-btn theme-shop-btn" onClick={() => { playSelectSound(); onShowThemeShop(); }}>
                 <span className="btn-icon">🎨</span>
                 <span className="btn-text">THEME SHOP</span>
                 <span className="btn-subtitle">Customize Appearance</span>
@@ -193,7 +199,7 @@ const MainMenu = ({
               <span className="accordion-arrow">{expandedSection === 'settings' ? '▼' : '▶'}</span>
             </button>
             <div className={`accordion-content ${expandedSection === 'settings' ? 'expanded' : ''}`}>
-              <button className="menu-btn" onClick={onShowSettings}>
+              <button className="menu-btn" onClick={() => { playSelectSound(); onShowSettings(); }}>
                 <span className="btn-icon">⚙️</span>
                 <span className="btn-text">SETTINGS</span>
                 <span className="btn-subtitle">Audio & Controls</span>

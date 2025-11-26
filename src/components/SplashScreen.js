@@ -6,6 +6,23 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
+    // Play Spooky Loop music
+    const spookyMusic = new Audio(`${process.env.PUBLIC_URL}/audio/Spooky_Loop.mp3`);
+    spookyMusic.volume = 0.3;
+    spookyMusic.loop = true;
+    
+    const playPromise = spookyMusic.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('✅ Spooky Loop music playing');
+        })
+        .catch(err => {
+          console.log('⏸️ Music autoplay prevented:', err);
+        });
+    }
+
     // Show "press any button" prompt immediately if returning from quit, otherwise after 2 seconds
     const promptTimer = setTimeout(() => {
       setShowPrompt(true);
@@ -13,11 +30,19 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
 
     return () => {
       clearTimeout(promptTimer);
+      // Stop music when leaving splash screen
+      spookyMusic.pause();
+      spookyMusic.currentTime = 0;
     };
   }, [isReturning]);
 
   const handleContinue = () => {
     if (!fadeOut) {
+      // Play success sound
+      const successSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-game-success-alert-2039.wav`);
+      successSound.volume = 0.5;
+      successSound.play().catch(err => console.log('Sound play prevented:', err));
+      
       setFadeOut(true);
       setTimeout(() => {
         onComplete();

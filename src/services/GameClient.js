@@ -287,7 +287,7 @@ class GameClient {
               comboFocus: strategy.comboFocus || 0.3,
               avatar: personality.avatar || '🤖',
               avatarImage: personality.avatarImage,
-              cardBackImage: personality.cardImage,
+              cardBackImage: personality.cardBackImage,
               difficulty: personality.difficulty || 'Medium'
             });
             
@@ -296,7 +296,7 @@ class GameClient {
               difficulty: personality.difficulty,
               personality: selectedPersonality,
               avatarImage: personality.avatarImage,
-              cardBackImage: personality.cardImage
+              cardBackImage: personality.cardBackImage
             });
           }
           
@@ -2488,6 +2488,13 @@ class GameClient {
     return new Promise((resolve) => {
       this.once('ABILITY_SKIPPED', (data) => resolve(data.success));
       this.send(`SKIP_ABILITY ${roomId} ${playerId}`);
+    });
+  }
+
+  reviveFromGraveyard(roomId, playerId, cardIndex) {
+    return new Promise((resolve) => {
+      this.once('CARD_REVIVED', (data) => resolve(data));
+      this.send(`REVIVE_FROM_GRAVEYARD ${roomId} ${playerId} ${cardIndex}`);
     });
   }
 

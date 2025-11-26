@@ -3,8 +3,18 @@ import './Settings.css';
 import soundManager from '../utils/sounds';
 
 const Settings = ({ isOpen, onClose, settings, onSettingsChange }) => {
-  const [soundVolume, setSoundVolume] = useState(50);
-  const [musicVolume, setMusicVolume] = useState(30);
+  const [soundVolume, setSoundVolume] = useState(() => {
+    if (soundManager) {
+      return Math.round(soundManager.volume * 100);
+    }
+    return 50;
+  });
+  const [musicVolume, setMusicVolume] = useState(() => {
+    if (soundManager) {
+      return Math.round(soundManager.musicVolume * 100);
+    }
+    return 30;
+  });
   const [currentTrack, setCurrentTrack] = useState('None');
 
   useEffect(() => {
