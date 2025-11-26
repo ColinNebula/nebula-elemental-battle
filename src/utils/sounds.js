@@ -531,7 +531,12 @@ class SoundManager {
 
   // Play a sound effect
   playSound(soundName, volumeMultiplier = 1) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      console.log('🔇 Sound disabled:', soundName);
+      return;
+    }
+    
+    console.log('🔊 Attempting to play sound:', soundName, 'unlocked:', this.audioUnlocked);
     
     // Map of sound names to audio files
     const audioFiles = {
@@ -718,13 +723,18 @@ class SoundManager {
 
   // Background music with intensity levels
   playMusic(intensity = 'calm') {
-    if (!this.musicEnabled) return;
+    if (!this.musicEnabled) {
+      console.log('🔇 Music disabled');
+      return;
+    }
     
     // If music is already playing, don't restart it
     if (this.backgroundMusic && !this.backgroundMusic.paused) {
       console.log('🎵 Music already playing:', this.currentTrack);
       return;
     }
+    
+    console.log('🎵 Starting music with intensity:', intensity, 'unlocked:', this.audioUnlocked);
     
     // Stop any existing music first
     this.stopMusic();

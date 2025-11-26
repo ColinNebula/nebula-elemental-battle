@@ -43,6 +43,7 @@ function App() {
   const lobbyMusicRef = useRef(null);
   const mainMenuMusicRef = useRef(null);
   const audioUnlockedRef = useRef(false);
+  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
 
   // Initialize mobile screen manager and sound system
   useEffect(() => {
@@ -99,9 +100,20 @@ function App() {
           
           // Mark sound manager as unlocked
           soundManager.audioUnlocked = true;
+          
+          // Try to start any queued music
+          if (soundManager.tryStartMusic) {
+            soundManager.tryStartMusic();
+          }
+          
+          // Hide audio prompt if it was showing
+          setShowAudioPrompt(false);
         } catch (err) {
           console.log('Audio unlock will retry on next interaction:', err.message || err);
-          // Audio will work once user interacts with actual game elements
+          // Show audio prompt for mobile users
+          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            setShowAudioPrompt(true);
+          }
         }
       }
     };
@@ -1402,6 +1414,81 @@ function App() {
                 onClose={() => setShowDonationBanner(false)}
               />
             </Suspense>
+          )}
+          
+          {/* Audio Enable Prompt for Mobile */}
+          {showAudioPrompt && (
+            <div style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 99999,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '30px 40px',
+              borderRadius: '20px',
+              border: '3px solid #ffd700',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.8)',
+              textAlign: 'center',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔊</div>
+              <h2 style={{ margin: '0 0 15px 0', color: 'white', fontSize: '24px' }}>Enable Sound</h2>
+              <p style={{ margin: '0 0 20px 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: '16px' }}>
+                Tap to enable music and sound effects
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const silentAudio = new Audio();
+                    silentAudio.src = 'data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAESAAzMzMzMzMzMzMzMzMzMzMzMzMzZmZmZmZmZmZmZmZmZmZmZmZmZmb/////////////////////////////////////////////8AAABhTEFNRTMuMTAwA8MAAAAAAAAAABQgJAUHQQAB9AAAARDRbfmwAAAAAAAAAAAAAAAAAAAA//sUxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUxDsAAANIAAAAAAAAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+                    silentAudio.volume = 0.01;
+                    silentAudio.setAttribute('playsinline', 'true');
+                    await silentAudio.play();
+                    
+                    if (window.AudioContext || window.webkitAudioContext) {
+                      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                      if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                      }
+                      audioContext.close();
+                    }
+                    
+                    audioUnlockedRef.current = true;
+                    soundManager.audioUnlocked = true;
+                    
+                    if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
+                      lobbyMusicRef.current.play();
+                    }
+                    if (soundManager.backgroundMusic && soundManager.backgroundMusic.paused) {
+                      soundManager.backgroundMusic.play();
+                    }
+                    if (soundManager.tryStartMusic) {
+                      soundManager.tryStartMusic();
+                    }
+                    
+                    setShowAudioPrompt(false);
+                    console.log('✅ Audio manually enabled');
+                  } catch (error) {
+                    console.error('Failed to enable audio:', error);
+                  }
+                }}
+                style={{
+                  padding: '15px 40px',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(135deg, #4ecdc4 0%, #44a6b5 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50px',
+                  cursor: 'pointer',
+                  boxShadow: '0 5px 20px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                🎵 Enable Sound
+              </button>
+            </div>
           )}
         </>
       )}

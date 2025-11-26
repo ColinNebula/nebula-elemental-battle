@@ -1821,8 +1821,8 @@ const GameBoard = ({
     setSortBy(prevSort => prevSort === newSort ? 'none' : newSort);
   };
 
-  const handleSkipTurn = () => {
-    console.log('⏭️ Player manually skipped turn');
+  const handleSkipTurn = async () => {
+    console.log('⏭️ Player manually skipping turn');
     
     // Show skip notification
     if (gameBoardRef.current) {
@@ -1840,7 +1840,14 @@ const GameBoard = ({
     
     // End the turn
     if (onForfeit) {
-      onForfeit();
+      try {
+        await onForfeit();
+        console.log('✅ Turn skipped successfully');
+      } catch (error) {
+        console.error('❌ Error skipping turn:', error);
+      }
+    } else {
+      console.warn('⚠️ onForfeit callback not provided');
     }
   };
 

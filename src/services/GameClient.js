@@ -2527,8 +2527,19 @@ class GameClient {
   }
 
   forfeitTurn(roomId, playerId) {
-    return new Promise((resolve) => {
-      this.once('TURN_FORFEITED', (data) => resolve(data.success));
+    return new Promise((resolve, reject) => {
+      // Set a timeout in case server doesn't respond
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ Forfeit turn timeout - server may not have responded');
+        resolve(true); // Resolve anyway to prevent UI from hanging
+      }, 3000);
+      
+      this.once('TURN_FORFEITED', (data) => {
+        clearTimeout(timeout);
+        resolve(data.success);
+      });
+      
+      console.log('📤 Sending FORFEIT_TURN command:', roomId, playerId);
       this.send(`FORFEIT_TURN ${roomId} ${playerId}`);
     });
   }
