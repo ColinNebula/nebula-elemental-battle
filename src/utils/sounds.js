@@ -535,15 +535,15 @@ class SoundManager {
     
     // Map of sound names to audio files
     const audioFiles = {
-      'fire': 'audio/mixkit-fire-swoosh-burning-1328.wav',
-      'fireball': 'audio/mixkit-fireball-spell-1347.wav',
-      'ice': 'audio/mixkit-thin-icicles-spell-882.wav',
-      'magic': 'audio/mixkit-magic-sparkle-whoosh-2350.wav',
-      'light': 'audio/mixkit-shot-light-energy-flowing-2589.wav',
-      'swoosh': 'audio/mixkit-soft-woosh-fire-1346.wav',
-      'fairy': 'audio/mixkit-spellcaster-fairy-swoosh-1463.wav',
-      'victory': 'audio/mixkit-game-success-alert-2039.wav',
-      'crowdCheer': 'audio/mixkit-huge-crowd-cheering-victory-462.wav'
+      'fire': 'mixkit-fire-swoosh-burning-1328.wav',
+      'fireball': 'mixkit-fireball-spell-1347.wav',
+      'ice': 'mixkit-thin-icicles-spell-882.wav',
+      'magic': 'mixkit-magic-sparkle-whoosh-2350.wav',
+      'light': 'mixkit-shot-light-energy-flowing-2589.wav',
+      'swoosh': 'mixkit-soft-woosh-fire-1346.wav',
+      'fairy': 'mixkit-spellcaster-fairy-swoosh-1463.wav',
+      'victory': 'mixkit-game-success-alert-2039.wav',
+      'crowdCheer': 'mixkit-huge-crowd-cheering-victory-462.wav'
     };
     
     // If there's an audio file for this sound, use it
@@ -895,6 +895,24 @@ class SoundManager {
   toggleSound() {
     this.enabled = !this.enabled;
     return this.enabled;
+  }
+
+  stopAllSounds() {
+    // Stop all currently playing sound effects
+    Object.values(this.sounds).forEach(sound => {
+      if (sound && !sound.paused) {
+        try {
+          sound.pause();
+          sound.currentTime = 0;
+        } catch (error) {
+          // Ignore errors from sounds that can't be stopped
+        }
+      }
+    });
+    
+    // Clear the sounds object
+    this.sounds = {};
+    console.log('🔇 All sounds stopped');
   }
 
   toggleMusic() {

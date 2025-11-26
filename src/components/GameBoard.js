@@ -571,21 +571,24 @@ const GameBoard = ({
           }
         }
         
-        // Play victory or defeat sound
+        // Play single victory/defeat music and stop all other sounds
         if (soundManager) {
-          if (winner === 'Tie') {
-            soundManager.playSound('victory');
-          } else if (winner === humanPlayer?.name) {
-            soundManager.playSound('victory');
-            soundManager.playVoiceLine(avatarPersonality, 'victory');
-            soundManager.playCrowdReaction('cheer');
-          } else {
-            soundManager.playSound('defeat');
-            soundManager.playVoiceLine(avatarPersonality, 'defeat');
-          }
-          
-          // Stop background music
+          // Stop all ongoing sounds and music first
           soundManager.stopMusic();
+          soundManager.stopAllSounds();
+          
+          // Wait a moment then play appropriate game over music
+          setTimeout(() => {
+            if (winner === 'Tie') {
+              soundManager.playSound('victory');
+            } else if (winner === humanPlayer?.name) {
+              // Play victory music only
+              soundManager.playSound('victory');
+            } else {
+              // Play defeat sound only
+              soundManager.playSound('defeat');
+            }
+          }, 300);
         }
         
         // Create enhanced victory pose animation
@@ -1860,8 +1863,8 @@ const GameBoard = ({
         />
       )}
 
-      {/* Pause Button */}
-      {gameState.gameStarted && !gameState.gameOver && (
+      {/* Pause Button - Hidden during game over */}
+      {gameState.gameStarted && !gameState.gameOver && !defeatCountdown && (
         <button className="pause-button" onClick={() => setIsPaused(true)} title="Pause (ESC)">
           ⏸
         </button>
@@ -2858,8 +2861,8 @@ const GameBoard = ({
 
       {/* Score Tracker - Always visible during game */}
 
-      {/* Power-Up System UI */}
-      {gameState.gameStarted && !gameState.gameOver && !hasQuit && defeatCountdown === null && (
+      {/* Power-Up System UI - Hidden during game over */}
+      {gameState.gameStarted && !gameState.gameOver && !hasQuit && defeatCountdown === null && !isPaused && (
         <>
           {/* Active Boosts Display */}
           {boosterSystem?.activeBoosts?.length > 0 && (

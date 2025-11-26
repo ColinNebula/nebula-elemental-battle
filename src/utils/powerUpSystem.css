@@ -770,10 +770,35 @@
    ============================================================================ */
 
 @media (max-width: 1024px) {
-  .booster-bar,
-  .sideboard-panel,
+  .booster-bar {
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 180px;
+    transform: none;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .sideboard-panel {
+    width: 90%;
+    max-width: 400px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    top: 50%;
+    right: auto;
+  }
+  
   .equipment-panel {
-    display: none;
+    width: 90%;
+    max-width: 400px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    top: 50%;
+    right: auto;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 
   .ultimate-bar {
@@ -785,9 +810,99 @@
     right: 10px;
     top: 10px;
   }
+  
+  .equipment-slots {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .equipment-slot {
+    min-height: 70px;
+    padding: 10px;
+  }
+  
+  .slot-icon {
+    font-size: 24px;
+  }
+  
+  .slot-label,
+  .slot-name,
+  .slot-empty {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 768px) {
+  .booster-bar {
+    bottom: 160px;
+    max-width: 350px;
+    padding: 10px;
+  }
+  
+  .equipment-panel {
+    width: 95%;
+    max-width: 360px;
+    padding: 15px;
+  }
+  
+  .equipment-title {
+    font-size: 18px;
+  }
+  
+  .equipment-slots {
+    gap: 6px;
+  }
+  
+  .equipment-slot {
+    min-height: 60px;
+    padding: 8px;
+  }
+  
+  .slot-icon {
+    font-size: 20px;
+  }
+  
+  .slot-label {
+    font-size: 9px;
+  }
+  
+  .slot-name,
+  .slot-empty {
+    font-size: 9px;
+  }
+  
+  .inventory-items {
+    gap: 8px;
+  }
+  
+  .inventory-item {
+    padding: 8px;
+  }
+  
+  .inventory-icon {
+    font-size: 20px;
+  }
+  
+  .inventory-name {
+    font-size: 10px;
+  }
+  
+  .shop-items {
+    gap: 8px;
+  }
+  
+  .shop-item {
+    padding: 10px;
+  }
+  
+  .shop-item-icon {
+    font-size: 24px;
+  }
+  
+  .shop-item-name {
+    font-size: 11px;
+  }
+
   .ultimate-bar {
     min-width: 250px;
     padding: 10px;

@@ -8,7 +8,7 @@ const BrandScreen = ({ onComplete }) => {
 
   const playBrandSound = () => {
     if (!soundPlayed) {
-      const brandSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-terror-sweep-of-darkness-2630.wav`);
+      const brandSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-terror-sweep-of-darkness-2630.wav`);
       brandSound.volume = 0.7;
       
       const playPromise = brandSound.play();

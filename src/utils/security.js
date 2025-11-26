@@ -335,7 +335,7 @@ class SecurityManager {
     // Note: CSP should ideally be set server-side, this is additional client-side protection
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Content-Security-Policy';
-    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:;";
+    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' ws: wss:;";
     
     if (document.head && !document.head.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
       document.head.appendChild(meta);

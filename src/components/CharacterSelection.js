@@ -64,7 +64,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
   const [availableAvatars, setAvailableAvatars] = useState(BASE_AVATARS);
 
   const playSelectSound = () => {
-    const selectSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-arcade-player-select-2036.wav`);
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
     selectSound.volume = 0.5;
     selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
@@ -219,7 +219,8 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
           </div>
         )}
 
-        {!isStoryMode && (
+        {/* Arena selection - only show for versus mode, not story mode */}
+        {!isStoryMode && selectedAvatar && (
           <div className="arena-theme-selection">
           <h2 className="arena-theme-title">Choose Arena Background</h2>
           <div className="arena-themes-grid">

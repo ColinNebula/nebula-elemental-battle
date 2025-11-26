@@ -7,7 +7,7 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
 
   useEffect(() => {
     // Play Spooky Loop music
-    const spookyMusic = new Audio(`${process.env.PUBLIC_URL}/audio/Spooky_Loop.mp3`);
+    const spookyMusic = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
     spookyMusic.volume = 0.3;
     spookyMusic.loop = true;
     
@@ -39,7 +39,7 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
   const handleContinue = () => {
     if (!fadeOut) {
       // Play success sound
-      const successSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-game-success-alert-2039.wav`);
+      const successSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-game-success-alert-2039.wav`);
       successSound.volume = 0.5;
       successSound.play().catch(err => console.log('Sound play prevented:', err));
       

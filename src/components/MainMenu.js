@@ -19,7 +19,7 @@ const MainMenu = ({
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
 
   const playSelectSound = () => {
-    const selectSound = new Audio(`${process.env.PUBLIC_URL}/audio/mixkit-arcade-player-select-2036.wav`);
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
     selectSound.volume = 0.5;
     selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
@@ -46,7 +46,7 @@ const MainMenu = ({
   useEffect(() => {
     // Play menu music when component mounts
     if (!menuMusicRef.current) {
-      menuMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Sunrise_in_Megalopolis.mp3`);
+      menuMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
       menuMusicRef.current.volume = 0.3;
       menuMusicRef.current.loop = true;
       

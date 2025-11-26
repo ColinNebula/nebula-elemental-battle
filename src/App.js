@@ -60,7 +60,8 @@ function App() {
       if (!audioUnlockedRef.current) {
         // Create and play a silent audio to unlock audio context on mobile
         const silentAudio = new Audio();
-        silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAABhADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dX//////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYTs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV';
+        // Use a valid minimal MP3 base64 - empty audio
+        silentAudio.src = 'data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAESAAzMzMzMzMzMzMzMzMzMzMzMzMzZmZmZmZmZmZmZmZmZmZmZmZmZmb/////////////////////////////////////////////8AAABhTEFNRTMuMTAwA8MAAAAAAAAAABQgJAUHQQAB9AAAARDRbfmwAAAAAAAAAAAAAAAAAAAA//sUxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUxDsAAANIAAAAAAAAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
         silentAudio.volume = 0;
         
         const playPromise = silentAudio.play();
@@ -71,15 +72,17 @@ function App() {
             
             // Now try to play any pending music
             if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
-              lobbyMusicRef.current.play().catch(err => console.log('Music play after unlock:', err));
+              lobbyMusicRef.current.play().catch(err => console.log('Music play after unlock:', err.message));
             }
             
             // Try to start background music if it exists
             if (soundManager.backgroundMusic && soundManager.backgroundMusic.paused) {
-              soundManager.backgroundMusic.play().catch(err => console.log('Background music play after unlock:', err));
+              soundManager.backgroundMusic.play().catch(err => console.log('Background music play after unlock:', err.message));
             }
           }).catch(err => {
-            console.log('Audio unlock attempt failed:', err);
+            console.log('Audio unlock attempt failed:', err.message || err);
+            // Some browsers may not support the base64 audio format
+            // Audio will still work once user interacts with actual game elements
           });
         }
       }
@@ -266,7 +269,7 @@ function App() {
     
     if (shouldPlayLobbyMusic && !lobbyMusicRef.current && settings.musicEnabled) {
       // Start lobby music
-      lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
+      lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
       lobbyMusicRef.current.volume = 0.3;
       lobbyMusicRef.current.loop = true;
       
