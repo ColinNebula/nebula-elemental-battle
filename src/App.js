@@ -135,6 +135,7 @@ function App() {
                 gamesPlayed: 0,
                 gamesWon: 0,
                 tutorialCompleted: false,
+                selectedAvatar: null,
                 settings: {
                   soundEnabled: true,
                   musicEnabled: true
@@ -189,7 +190,15 @@ function App() {
   const [showInventory, setShowInventory] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [selectedCharacter, setSelectedCharacter] = useState(() => {
+    // Load saved avatar from playerProfile
+    const profile = recoverProfile();
+    if (profile?.selectedAvatar) {
+      console.log('🎮 Loaded saved avatar:', profile.selectedAvatar.name);
+      return profile.selectedAvatar;
+    }
+    return null;
+  });
   const [showVictoryRewards, setShowVictoryRewards] = useState(false);
   const [victoryRewardsData, setVictoryRewardsData] = useState(null);
   const [playerProfile, setPlayerProfile] = useState(() => recoverProfile());
@@ -1041,6 +1050,21 @@ function App() {
   const handleCharacterSelect = async (character) => {
     setSelectedCharacter(character);
     setShowCharacterSelection(false);
+    
+    // Save character to playerProfile
+    const updatedProfile = {
+      ...playerProfile,
+      selectedAvatar: {
+        id: character.id,
+        name: character.name,
+        image: character.image,
+        icon: character.icon,
+        element: character.element
+      }
+    };
+    setPlayerProfile(updatedProfile);
+    secureStorage.setItem('playerProfile', JSON.stringify(updatedProfile));
+    console.log('💾 Saved avatar to profile:', character.name);
     
     // Check if coming from lobby or story mode
     if (currentOpponent) {

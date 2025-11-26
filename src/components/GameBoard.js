@@ -2797,7 +2797,8 @@ const GameBoard = ({
                 onClick={handleSkipTurn}
                 title={humanPlayer.hand?.length === 0 ? "Skip Turn - No cards in hand" : !hasPlayableCards() ? "Skip Turn - No playable cards available" : "Skip Turn - Pass this round"}
               >
-                ⏭️ Skip Turn
+                <span className="skip-turn-icon">⏭️</span>
+                <span className="skip-turn-text">Skip Turn</span>
               </button>
               {humanPlayer.hand?.length === 0 ? (
                 <p className="skip-turn-message">No cards in hand</p>

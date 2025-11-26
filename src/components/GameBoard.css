@@ -6588,6 +6588,17 @@
   letter-spacing: 1.5px;
   box-shadow: 0 6px 20px rgba(255, 87, 34, 0.6);
   animation: skipButtonPulse 2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skip-turn-icon {
+  display: inline;
+}
+
+.skip-turn-text {
+  display: inline;
 }
 
 @keyframes skipButtonPulse {
@@ -6702,37 +6713,60 @@
   }
   
   .advanced-mechanics-controls {
-    top: -50px;
-    gap: 8px;
+    top: -120px;
+    gap: 10px;
     z-index: 150;
+    flex-direction: row;
+    justify-content: center;
   }
   
   .fusion-btn,
   .trap-btn {
-    padding: 10px 18px;
-    font-size: 13px;
-    min-width: 110px;
+    padding: 0;
+    font-size: 24px;
+    min-width: 60px;
     white-space: nowrap;
     pointer-events: auto;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .fusion-btn:active,
   .trap-btn:active {
-    transform: translateY(-1px) scale(0.98);
+    transform: translateY(-1px) scale(0.95);
   }
   
   .skip-turn-container {
-    top: -65px;
+    top: -60px;
   }
   
   .skip-turn-btn {
-    padding: 12px 30px;
-    font-size: 16px;
+    padding: 0;
+    font-size: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .skip-turn-icon {
+    display: inline;
+  }
+  
+  .skip-turn-text {
+    display: none;
   }
   
   .skip-turn-message {
-    font-size: 12px;
-    padding: 6px 15px;
+    font-size: 11px;
+    padding: 5px 12px;
+    white-space: nowrap;
   }
   
   .skip-turn-notification {

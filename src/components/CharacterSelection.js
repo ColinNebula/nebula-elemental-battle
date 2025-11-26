@@ -140,8 +140,8 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
           console.log('🎲 Random arena theme selected:', finalTheme);
         }
 
-        // Save the selected arena theme to localStorage
-        localStorage.setItem('arenaTheme', finalTheme);
+        // Save the selected arena theme using secure storage
+        secureStorage.setItem('arenaTheme', finalTheme);
       }
       
       onSelectCharacter(finalAvatar);

@@ -12,6 +12,7 @@ export const getProfile = () => {
     return {
       avatar: '👤',
       name: 'Player',
+      selectedAvatar: null,
       totalGames: stats.gamesPlayed || 0,
       wins: stats.gamesWon || 0,
       losses: stats.gamesLost || 0,
@@ -35,6 +36,7 @@ export const getProfile = () => {
   // Ensure all properties exist and merge with stats
   return {
     ...profile,
+    selectedAvatar: profile.selectedAvatar || null,
     coins: profile.coins !== undefined ? profile.coins : 0,
     totalGames: stats.gamesPlayed || profile.totalGames || 0,
     wins: stats.gamesWon || profile.wins || 0,

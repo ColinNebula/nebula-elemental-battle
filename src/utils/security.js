@@ -254,31 +254,45 @@ class SecurityManager {
     
     const protectedKeys = ['playerProfile', 'inventory', 'gameSettings', 'statistics'];
     
-    // Store checksums of protected data
+    // Import secureStorage for proper decryption
+    const secureStorage = require('./secureStorage').default;
+    
+    // Store checksums of decrypted data
     const checksums = new Map();
     
     protectedKeys.forEach(key => {
-      const data = localStorage.getItem(key);
-      if (data) {
-        checksums.set(key, this.generateChecksum(data));
+      try {
+        const data = secureStorage.getItem(key);
+        if (data) {
+          checksums.set(key, this.generateChecksum(JSON.stringify(data)));
+        }
+      } catch (err) {
+        console.warn(`[SECURITY] Failed to read ${key} for monitoring:`, err);
       }
     });
     
     // Check for tampering periodically
     setInterval(() => {
       protectedKeys.forEach(key => {
-        const data = localStorage.getItem(key);
-        if (data) {
-          const storedChecksum = checksums.get(key);
-          const currentChecksum = this.generateChecksum(data);
-          
-          if (storedChecksum && storedChecksum !== currentChecksum) {
-            // Data changed outside normal flow
-            this.handleTamperDetection('storage_modified', key);
+        try {
+          const data = secureStorage.getItem(key);
+          if (data) {
+            const storedChecksum = checksums.get(key);
+            const currentChecksum = this.generateChecksum(JSON.stringify(data));
+            
+            if (storedChecksum && storedChecksum !== currentChecksum) {
+              // Data changed outside normal flow - legitimate if done through secureStorage
+              // Only flag as tampering if decryption fails or data is corrupted
+              console.log(`[SECURITY] Data updated for ${key} - this is normal`);
+            }
+            
+            // Update checksum for next check
+            checksums.set(key, currentChecksum);
           }
-          
-          // Update checksum for next check
-          checksums.set(key, currentChecksum);
+        } catch (err) {
+          // Decryption failed - this is actual tampering
+          console.error(`[SECURITY] Tampering detected for ${key}:`, err);
+          this.handleTamperDetection('storage_modified', key);
         }
       });
     }, 5000); // Check every 5 seconds
