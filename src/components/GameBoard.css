@@ -6798,10 +6798,8 @@
 
 /* Mobile animation optimizations */
 @media (max-width: 768px) {
-  /* Force GPU acceleration for all animated elements */
+  /* Improve font rendering */
   * {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -6880,32 +6878,19 @@
 
 /* Touch device specific optimizations */
 @media (hover: none) and (pointer: coarse) {
-  /* Disable hover effects that can cause flickering */
+  /* Disable hover effects on touch devices */
   .card:hover {
-    transform: translateZ(0) !important;
+    transform: none !important;
   }
   
   /* Use active state instead */
   .card:active {
-    transform: scale(0.98) translateZ(0) !important;
+    transform: scale(0.98) !important;
   }
   
   /* Reduce animation iterations */
   .particle,
   .cosmic-particle {
     animation-iteration-count: 1 !important;
-  }
-  
-  /* Force hardware acceleration on all animations */
-  [class*="animation"],
-  [class*="animate"],
-  .turn-text,
-  .timer-display,
-  .match-bonus-overlay {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
   }
 }

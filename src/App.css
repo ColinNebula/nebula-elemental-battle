@@ -17,12 +17,6 @@
   position: relative;
   background: var(--theme-background);
   color: var(--theme-text-color);
-  
-  /* Prevent bouncing and flickering */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
   overflow: hidden;
   touch-action: manipulation;
 }
@@ -258,14 +252,6 @@
 @media (max-width: 480px) {
   .App {
     min-height: 100dvh; /* Dynamic viewport height for mobile */
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    
-    /* Additional mobile fixes */
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    will-change: transform;
   }
   
   .top-menu {
@@ -323,32 +309,11 @@
   }
 }
 
-/* Additional mobile fixes to prevent bouncing and flickering */
+/* Touch device optimizations - don't override transforms */
 @media (hover: none) and (pointer: coarse) {
-  * {
-    /* Force hardware acceleration */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-perspective: 1000;
-    perspective: 1000;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-  
-  /* Prevent bounce scroll */
-  html,
-  body {
-    position: fixed;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-  
   /* Disable pull-to-refresh */
-  body {
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
+  html, body {
+    overscroll-behavior: none;
   }
   
   /* Prevent text selection flicker */
