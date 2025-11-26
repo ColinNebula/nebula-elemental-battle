@@ -1,30 +1,26 @@
-html {
-  /* Prevent pull-to-refresh and bounce */
-  overscroll-behavior: none;
-  overflow: hidden;
-  position: fixed;
+﻿html {
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
-  /* Prevent bouncing/rubber-banding on iOS */
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-  
-  /* Touch handling */
   -webkit-tap-highlight-color: transparent;
-  touch-action: pan-x pan-y;
+  overscroll-behavior: none;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 * {
@@ -49,8 +45,6 @@ code {
   * {
     -webkit-user-select: none;
     user-select: none;
-    
-    /* Additional mobile fixes */
     -webkit-touch-callout: none;
     -webkit-text-size-adjust: 100%;
   }
@@ -59,33 +53,5 @@ code {
   textarea {
     -webkit-user-select: text;
     user-select: text;
-  }
-  
-  body {
-    /* Force GPU acceleration on mobile */
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-  }
-  
-  /* Prevent pull-to-refresh */
-  html {
-    overscroll-behavior: none;
-    overscroll-behavior-y: none;
-  }
-}
-
-/* iOS specific fixes */
-@supports (-webkit-touch-callout: none) {
-  body {
-    /* iOS bounce fix */
-    position: fixed;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-  }
-  
-  #root {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
 }
