@@ -6,12 +6,6 @@
   font-family: Arial, sans-serif;
   position: relative;
   display: flex;
-  /* Performance optimizations for mobile */
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  -webkit-transform: translateZ(0);
 }
 
 .turn-announcement {
@@ -6784,16 +6778,13 @@
   transition: all 0.2s ease !important;
 }
 
-/* GPU acceleration for smooth animations on mobile */
+/* Allow animations to use their own transforms */
 .card,
 .played-card,
 .particle,
 .damage-number {
-  will-change: transform, opacity;
-  transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  -webkit-transform: translateZ(0);
 }
 
 /* Mobile animation optimizations */
