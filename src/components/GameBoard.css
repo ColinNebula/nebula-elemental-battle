@@ -6795,3 +6795,117 @@
   -webkit-backface-visibility: hidden;
   -webkit-transform: translateZ(0);
 }
+
+/* Mobile animation optimizations */
+@media (max-width: 768px) {
+  /* Force GPU acceleration for all animated elements */
+  * {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Optimize keyframe animations */
+  @keyframes turnBounce {
+    0% { 
+      transform: translate3d(-50%, -50%, 0) scale(0.5);
+      opacity: 0;
+    }
+    50% { 
+      transform: translate3d(-50%, -50%, 0) scale(1.1);
+    }
+    100% { 
+      transform: translate3d(-50%, -50%, 0) scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% { 
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% { 
+      transform: scale(1.02);
+      opacity: 0.95;
+    }
+  }
+  
+  /* Reduce animation complexity */
+  .turn-text {
+    animation: turnBounce 0.4s ease-out;
+  }
+  
+  .particle {
+    animation-duration: 0.8s !important;
+    will-change: transform, opacity;
+  }
+  
+  .cosmic-particle {
+    animation-duration: 1.2s !important;
+    will-change: transform, opacity;
+  }
+  
+  .damage-number {
+    animation-duration: 0.5s !important;
+    will-change: transform, opacity;
+  }
+  
+  /* Disable expensive filters on mobile */
+  .card,
+  .played-card {
+    filter: none !important;
+  }
+  
+  /* Simplify transforms */
+  .card:hover,
+  .card:active {
+    transform: translateY(-5px) translateZ(0) !important;
+  }
+  
+  /* Reduce shadow complexity */
+  .card,
+  .played-card,
+  .hand {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* Optimize transitions */
+  * {
+    transition-property: transform, opacity !important;
+    transition-timing-function: ease-out !important;
+  }
+}
+
+/* Touch device specific optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects that can cause flickering */
+  .card:hover {
+    transform: translateZ(0) !important;
+  }
+  
+  /* Use active state instead */
+  .card:active {
+    transform: scale(0.98) translateZ(0) !important;
+  }
+  
+  /* Reduce animation iterations */
+  .particle,
+  .cosmic-particle {
+    animation-iteration-count: 1 !important;
+  }
+  
+  /* Force hardware acceleration on all animations */
+  [class*="animation"],
+  [class*="animate"],
+  .turn-text,
+  .timer-display,
+  .match-bonus-overlay {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}

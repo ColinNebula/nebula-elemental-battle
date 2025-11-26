@@ -713,4 +713,39 @@
   .accordion-content.expanded {
     max-height: 300px;
   }
+  
+  /* Mobile animation optimizations */
+  .main-menu,
+  .menu-background,
+  .cosmic-particle,
+  .menu-title,
+  .menu-button,
+  .accordion-item {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  
+  /* Reduce particle complexity */
+  .cosmic-particle {
+    animation-duration: 4s !important;
+    will-change: opacity, transform;
+  }
+  
+  /* Optimize button animations */
+  .menu-button {
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  
+  .menu-button:active {
+    transform: scale(0.95) translateZ(0) !important;
+  }
+  
+  /* Disable expensive filters on mobile */
+  .menu-button,
+  .accordion-item {
+    filter: none !important;
+  }
 }

@@ -496,4 +496,52 @@
   .prompt-indicator {
     font-size: 18px;
   }
+  
+  /* Mobile animation optimizations */
+  .splash-screen,
+  .splash-content,
+  .splash-logo,
+  .splash-card,
+  .energy-circle,
+  .title-word,
+  .element-icon {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  
+  /* Reduce animation complexity */
+  .splash-screen::before {
+    animation: rotate 30s linear infinite;
+  }
+  
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg) translateZ(0);
+    }
+    to {
+      transform: rotate(360deg) translateZ(0);
+    }
+  }
+  
+  /* Optimize card animations */
+  @keyframes floatUp {
+    from {
+      transform: translate3d(0, 20px, 0) rotateY(0deg);
+    }
+    to {
+      transform: translate3d(0, 0, 0) rotateY(10deg);
+    }
+  }
+  
+  @keyframes floatDown {
+    from {
+      transform: translate3d(0, 20px, 0) rotateY(0deg);
+    }
+    to {
+      transform: translate3d(0, 0, 0) rotateY(-10deg);
+    }
+  }
 }

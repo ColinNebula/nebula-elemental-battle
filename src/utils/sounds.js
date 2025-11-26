@@ -6,6 +6,7 @@ class SoundManager {
     this.music = null;
     this.enabled = true;
     this.musicEnabled = true;
+    this.audioUnlocked = false; // Track if mobile audio context is unlocked
     // Load saved volumes from localStorage or use defaults
     const savedVolume = localStorage.getItem('soundVolume');
     const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -701,15 +702,26 @@ class SoundManager {
       this.backgroundMusic.volume = this.getMusicVolumeForIntensity(intensity);
       this.backgroundMusic.loop = true;
       
-      // Play the track
+      // Mobile-specific audio handling
+      this.backgroundMusic.setAttribute('playsinline', 'true');
+      this.backgroundMusic.setAttribute('webkit-playsinline', 'true');
+      
+      // Preload the audio
+      this.backgroundMusic.load();
+      
+      // Play the track with enhanced mobile support
       const playPromise = this.backgroundMusic.play();
       
       if (playPromise !== undefined) {
         playPromise.then(() => {
           console.log('🎵 Music playing successfully:', this.currentTrack);
+          // Mark that audio context is unlocked
+          this.audioUnlocked = true;
         }).catch(error => {
           console.warn('⚠️ Music autoplay prevented - user interaction required:', error.message);
           console.log('💡 Music will start after any button click or card play');
+          // Set up one-time event listeners for mobile unlock
+          this.setupMobileAudioUnlock();
         });
       }
       
@@ -717,6 +729,33 @@ class SoundManager {
     } catch (error) {
       console.error('Error playing music:', error);
     }
+  }
+  
+  // Setup mobile audio unlock on first user interaction
+  setupMobileAudioUnlock() {
+    if (this.audioUnlocked) return;
+    
+    const unlockAudio = () => {
+      if (this.backgroundMusic && this.backgroundMusic.paused && this.musicEnabled) {
+        this.backgroundMusic.play()
+          .then(() => {
+            console.log('🎵 Mobile audio unlocked and playing');
+            this.audioUnlocked = true;
+            // Remove listeners after successful unlock
+            document.removeEventListener('touchstart', unlockAudio);
+            document.removeEventListener('touchend', unlockAudio);
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+          })
+          .catch(err => console.log('Still waiting for audio unlock:', err.message));
+      }
+    };
+    
+    // Listen for any user interaction
+    document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+    document.addEventListener('touchend', unlockAudio, { once: true, passive: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
   }
 
   // Get music volume based on intensity
@@ -892,9 +931,19 @@ class SoundManager {
   // Try to start music (call this after any user interaction)
   tryStartMusic() {
     if (this.musicEnabled && this.backgroundMusic && this.backgroundMusic.paused) {
-      this.backgroundMusic.play().catch(error => {
-        console.log('Could not start music yet:', error.message);
-      });
+      const playPromise = this.backgroundMusic.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('🎵 Music resumed successfully');
+            this.audioUnlocked = true;
+          })
+          .catch(error => {
+            console.log('Could not start music yet:', error.message);
+            // Set up mobile audio unlock if not already done
+            this.setupMobileAudioUnlock();
+          });
+      }
     } else if (this.musicEnabled && !this.backgroundMusic) {
       // No music loaded yet, start it
       this.playMusic('calm');
