@@ -10,6 +10,8 @@ const BrandScreen = ({ onComplete }) => {
     if (!soundPlayed) {
       const brandSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-terror-sweep-of-darkness-2630.wav`);
       brandSound.volume = 0.7;
+      brandSound.setAttribute('playsinline', 'true');
+      brandSound.setAttribute('webkit-playsinline', 'true');
       
       const playPromise = brandSound.play();
       

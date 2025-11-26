@@ -54,36 +54,54 @@ function App() {
     };
   }, []);
 
-  // Unlock audio on first user interaction (required for mobile)
+  // Unlock audio on first user interaction (required for mobile/iOS)
   useEffect(() => {
-    const unlockAudio = () => {
+    const unlockAudio = async () => {
       if (!audioUnlockedRef.current) {
-        // Create and play a silent audio to unlock audio context on mobile
-        const silentAudio = new Audio();
-        // Use a valid minimal MP3 base64 - empty audio
-        silentAudio.src = 'data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAESAAzMzMzMzMzMzMzMzMzMzMzMzMzZmZmZmZmZmZmZmZmZmZmZmZmZmb/////////////////////////////////////////////8AAABhTEFNRTMuMTAwA8MAAAAAAAAAABQgJAUHQQAB9AAAARDRbfmwAAAAAAAAAAAAAAAAAAAA//sUxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUxDsAAANIAAAAAAAAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
-        silentAudio.volume = 0;
-        
-        const playPromise = silentAudio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            console.log('🔊 Audio context unlocked for mobile');
-            audioUnlockedRef.current = true;
-            
-            // Now try to play any pending music
-            if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
-              lobbyMusicRef.current.play().catch(err => console.log('Music play after unlock:', err.message));
-            }
-            
-            // Try to start background music if it exists
-            if (soundManager.backgroundMusic && soundManager.backgroundMusic.paused) {
-              soundManager.backgroundMusic.play().catch(err => console.log('Background music play after unlock:', err.message));
-            }
-          }).catch(err => {
-            console.log('Audio unlock attempt failed:', err.message || err);
-            // Some browsers may not support the base64 audio format
-            // Audio will still work once user interacts with actual game elements
+        try {
+          // iOS requires audio elements to be created during user interaction
+          const silentAudio = new Audio();
+          // Use a valid minimal MP3 base64 - empty audio
+          silentAudio.src = 'data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAESAAzMzMzMzMzMzMzMzMzMzMzMzMzZmZmZmZmZmZmZmZmZmZmZmZmZmb/////////////////////////////////////////////8AAABhTEFNRTMuMTAwA8MAAAAAAAAAABQgJAUHQQAB9AAAARDRbfmwAAAAAAAAAAAAAAAAAAAA//sUxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUxDsAAANIAAAAAAAAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+          silentAudio.volume = 0.01; // iOS won't play with 0 volume
+          silentAudio.setAttribute('playsinline', 'true');
+          
+          // Load the audio first (important for iOS)
+          await new Promise((resolve) => {
+            silentAudio.addEventListener('loadeddata', resolve, { once: true });
+            silentAudio.load();
           });
+          
+          // Play silent audio to unlock
+          await silentAudio.play();
+          console.log('🔊 Audio context unlocked for mobile/iOS');
+          audioUnlockedRef.current = true;
+          
+          // Resume any AudioContext (for Web Audio API sounds)
+          if (window.AudioContext || window.webkitAudioContext) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+              await audioContext.resume();
+              console.log('🔊 AudioContext resumed');
+            }
+            audioContext.close();
+          }
+          
+          // Now try to play any pending music
+          if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
+            lobbyMusicRef.current.play().catch(err => console.log('Music play after unlock:', err.message));
+          }
+          
+          // Try to start background music if it exists
+          if (soundManager.backgroundMusic && soundManager.backgroundMusic.paused) {
+            soundManager.backgroundMusic.play().catch(err => console.log('Background music play after unlock:', err.message));
+          }
+          
+          // Mark sound manager as unlocked
+          soundManager.audioUnlocked = true;
+        } catch (err) {
+          console.log('Audio unlock will retry on next interaction:', err.message || err);
+          // Audio will work once user interacts with actual game elements
         }
       }
     };
@@ -272,6 +290,10 @@ function App() {
       lobbyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
       lobbyMusicRef.current.volume = 0.3;
       lobbyMusicRef.current.loop = true;
+      // iOS compatibility
+      lobbyMusicRef.current.setAttribute('playsinline', 'true');
+      lobbyMusicRef.current.setAttribute('webkit-playsinline', 'true');
+      lobbyMusicRef.current.preload = 'auto';
       
       // Try to play, but handle mobile autoplay restrictions gracefully
       const playPromise = lobbyMusicRef.current.play();
@@ -298,6 +320,10 @@ function App() {
       mainMenuMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
       mainMenuMusicRef.current.volume = 0.3;
       mainMenuMusicRef.current.loop = true;
+      // iOS compatibility
+      mainMenuMusicRef.current.setAttribute('playsinline', 'true');
+      mainMenuMusicRef.current.setAttribute('webkit-playsinline', 'true');
+      mainMenuMusicRef.current.preload = 'auto';
       
       const playPromise = mainMenuMusicRef.current.play();
       if (playPromise !== undefined) {

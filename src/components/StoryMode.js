@@ -30,6 +30,9 @@ function StoryMode({ onStartBattle, onBack, storyProgress }) {
     storyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Under_Cover_of_the_Myst.mp3`);
     storyMusicRef.current.volume = 0.3;
     storyMusicRef.current.loop = true;
+    storyMusicRef.current.setAttribute('playsinline', 'true');
+    storyMusicRef.current.setAttribute('webkit-playsinline', 'true');
+    storyMusicRef.current.preload = 'auto';
     storyMusicRef.current.play().catch(err => console.log('Story music autoplay prevented:', err));
 
     return () => {

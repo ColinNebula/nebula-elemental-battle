@@ -65,8 +65,8 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
 
   const playSelectSound = () => {
     const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
-    selectSound.volume = 0.5;
-    selectSound.play().catch(err => console.log('Sound play prevented:', err));
+    selectSound.volume = 0.5;    selectSound.setAttribute('playsinline', 'true');
+    selectSound.setAttribute('webkit-playsinline', 'true');    selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
 
   // Load owned themes and unlocked characters from localStorage

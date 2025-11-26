@@ -10,6 +10,9 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
     const spookyMusic = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
     spookyMusic.volume = 0.3;
     spookyMusic.loop = true;
+    spookyMusic.setAttribute('playsinline', 'true');
+    spookyMusic.setAttribute('webkit-playsinline', 'true');
+    spookyMusic.preload = 'auto';
     
     const playPromise = spookyMusic.play();
     
@@ -40,8 +43,8 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
     if (!fadeOut) {
       // Play success sound
       const successSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-game-success-alert-2039.wav`);
-      successSound.volume = 0.5;
-      successSound.play().catch(err => console.log('Sound play prevented:', err));
+      successSound.volume = 0.5;      successSound.setAttribute('playsinline', 'true');
+      successSound.setAttribute('webkit-playsinline', 'true');      successSound.play().catch(err => console.log('Sound play prevented:', err));
       
       setFadeOut(true);
       setTimeout(() => {

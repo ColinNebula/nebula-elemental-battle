@@ -20,8 +20,8 @@ const MainMenu = ({
 
   const playSelectSound = () => {
     const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
-    selectSound.volume = 0.5;
-    selectSound.play().catch(err => console.log('Sound play prevented:', err));
+    selectSound.volume = 0.5;    selectSound.setAttribute('playsinline', 'true');
+    selectSound.setAttribute('webkit-playsinline', 'true');    selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
 
   const toggleSection = (section) => {
@@ -49,6 +49,9 @@ const MainMenu = ({
       menuMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Cooler_Heads_Prevail.mp3`);
       menuMusicRef.current.volume = 0.3;
       menuMusicRef.current.loop = true;
+      menuMusicRef.current.setAttribute('playsinline', 'true');
+      menuMusicRef.current.setAttribute('webkit-playsinline', 'true');
+      menuMusicRef.current.preload = 'auto';
       
       menuMusicRef.current.play().catch(error => {
         console.log('Menu music autoplay prevented:', error);

@@ -551,7 +551,25 @@ class SoundManager {
       try {
         const audio = new Audio(`${process.env.PUBLIC_URL}/${audioFiles[soundName]}`);
         audio.volume = this.volume * volumeMultiplier;
-        audio.play().catch(err => console.log('Sound play prevented:', err));
+        // iOS compatibility
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+        audio.preload = 'auto';
+        
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              this.audioUnlocked = true;
+            })
+            .catch(err => {
+              console.log('Sound play prevented:', err.message);
+              // Try to unlock on next interaction
+              if (!this.audioUnlocked) {
+                this.setupMobileAudioUnlock();
+              }
+            });
+        }
         return;
       } catch (error) {
         console.error('Error playing audio file:', error);
@@ -562,7 +580,16 @@ class SoundManager {
     if (this.sounds[soundName]) {
       try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.sounds[soundName](audioContext);
+        // Resume AudioContext if suspended (iOS requirement)
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().then(() => {
+            this.sounds[soundName](audioContext);
+            this.audioUnlocked = true;
+          });
+        } else {
+          this.sounds[soundName](audioContext);
+          this.audioUnlocked = true;
+        }
       } catch (error) {
         console.error('Error playing sound:', error);
       }
@@ -599,13 +626,26 @@ class SoundManager {
     
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.createComboSound(audioContext, comboCount);
+      // Resume AudioContext if suspended (iOS requirement)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          this.createComboSound(audioContext, comboCount);
+          this.audioUnlocked = true;
+        });
+      } else {
+        this.createComboSound(audioContext, comboCount);
+        this.audioUnlocked = true;
+      }
       
       // Play crowd cheer for combos of 3+
       if (comboCount >= 3) {
         setTimeout(() => {
           const cheerContext = new (window.AudioContext || window.webkitAudioContext)();
-          this.createCrowdCheerSound(cheerContext);
+          if (cheerContext.state === 'suspended') {
+            cheerContext.resume().then(() => this.createCrowdCheerSound(cheerContext));
+          } else {
+            this.createCrowdCheerSound(cheerContext);
+          }
         }, 200);
       }
     } catch (error) {
@@ -660,7 +700,16 @@ class SoundManager {
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       if (reactionType === 'gasp') {
-        this.createCrowdGaspSound(audioContext);
+        // Resume AudioContext if suspended (iOS requirement)
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().then(() => {
+            this.createCrowdGaspSound(audioContext);
+            this.audioUnlocked = true;
+          });
+        } else {
+          this.createCrowdGaspSound(audioContext);
+          this.audioUnlocked = true;
+        }
       }
     } catch (error) {
       console.error('Error playing crowd reaction:', error);
