@@ -96,8 +96,11 @@ class MobileScreenManager {
       this.requestWakeLock();
     }
 
-    // Performance mode is now opt-in via settings
-    // Users can enable it manually if needed
+    // Auto-enable performance mode on mobile devices
+    if (this.isMobile()) {
+      console.log('📱 Mobile device detected - enabling performance optimizations');
+      this.enablePerformanceMode();
+    }
 
     // Prevent mobile browser from hiding content
     this.preventMobileBlank();

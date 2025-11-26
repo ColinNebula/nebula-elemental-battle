@@ -1,6 +1,13 @@
 // Visual Effects Utility
 // Handles critical hits, elemental particles, and advanced visual effects
 
+// Detect mobile for performance optimization
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         ('ontouchstart' in window) ||
+         (navigator.maxTouchPoints > 0);
+};
+
 // Screen shake effect for critical hits
 export const createScreenShake = (intensity = 'medium', duration = 400) => {
   const gameBoard = document.querySelector('.game-board');
@@ -114,7 +121,8 @@ export const createElementalWeather = (element, container) => {
   const weatherContainer = document.createElement('div');
   weatherContainer.className = `elemental-weather ${element.toLowerCase()}-weather`;
   
-  const particleCount = 30;
+  // Significantly reduce particles on mobile
+  const particleCount = isMobile() ? 8 : 20;
   
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');

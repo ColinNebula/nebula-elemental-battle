@@ -674,6 +674,10 @@
   animation: particleFloat 2.5s ease-out forwards, particleSpin 2.5s linear forwards;
   opacity: 0;
   filter: blur(0.5px);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
 }
 
 @keyframes particleFloat {
@@ -4984,6 +4988,9 @@
   pointer-events: none;
   animation: damageFloat 1s ease-out forwards;
   z-index: 1001;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .damage-number.winner {
@@ -6792,22 +6799,34 @@
 /* Performance mode - reduces animations and effects for low-end devices */
 .performance-mode .particle {
   animation-duration: 0.5s !important;
+  filter: none !important;
 }
 
 .performance-mode .cosmic-particle {
   animation-duration: 1s !important;
+  display: none !important;
 }
 
 .performance-mode .damage-number {
   animation-duration: 0.3s !important;
+  text-shadow: none !important;
 }
 
 .performance-mode .card:hover {
   transform: translateY(-2px) !important;
+  box-shadow: none !important;
 }
 
 .performance-mode .played-card {
   transition: all 0.2s ease !important;
+}
+
+.performance-mode .confetti-piece {
+  display: none !important;
+}
+
+.performance-mode .elemental-weather {
+  display: none !important;
 }
 
 /* Allow animations to use their own transforms */
@@ -6873,6 +6892,23 @@
   
   .particle {
     animation-duration: 0.8s !important;
+    filter: blur(0) !important;
+  }
+  
+  /* Simplify blur effects on mobile */
+  .particle,
+  .cosmic-particle {
+    filter: none !important;
+  }
+  
+  /* Reduce text shadows on mobile for performance */
+  .damage-number {
+    text-shadow: 0 0 10px currentColor, 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+  }
+  
+  /* Reduce confetti on mobile */
+  .confetti-piece:nth-child(n+15) {
+    display: none;
   }
   
   .cosmic-particle {
@@ -6881,6 +6917,28 @@
   
   .damage-number {
     animation-duration: 0.5s !important;
+  }
+  
+  /* Simplify box-shadows on mobile for performance */
+  .card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .card:hover,
+  .card:active {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  /* Remove expensive glow effects on mobile */
+  .turn-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+  }
+  
+  /* Reduce backdrop blur on mobile */
+  .modal-overlay,
+  .pause-menu-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
   
   /* Disable expensive filters on mobile */

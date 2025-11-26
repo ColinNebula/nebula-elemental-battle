@@ -7,9 +7,33 @@ const isMobile = () => {
          (navigator.maxTouchPoints > 0);
 };
 
+// Animation cleanup tracker to prevent memory leaks
+const activeAnimations = new Set();
+let cleanupScheduled = false;
+
+const scheduleCleanup = () => {
+  if (cleanupScheduled) return;
+  cleanupScheduled = true;
+  
+  requestAnimationFrame(() => {
+    // Clean up completed animations
+    activeAnimations.forEach(element => {
+      if (!element.parentNode || !document.body.contains(element)) {
+        activeAnimations.delete(element);
+      }
+    });
+    cleanupScheduled = false;
+  });
+};
+
+const trackAnimation = (element) => {
+  activeAnimations.add(element);
+  scheduleCleanup();
+};
+
 export const createParticles = (element, x, y, container) => {
   // Reduce particles on mobile for better performance
-  const particleCount = isMobile() ? 8 : 20;
+  const particleCount = isMobile() ? 4 : 15;
   const particles = [];
   
   const elementEmojis = {
@@ -35,8 +59,8 @@ export const createParticles = (element, x, y, container) => {
     
     // More varied and dynamic particle trajectories
     const angle = (i / particleCount) * Math.PI * 2;
-    const baseDistance = isMobile() ? 80 : 150;
-    const distance = baseDistance + Math.random() * (isMobile() ? 50 : 100);
+    const baseDistance = isMobile() ? 60 : 150;
+    const distance = baseDistance + Math.random() * (isMobile() ? 30 : 100);
     const tx = Math.cos(angle) * distance;
     const ty = Math.sin(angle) * distance;
     
@@ -48,9 +72,11 @@ export const createParticles = (element, x, y, container) => {
     container.appendChild(particle);
     particles.push(particle);
 
-    const duration = isMobile() ? 1500 : 2500;
+    const duration = isMobile() ? 1000 : 2500;
     setTimeout(() => {
-      particle.remove();
+      if (particle.parentNode) {
+        particle.remove();
+      }
     }, duration);
   }
 
@@ -116,9 +142,10 @@ export const createVictoryCelebration = (winner, container) => {
   celebration.appendChild(subText);
   container.appendChild(celebration);
 
-  // Create confetti
+  // Create confetti (reduced on mobile)
   const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
-  for (let i = 0; i < 50; i++) {
+  const confettiCount = isMobile() ? 15 : 50;
+  for (let i = 0; i < confettiCount; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti-piece';
     confetti.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
@@ -127,7 +154,9 @@ export const createVictoryCelebration = (winner, container) => {
     container.appendChild(confetti);
 
     setTimeout(() => {
-      confetti.remove();
+      if (confetti.parentNode) {
+        confetti.remove();
+      }
     }, 3500);
   }
 
@@ -203,9 +232,15 @@ export const createEnvironmentalEffect = (type, container) => {
   const effect = document.createElement('div');
   effect.className = `environmental-effect ${type}`;
   
+  // Reduce environmental effects on mobile
+  const rainCount = isMobile() ? 15 : 50;
+  const snowCount = isMobile() ? 15 : 40;
+  const leafCount = isMobile() ? 10 : 30;
+  const emberCount = isMobile() ? 10 : 25;
+  
   switch (type) {
     case 'rain':
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < rainCount; i++) {
         const drop = document.createElement('div');
         drop.className = 'rain-drop';
         drop.style.left = `${Math.random() * 100}%`;
@@ -216,7 +251,7 @@ export const createEnvironmentalEffect = (type, container) => {
       break;
       
     case 'snow':
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < snowCount; i++) {
         const flake = document.createElement('div');
         flake.className = 'snow-flake';
         flake.textContent = '❄️';
@@ -229,7 +264,7 @@ export const createEnvironmentalEffect = (type, container) => {
       break;
       
     case 'leaves':
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < leafCount; i++) {
         const leaf = document.createElement('div');
         leaf.className = 'falling-leaf';
         leaf.textContent = ['🍂', '🍁'][Math.floor(Math.random() * 2)];
@@ -241,7 +276,7 @@ export const createEnvironmentalEffect = (type, container) => {
       break;
       
     case 'embers':
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < emberCount; i++) {
         const ember = document.createElement('div');
         ember.className = 'floating-ember';
         ember.textContent = '🔥';
