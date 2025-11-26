@@ -213,8 +213,9 @@ export const HAND_THEMES = {
     cost: 0,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(0, 0, 0, 0.3)',
-    glowEffect: 'none',
-    borderStyle: '2px solid rgba(74, 144, 226, 0.5)',
+    glowEffect: '0 0 10px rgba(74, 144, 226, 0.3)',
+    borderStyle: '3px solid rgba(74, 144, 226, 0.6)',
+    borderGradient: 'linear-gradient(135deg, rgba(74, 144, 226, 0.6), rgba(102, 126, 234, 0.6))',
     animation: 'none',
     premium: false
   },
@@ -223,9 +224,10 @@ export const HAND_THEMES = {
     cost: 80,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(102, 126, 234, 0.25)',
-    glowEffect: '0 0 25px rgba(102, 126, 234, 0.6), 0 0 40px rgba(118, 75, 162, 0.4)',
-    borderStyle: '3px solid rgba(102, 126, 234, 0.7)',
-    animation: 'pulse 3s ease-in-out infinite',
+    glowEffect: '0 0 25px rgba(102, 126, 234, 0.7), 0 0 40px rgba(118, 75, 162, 0.5), inset 0 0 15px rgba(102, 126, 234, 0.3)',
+    borderStyle: '4px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #667eea, #764ba2, #667eea)',
+    animation: 'cosmicPulse 3s ease-in-out infinite',
     premium: true
   },
   flame: {
@@ -233,9 +235,10 @@ export const HAND_THEMES = {
     cost: 90,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(255, 107, 107, 0.25)',
-    glowEffect: '0 0 30px rgba(255, 107, 107, 0.7), 0 0 50px rgba(238, 90, 82, 0.5)',
-    borderStyle: '3px solid rgba(255, 107, 107, 0.8)',
-    animation: 'flicker 2s ease-in-out infinite',
+    glowEffect: '0 0 30px rgba(255, 107, 107, 0.8), 0 0 50px rgba(238, 90, 82, 0.6), inset 0 0 20px rgba(255, 107, 107, 0.4)',
+    borderStyle: '4px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #ff6b6b, #ee5a52, #ff4500, #ff6b6b)',
+    animation: 'flameFlicker 2s ease-in-out infinite',
     premium: true
   },
   ice: {
@@ -243,9 +246,10 @@ export const HAND_THEMES = {
     cost: 85,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(116, 185, 255, 0.25)',
-    glowEffect: '0 0 25px rgba(116, 185, 255, 0.7), 0 0 45px rgba(9, 132, 227, 0.5)',
-    borderStyle: '3px solid rgba(116, 185, 255, 0.8)',
-    animation: 'shimmer 4s ease-in-out infinite',
+    glowEffect: '0 0 25px rgba(116, 185, 255, 0.8), 0 0 45px rgba(9, 132, 227, 0.6), inset 0 0 15px rgba(116, 185, 255, 0.4)',
+    borderStyle: '4px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #74b9ff, #0984e3, #a7f3ff, #74b9ff)',
+    animation: 'crystalShimmer 4s ease-in-out infinite',
     premium: true
   },
   gold: {
@@ -253,9 +257,10 @@ export const HAND_THEMES = {
     cost: 120,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(243, 156, 18, 0.3)',
-    glowEffect: '0 0 35px rgba(243, 156, 18, 0.8), 0 0 60px rgba(230, 126, 34, 0.6)',
-    borderStyle: '4px solid rgba(243, 156, 18, 0.9)',
-    animation: 'goldShine 3s ease-in-out infinite',
+    glowEffect: '0 0 35px rgba(255, 215, 0, 0.9), 0 0 60px rgba(255, 152, 0, 0.7), inset 0 0 25px rgba(255, 215, 0, 0.5)',
+    borderStyle: '5px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #ffd700, #ff9800, #ffaa00, #ffd700)',
+    animation: 'legendaryGlow 3s ease-in-out infinite',
     premium: true
   },
   shadow: {
@@ -263,8 +268,9 @@ export const HAND_THEMES = {
     cost: 110,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(45, 52, 54, 0.4)',
-    glowEffect: '0 0 30px rgba(45, 52, 54, 0.9), 0 0 50px rgba(99, 110, 114, 0.7)',
-    borderStyle: '3px solid rgba(99, 110, 114, 0.9)',
+    glowEffect: '0 0 30px rgba(99, 110, 114, 0.9), 0 0 50px rgba(45, 52, 54, 0.8), inset 0 0 20px rgba(75, 75, 90, 0.6)',
+    borderStyle: '4px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #636e72, #2d3436, #4b4b5a, #636e72)',
     animation: 'shadowPulse 3.5s ease-in-out infinite',
     premium: true
   },
@@ -273,8 +279,9 @@ export const HAND_THEMES = {
     cost: 150,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(255, 140, 0, 0.2)',
-    glowEffect: '0 0 40px rgba(255, 0, 128, 0.6), 0 0 60px rgba(64, 224, 208, 0.5)',
-    borderStyle: '4px solid rgba(255, 140, 0, 0.8)',
+    glowEffect: '0 0 40px rgba(255, 0, 128, 0.7), 0 0 60px rgba(64, 224, 208, 0.6), inset 0 0 20px rgba(255, 140, 0, 0.4)',
+    borderStyle: '5px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0, #9b59b6, #ff0080)',
     animation: 'rainbowShift 5s linear infinite',
     premium: true
   },
@@ -283,8 +290,9 @@ export const HAND_THEMES = {
     cost: 175,
     cardBack: `url(${process.env.PUBLIC_URL}/cards-back.png)`,
     handBackground: 'rgba(255, 0, 255, 0.25)',
-    glowEffect: '0 0 45px rgba(255, 0, 255, 0.8), 0 0 70px rgba(0, 255, 255, 0.6)',
-    borderStyle: '5px solid rgba(255, 0, 255, 1)',
+    glowEffect: '0 0 45px rgba(255, 0, 255, 0.9), 0 0 70px rgba(0, 255, 255, 0.7), inset 0 0 30px rgba(255, 0, 255, 0.5)',
+    borderStyle: '6px solid transparent',
+    borderGradient: 'linear-gradient(135deg, #ff00ff, #00ffff, #ff00ff, #00ffff)',
     animation: 'plasmaFlow 4s ease-in-out infinite',
     premium: true
   },
@@ -623,6 +631,9 @@ export const applyHandTheme = (themeId) => {
   root.style.setProperty('--hand-card-back', theme.cardBack);
   root.style.setProperty('--hand-background', theme.handBackground);
   root.style.setProperty('--hand-glow-effect', theme.glowEffect);
+  root.style.setProperty('--hand-border-style', theme.borderStyle);
+  root.style.setProperty('--hand-border-gradient', theme.borderGradient || theme.borderStyle);
+  root.style.setProperty('--hand-animation', theme.animation);
 };
 
 // Apply arena theme

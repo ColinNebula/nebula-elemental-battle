@@ -178,6 +178,7 @@ const GameBoard = ({
   const gameBoardRef = useRef(null);
   const lastAnnouncedRoundRef = useRef(0);
   const hasShownInitialArenaRef = useRef(false);
+  const gameOverSoundsPlayedRef = useRef(false);
   const handCardRefs = useRef({});
   const shownMatchBonuses = useRef(new Set());
   
@@ -521,9 +522,17 @@ const GameBoard = ({
     onPlayAgain();
   };
 
+  // Reset game over sounds flag when game starts
+  useEffect(() => {
+    if (gameState?.gameStarted && !gameState?.gameOver) {
+      gameOverSoundsPlayedRef.current = false;
+    }
+  }, [gameState?.gameStarted, gameState?.gameOver]);
+
   // Victory celebration
   useEffect(() => {
     if (gameState?.gameOver && gameBoardRef.current) {
+      
       setTimeout(() => {
         // Check if ref is still valid after timeout
         if (!gameBoardRef.current) return;
@@ -571,8 +580,10 @@ const GameBoard = ({
           }
         }
         
-        // Play single victory/defeat music and stop all other sounds
-        if (soundManager) {
+        // Play single victory/defeat music and stop all other sounds (ONLY ONCE)
+        if (soundManager && !gameOverSoundsPlayedRef.current) {
+          gameOverSoundsPlayedRef.current = true;
+          
           // Stop all ongoing sounds and music first
           soundManager.stopMusic();
           soundManager.stopAllSounds();
@@ -2812,10 +2823,11 @@ const GameBoard = ({
               )}
             </div>
           )}
-          <div className={`hand ${isMyTurn ? 'your-turn' : ''}`} style={{
+          <div className={`hand themed ${isMyTurn ? 'your-turn' : ''}`} style={{
             background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
             boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`,
-            borderImage: `url(${process.env.PUBLIC_URL}/hand-frame1.png) 50 stretch`
+            borderImage: `url(${process.env.PUBLIC_URL}/hand-frame1.png) 50 stretch`,
+            animation: HAND_THEMES[handTheme]?.animation || 'none'
           }}>
             {sortedHumanHand.map((item, displayIndex) => {
               const manaSystemActive = strategicSettings?.manaEnabled === true;
