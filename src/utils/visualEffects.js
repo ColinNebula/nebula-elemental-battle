@@ -1,6 +1,8 @@
 // Visual Effects Utility
 // Handles critical hits, elemental particles, and advanced visual effects
 
+import soundManager from './sounds';
+
 // Detect mobile for performance optimization
 const isMobile = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -89,6 +91,11 @@ export const handleCriticalHit = (card, cardElement, container) => {
 // Meteor strike effect on card
 export const handleMeteorStrike = (cardElement, container) => {
   if (!cardElement || !container) return;
+
+  // Play meteor strike sound effect
+  if (soundManager) {
+    soundManager.playSound('meteorStrike');
+  }
 
   // Create meteor strike overlay on the card
   const meteorOverlay = document.createElement('div');

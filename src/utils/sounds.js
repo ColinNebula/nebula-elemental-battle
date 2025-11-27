@@ -664,6 +664,7 @@ class SoundManager {
     const audioFiles = {
       'fire': 'mixkit-fire-swoosh-burning-1328.wav',
       'fireball': 'mixkit-fireball-spell-1347.wav',
+      'meteorStrike': 'mixkit-fireball-spell-1347.wav',
       'ice': 'mixkit-thin-icicles-spell-882.wav',
       'magic': 'mixkit-magic-sparkle-whoosh-2350.wav',
       'light': 'mixkit-shot-light-energy-flowing-2589.wav',
