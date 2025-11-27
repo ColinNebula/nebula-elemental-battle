@@ -4,8 +4,34 @@ import './PlayerProfile.css';
 const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const [activeTab, setActiveTab] = useState('stats');
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [avatarCategory, setAvatarCategory] = useState('heroes');
   
-  const avatarOptions = ['👤', '🧙', '⚔️', '🛡️', '🏹', '🗡️', '⚡', '🔥', '❄️', '🌊', '🌍', '✨', '🌟', '💫', '👑', '🦸', '🧙‍♂️', '🧝', '🧚', '🦹'];
+  const avatarCategories = {
+    heroes: {
+      name: '⚔️ Heroes',
+      avatars: ['👤', '🧙', '🧙‍♂️', '🧙‍♀️', '🧝', '🧝‍♂️', '🧝‍♀️', '🧚', '🧚‍♂️', '🧚‍♀️', '🦸', '🦸‍♂️', '🦸‍♀️', '🦹', '🦹‍♂️', '🦹‍♀️', '🥷', '🤴', '👸', '👑']
+    },
+    warriors: {
+      name: '⚔️ Warriors',
+      avatars: ['⚔️', '🗡️', '🛡️', '🏹', '🪓', '⚡', '🔱', '🎯', '🏹', '💣', '🧨', '💥', '⚔️', '🗡️', '🔫', '🏴‍☠️', '☠️', '💀', '👹', '👺']
+    },
+    elements: {
+      name: '🌟 Elements',
+      avatars: ['🔥', '❄️', '💧', '🌊', '⚡', '🌍', '💨', '🌪️', '☄️', '⭐', '✨', '💫', '🌟', '💎', '🔮', '☀️', '🌙', '⚡', '🌈', '🌠']
+    },
+    creatures: {
+      name: '🐉 Creatures',
+      avatars: ['🐉', '🐲', '🦄', '🦅', '🦊', '🐺', '🦁', '🐯', '🐻', '🐼', '🦇', '🦉', '🦚', '🐍', '🦎', '🐢', '🦈', '🐙', '🦀', '🦑']
+    },
+    mythical: {
+      name: '✨ Mythical',
+      avatars: ['👻', '👽', '🤖', '👾', '🎃', '👹', '👺', '🧛', '🧛‍♂️', '🧛‍♀️', '🧟', '🧟‍♂️', '🧟‍♀️', '🎭', '🗿', '🏺', '⚱️', '🔱', '☯️', '♾️']
+    },
+    cosmic: {
+      name: '🌌 Cosmic',
+      avatars: ['🌌', '🪐', '🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘', '🌚', '🌝', '🌞', '⭐', '🌟', '✨', '💫', '☄️', '🌠', '🔭']
+    }
+  };
   
   if (!player) return null;
 
@@ -173,17 +199,40 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
             {getAvatar()}
           </div>
           {showAvatarSelector && !isAI && (
-            <div className="avatar-selector">
-              {avatarOptions.map((avatar, idx) => (
-                <div 
-                  key={idx} 
-                  className="avatar-option"
-                  onClick={() => handleAvatarChange(avatar)}
-                >
-                  {avatar}
+            <>
+              <div className="avatar-selector-backdrop" onClick={() => setShowAvatarSelector(false)} />
+              <div className="avatar-selector-enhanced">
+                <div className="avatar-selector-header">
+                  <h3>Choose Your Avatar</h3>
+                  <button className="avatar-close-btn" onClick={() => setShowAvatarSelector(false)}>✕</button>
                 </div>
-              ))}
-            </div>
+              
+              <div className="avatar-categories">
+                {Object.keys(avatarCategories).map((catKey) => (
+                  <button
+                    key={catKey}
+                    className={`category-btn ${avatarCategory === catKey ? 'active' : ''}`}
+                    onClick={() => setAvatarCategory(catKey)}
+                  >
+                    {avatarCategories[catKey].name}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="avatar-grid">
+                {avatarCategories[avatarCategory].avatars.map((avatar, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`avatar-option ${getAvatar() === avatar ? 'selected' : ''}`}
+                    onClick={() => handleAvatarChange(avatar)}
+                    title="Click to select"
+                  >
+                    {avatar}
+                  </div>
+                ))}
+              </div>
+              </div>
+            </>
           )}
           <div className="profile-level-badge">
             <span className="level-icon">⚡</span>

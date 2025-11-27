@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './MainMenu.css';
+import userPreferences from '../utils/userPreferences';
 
 const MainMenu = ({ 
   onPlayGame,
@@ -17,6 +18,8 @@ const MainMenu = ({
   const menuMusicRef = useRef(null);
   const [expandedSection, setExpandedSection] = useState('gameplay');
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+  const [playerAvatar, setPlayerAvatar] = useState(null);
+  const [playerName, setPlayerName] = useState('Player');
 
   const playSelectSound = () => {
     const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
@@ -41,6 +44,26 @@ const MainMenu = ({
       }
     };
     checkUnreadNews();
+    
+    // Load player avatar and name from userPreferences
+    const loadPlayerInfo = () => {
+      const avatar = userPreferences.getAvatar();
+      const name = userPreferences.getPlayerName();
+      setPlayerAvatar(avatar);
+      setPlayerName(name);
+      console.log('🎭 [MAIN MENU] Loaded player info:', { avatar: avatar?.name, name });
+    };
+    loadPlayerInfo();
+    
+    // Listen for preference updates
+    const handlePreferencesUpdate = (event) => {
+      loadPlayerInfo();
+    };
+    window.addEventListener('userPreferencesUpdated', handlePreferencesUpdate);
+    
+    return () => {
+      window.removeEventListener('userPreferencesUpdated', handlePreferencesUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -92,6 +115,16 @@ const MainMenu = ({
             <span className="title-battle">BATTLE</span>
           </h1>
           <p className="title-subtitle">Master the Elements • Conquer the Arena</p>
+          
+          {/* Player Info - Avatar and Name */}
+          {playerAvatar && (
+            <div className="player-info-banner" onClick={onShowProfile} title="View Profile">
+              <div className="player-avatar-display">
+                {playerAvatar.icon || playerAvatar.name?.charAt(0) || '👤'}
+              </div>
+              <div className="player-name-display">{playerName}</div>
+            </div>
+          )}
           
           {/* News Alert Button */}
           <button className="news-alert-btn" onClick={onShowNews} title="What's New">

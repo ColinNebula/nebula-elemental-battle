@@ -11,9 +11,18 @@ function Credits({ onClose }) {
           <div className="credits-section">
             <h2>Created By</h2>
             <p className="credits-name">Colin Nebula</p>
-            <p className="credits-company">for Nebula 3D Development</p>
-            <p className="credits-role">Lead Developer & Designer</p>
-            <p className="credits-company">Thank you to all our supporters ans sponsors</p>
+            <p className="credits-company">Nebula 3D Development</p>
+            <p className="credits-role">Lead Developer & Designer
+              Colin Nebula
+            </p>
+            <p className="credits-role">Music Composer 
+              TeknoAXE
+              Music by TeknoAXE is licensed under a Creative Commons Attribution 4.0 International License.
+              Music link: https://teknoaxe.com/License
+              Music was not modified in any way.
+            </p>
+
+            <p className="credits-company">Thank you to all our supporters and sponsors</p>
           </div>
 
           <div className="credits-section">

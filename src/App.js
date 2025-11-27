@@ -16,6 +16,7 @@ import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyT
 import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/powerUps';
 import mobileScreenManager from './utils/mobileScreenManager';
 import soundManager from './utils/sounds';
+import userPreferences from './utils/userPreferences';
 
 // Lazy load heavy components for code splitting
 const StoryMode = lazy(() => import('./components/StoryMode'));
@@ -236,21 +237,30 @@ function App() {
     return saved ? PlayerInventory.fromJSON(saved) : createDefaultInventory();
   });
   const [settings, setSettings] = useState(() => {
-    const saved = secureStorage.getItem('gameSettings');
+    // Load from userPreferences system first
+    const prefs = userPreferences.getUserPreferences();
     const accessibilitySettings = initializeAccessibility();
-    const baseSettings = saved ? {
-      ...saved,
-      ...accessibilitySettings
-    } : {
-      soundEnabled: true,
-      musicEnabled: true,
-      animationsEnabled: true,
-      timerEnabled: true,
-      keyboardEnabled: true,
-      colorblindMode: accessibilitySettings.colorblindMode,
-      highContrast: accessibilitySettings.highContrast,
-      textSize: accessibilitySettings.textSize,
-      showElementIcons: accessibilitySettings.showElementIcons
+    
+    // Merge preferences with accessibility settings
+    const baseSettings = {
+      soundEnabled: prefs.soundEnabled,
+      musicEnabled: prefs.musicEnabled,
+      animationsEnabled: prefs.animationsEnabled,
+      timerEnabled: prefs.timerEnabled,
+      keyboardEnabled: prefs.keyboardEnabled,
+      colorblindMode: prefs.colorblindMode || accessibilitySettings.colorblindMode,
+      highContrast: prefs.highContrast !== undefined ? prefs.highContrast : accessibilitySettings.highContrast,
+      textSize: prefs.textSize || accessibilitySettings.textSize,
+      showElementIcons: prefs.showElementIcons !== undefined ? prefs.showElementIcons : accessibilitySettings.showElementIcons,
+      difficulty: prefs.difficulty,
+      gameSpeed: prefs.gameSpeed,
+      autoSortHand: prefs.autoSortHand,
+      particleEffects: prefs.particleEffects,
+      screenShake: prefs.screenShake,
+      showStats: prefs.showStats,
+      showTooltips: prefs.showTooltips,
+      confirmActions: prefs.confirmActions,
+      autoEndTurn: prefs.autoEndTurn
     };
     
     // Remove strategicMode from initial settings - it should only be set when explicitly choosing Strategic Mode
@@ -457,8 +467,10 @@ function App() {
   }, []); // Empty deps - gameClient is stable from useState
 
 
-  // Save settings to localStorage
+  // Save settings to userPreferences whenever they change
   useEffect(() => {
+    userPreferences.updatePreferences(settings);
+    // Also update legacy gameSettings for backwards compatibility
     secureStorage.setItem('gameSettings', settings);
   }, [settings]);
 
@@ -1095,20 +1107,27 @@ function App() {
     setSelectedCharacter(character);
     setShowCharacterSelection(false);
     
-    // Save character to playerProfile
+    // Save character to both userPreferences and playerProfile
+    const avatarData = {
+      id: character.id,
+      name: character.name,
+      image: character.image,
+      icon: character.icon,
+      element: character.element
+    };
+    
+    // Update userPreferences system
+    userPreferences.updateAvatar(avatarData);
+    
+    // Update playerProfile for backwards compatibility
     const updatedProfile = {
       ...playerProfile,
-      selectedAvatar: {
-        id: character.id,
-        name: character.name,
-        image: character.image,
-        icon: character.icon,
-        element: character.element
-      }
+      selectedAvatar: avatarData,
+      avatar: character.icon || character.name
     };
     setPlayerProfile(updatedProfile);
     secureStorage.setItem('playerProfile', JSON.stringify(updatedProfile));
-    console.log('💾 Saved avatar to profile:', character.name);
+    console.log('💾 Saved avatar to profile and preferences:', character.name);
     
     // Check if coming from lobby or story mode
     if (currentOpponent) {
@@ -1268,9 +1287,28 @@ function App() {
                 isAI={false}
                 stats={playerProfile}
                 onUpdateProfile={(updates) => {
+                  // Update avatar in userPreferences if avatar changed
+                  if (updates.avatar) {
+                    userPreferences.updateAvatar({
+                      id: 'custom',
+                      name: 'Custom Avatar',
+                      icon: updates.avatar,
+                      element: 'NEUTRAL'
+                    });
+                    // Also update selectedCharacter to reflect on main menu
+                    setSelectedCharacter({
+                      id: 'custom',
+                      name: 'Custom Avatar',
+                      icon: updates.avatar,
+                      element: 'NEUTRAL'
+                    });
+                  }
+                  
                   const updatedProfile = { ...playerProfile, ...updates };
                   setPlayerProfile(updatedProfile);
                   updateProfile(updatedProfile);
+                  
+                  console.log('✅ Profile updated, avatar synced to main menu');
                 }}
               />
             </Suspense>
