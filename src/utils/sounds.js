@@ -7,6 +7,9 @@ class SoundManager {
     this.enabled = true;
     this.musicEnabled = true;
     this.audioUnlocked = false; // Track if mobile audio context is unlocked
+    this.audioContext = null; // Persistent AudioContext for iOS compatibility
+    this.audioContextCreationAttempts = 0;
+    this.maxAudioContextAttempts = 3;
     // Load saved volumes from localStorage or use defaults
     const savedVolume = localStorage.getItem('soundVolume');
     const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -89,10 +92,72 @@ class SoundManager {
       technology: this.createTechnologySound,
       meteor: this.createMeteorSound
     };
+    
+    // Initialize AudioContext for iOS compatibility
+    this.initAudioContext();
+  }
+  
+  // Get or create persistent AudioContext (iOS compatibility)
+  getAudioContext() {
+    if (!this.audioContext || this.audioContext.state === 'closed') {
+      if (this.audioContextCreationAttempts >= this.maxAudioContextAttempts) {
+        console.warn('⚠️ Max AudioContext creation attempts reached');
+        return null;
+      }
+      
+      try {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioContextCreationAttempts++;
+        console.log('🔊 AudioContext created, state:', this.audioContext.state);
+      } catch (error) {
+        console.error('❌ Failed to create AudioContext:', error);
+        return null;
+      }
+    }
+    
+    return this.audioContext;
+  }
+  
+  // Initialize and unlock AudioContext for iOS
+  async initAudioContext() {
+    const context = this.getAudioContext();
+    if (!context) return;
+    
+    // Try to resume if suspended (iOS requirement)
+    if (context.state === 'suspended') {
+      console.log('⏸️ AudioContext suspended, waiting for user interaction');
+      // Will be resumed on first user interaction
+    } else if (context.state === 'running') {
+      console.log('✅ AudioContext running');
+      this.audioUnlocked = true;
+    }
+  }
+  
+  // Resume AudioContext if suspended (iOS compatibility)
+  async resumeAudioContext() {
+    const context = this.getAudioContext();
+    if (!context) return false;
+    
+    if (context.state === 'suspended') {
+      try {
+        await context.resume();
+        console.log('✅ AudioContext resumed');
+        this.audioUnlocked = true;
+        return true;
+      } catch (error) {
+        console.error('❌ Failed to resume AudioContext:', error);
+        return false;
+      }
+    }
+    
+    return context.state === 'running';
   }
 
   // Create element-specific sounds using Web Audio API
-  createFireSound(audioContext) {
+  createFireSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.3;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -101,7 +166,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.3 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -111,7 +176,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createIceSound(audioContext) {
+  createIceSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.4;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -120,7 +188,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.2 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -130,7 +198,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createWaterSound(audioContext) {
+  createWaterSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.5;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -140,7 +211,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(350, audioContext.currentTime + 0.1);
     oscillator.frequency.setValueAtTime(380, audioContext.currentTime + 0.2);
     
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.25 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -150,7 +221,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createElectricitySound(audioContext) {
+  createElectricitySound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.2;
     const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -167,7 +241,7 @@ class SoundManager {
     filter.frequency.value = 2000;
     
     const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.3 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     noise.connect(filter);
@@ -178,7 +252,10 @@ class SoundManager {
     noise.stop(audioContext.currentTime + duration);
   }
 
-  createEarthSound(audioContext) {
+  createEarthSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.4;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -187,7 +264,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.4 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -197,7 +274,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createPowerSound(audioContext) {
+  createPowerSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.3;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -206,7 +286,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.35, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.35 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -216,7 +296,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createLightSound(audioContext) {
+  createLightSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.35;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -225,7 +308,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(1600, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.25 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -235,7 +318,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createDarkSound(audioContext) {
+  createDarkSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.5;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -244,7 +330,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.3 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -254,7 +340,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createNeutralSound(audioContext) {
+  createNeutralSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.3;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -262,7 +351,7 @@ class SoundManager {
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
     
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.2 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -272,7 +361,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createCardFlipSound(audioContext) {
+  createCardFlipSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.15;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -281,7 +373,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(500, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.15 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -291,7 +383,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createVictorySound(audioContext) {
+  createVictorySound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const notes = [262, 330, 392, 523]; // C, E, G, C (major chord)
     notes.forEach((freq, i) => {
       const oscillator = audioContext.createOscillator();
@@ -301,7 +396,7 @@ class SoundManager {
       oscillator.frequency.value = freq;
       
       const startTime = audioContext.currentTime + (i * 0.15);
-      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.setValueAtTime(0.3 * this.volume, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
       
       oscillator.connect(gainNode);
@@ -312,7 +407,10 @@ class SoundManager {
     });
   }
 
-  createDefeatSound(audioContext) {
+  createDefeatSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const notes = [392, 349, 330, 294]; // Descending sad notes
     notes.forEach((freq, i) => {
       const oscillator = audioContext.createOscillator();
@@ -322,7 +420,7 @@ class SoundManager {
       oscillator.frequency.value = freq;
       
       const startTime = audioContext.currentTime + (i * 0.2);
-      gainNode.gain.setValueAtTime(0.25, startTime);
+      gainNode.gain.setValueAtTime(0.25 * this.volume, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
       
       oscillator.connect(gainNode);
@@ -333,7 +431,10 @@ class SoundManager {
     });
   }
 
-  createYourTurnSound(audioContext) {
+  createYourTurnSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -341,7 +442,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
     oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
     
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.3 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
     
     oscillator.connect(gainNode);
@@ -351,7 +452,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + 0.3);
   }
 
-  createOpponentTurnSound(audioContext) {
+  createOpponentTurnSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -359,7 +463,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
     oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
     
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.25 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
     
     oscillator.connect(gainNode);
@@ -369,7 +473,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + 0.3);
   }
 
-  createPowerPlaySound(audioContext) {
+  createPowerPlaySound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.5;
     const oscillator1 = audioContext.createOscillator();
     const oscillator2 = audioContext.createOscillator();
@@ -383,7 +490,7 @@ class SoundManager {
     oscillator2.frequency.setValueAtTime(200, audioContext.currentTime);
     oscillator2.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.4 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator1.connect(gainNode);
@@ -396,7 +503,10 @@ class SoundManager {
     oscillator2.stop(audioContext.currentTime + duration);
   }
 
-  createTechnologySound(audioContext) {
+  createTechnologySound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.35;
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -406,7 +516,7 @@ class SoundManager {
     oscillator.frequency.setValueAtTime(1200, audioContext.currentTime + 0.1);
     oscillator.frequency.setValueAtTime(1100, audioContext.currentTime + 0.2);
     
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.25 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator.connect(gainNode);
@@ -416,7 +526,10 @@ class SoundManager {
     oscillator.stop(audioContext.currentTime + duration);
   }
 
-  createMeteorSound(audioContext) {
+  createMeteorSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     const duration = 0.6;
     const oscillator1 = audioContext.createOscillator();
     const oscillator2 = audioContext.createOscillator();
@@ -430,7 +543,7 @@ class SoundManager {
     oscillator2.frequency.setValueAtTime(250, audioContext.currentTime);
     oscillator2.frequency.exponentialRampToValueAtTime(25, audioContext.currentTime + duration);
     
-    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.5 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     oscillator1.connect(gainNode);
@@ -443,7 +556,10 @@ class SoundManager {
     oscillator2.stop(audioContext.currentTime + duration);
   }
 
-  createComboSound(audioContext, comboCount = 1) {
+  createComboSound(comboCount = 1) {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     // Create ascending notes for combo chain
     const baseFreq = 400;
     const duration = 0.2;
@@ -457,7 +573,7 @@ class SoundManager {
       oscillator.frequency.value = freq;
       
       const startTime = audioContext.currentTime + (i * 0.1);
-      gainNode.gain.setValueAtTime(0.25, startTime);
+      gainNode.gain.setValueAtTime(0.25 * this.volume, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
       
       oscillator.connect(gainNode);
@@ -468,7 +584,10 @@ class SoundManager {
     }
   }
 
-  createCrowdCheerSound(audioContext) {
+  createCrowdCheerSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     // Simulate crowd cheer with filtered noise
     const duration = 1.5;
     const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
@@ -488,8 +607,8 @@ class SoundManager {
     
     const gainNode = audioContext.createGain();
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.2);
-    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + 1.0);
+    gainNode.gain.linearRampToValueAtTime(0.15 * this.volume, audioContext.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.15 * this.volume, audioContext.currentTime + 1.0);
     gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     noise.connect(filter);
@@ -500,7 +619,10 @@ class SoundManager {
     noise.stop(audioContext.currentTime + duration);
   }
 
-  createCrowdGaspSound(audioContext) {
+  createCrowdGaspSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
     // Simulate crowd gasp with quick filtered noise burst
     const duration = 0.4;
     const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
@@ -518,7 +640,7 @@ class SoundManager {
     filter.frequency.value = 1000;
     
     const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.2 * this.volume, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     noise.connect(filter);
@@ -530,7 +652,7 @@ class SoundManager {
   }
 
   // Play a sound effect
-  playSound(soundName, volumeMultiplier = 1) {
+  async playSound(soundName, volumeMultiplier = 1) {
     if (!this.enabled) {
       console.log('🔇 Sound disabled:', soundName);
       return;
@@ -586,16 +708,21 @@ class SoundManager {
     // Fall back to Web Audio API synthesized sound
     if (this.sounds[soundName]) {
       try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        // Resume AudioContext if suspended (iOS requirement)
-        if (audioContext.state === 'suspended') {
-          audioContext.resume().then(() => {
-            this.sounds[soundName](audioContext);
-            this.audioUnlocked = true;
-          });
-        } else {
-          this.sounds[soundName](audioContext);
+        // Try to resume AudioContext for iOS
+        await this.resumeAudioContext();
+        
+        const context = this.getAudioContext();
+        if (!context) {
+          console.warn('⚠️ AudioContext not available');
+          return;
+        }
+        
+        if (context.state === 'running') {
+          this.sounds[soundName].call(this);
           this.audioUnlocked = true;
+        } else {
+          console.log('⏸️ AudioContext not running, state:', context.state);
+          this.setupMobileAudioUnlock();
         }
       } catch (error) {
         console.error('Error playing sound:', error);
@@ -626,33 +753,28 @@ class SoundManager {
   }
 
   // Play combo chain sound
-  playComboChain(comboCount) {
+  async playComboChain(comboCount) {
     if (!this.enabled || comboCount < 2) return;
     
     this.comboChainCount = comboCount;
     
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      // Resume AudioContext if suspended (iOS requirement)
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          this.createComboSound(audioContext, comboCount);
-          this.audioUnlocked = true;
-        });
-      } else {
-        this.createComboSound(audioContext, comboCount);
-        this.audioUnlocked = true;
+      // Resume AudioContext for iOS
+      await this.resumeAudioContext();
+      
+      const audioContext = this.getAudioContext();
+      if (!audioContext || audioContext.state !== 'running') {
+        console.warn('⚠️ AudioContext not running for combo sound');
+        return;
       }
+      
+      this.createComboSound(comboCount);
+      this.audioUnlocked = true;
       
       // Play crowd cheer for combos of 3+
       if (comboCount >= 3) {
         setTimeout(() => {
-          const cheerContext = new (window.AudioContext || window.webkitAudioContext)();
-          if (cheerContext.state === 'suspended') {
-            cheerContext.resume().then(() => this.createCrowdCheerSound(cheerContext));
-          } else {
-            this.createCrowdCheerSound(cheerContext);
-          }
+          this.createCrowdCheerSound();
         }, 200);
       }
     } catch (error) {
@@ -696,7 +818,7 @@ class SoundManager {
   }
 
   // Play crowd reaction
-  playCrowdReaction(reactionType = 'cheer') {
+  async playCrowdReaction(reactionType = 'cheer') {
     if (!this.enabled) return;
     
     if (reactionType === 'cheer') {
@@ -705,18 +827,18 @@ class SoundManager {
     }
     
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       if (reactionType === 'gasp') {
-        // Resume AudioContext if suspended (iOS requirement)
-        if (audioContext.state === 'suspended') {
-          audioContext.resume().then(() => {
-            this.createCrowdGaspSound(audioContext);
-            this.audioUnlocked = true;
-          });
-        } else {
-          this.createCrowdGaspSound(audioContext);
-          this.audioUnlocked = true;
+        // Resume AudioContext for iOS
+        await this.resumeAudioContext();
+        
+        const audioContext = this.getAudioContext();
+        if (!audioContext || audioContext.state !== 'running') {
+          console.warn('⚠️ AudioContext not running for crowd gasp');
+          return;
         }
+        
+        this.createCrowdGaspSound();
+        this.audioUnlocked = true;
       }
     } catch (error) {
       console.error('Error playing crowd reaction:', error);
@@ -796,19 +918,26 @@ class SoundManager {
   setupMobileAudioUnlock() {
     if (this.audioUnlocked) return;
     
-    const unlockAudio = () => {
-      if (this.backgroundMusic && this.backgroundMusic.paused && this.musicEnabled) {
-        this.backgroundMusic.play()
-          .then(() => {
-            console.log('🎵 Mobile audio unlocked and playing');
-            this.audioUnlocked = true;
-            // Remove listeners after successful unlock
-            document.removeEventListener('touchstart', unlockAudio);
-            document.removeEventListener('touchend', unlockAudio);
-            document.removeEventListener('click', unlockAudio);
-            document.removeEventListener('keydown', unlockAudio);
-          })
-          .catch(err => console.log('Still waiting for audio unlock:', err.message));
+    const unlockAudio = async () => {
+      try {
+        // Resume AudioContext for Web Audio API sounds
+        await this.resumeAudioContext();
+        
+        // Try to play background music if available
+        if (this.backgroundMusic && this.backgroundMusic.paused && this.musicEnabled) {
+          await this.backgroundMusic.play();
+          console.log('🎵 Mobile audio unlocked and playing');
+        }
+        
+        this.audioUnlocked = true;
+        
+        // Remove listeners after successful unlock
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('touchend', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+      } catch (err) {
+        console.log('Still waiting for audio unlock:', err.message);
       }
     };
     
@@ -1008,24 +1137,31 @@ class SoundManager {
   }
   
   // Try to start music (call this after any user interaction)
-  tryStartMusic() {
-    if (this.musicEnabled && this.backgroundMusic && this.backgroundMusic.paused) {
-      const playPromise = this.backgroundMusic.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            console.log('🎵 Music resumed successfully');
-            this.audioUnlocked = true;
-          })
-          .catch(error => {
-            console.log('Could not start music yet:', error.message);
-            // Set up mobile audio unlock if not already done
-            this.setupMobileAudioUnlock();
-          });
+  async tryStartMusic() {
+    try {
+      // Resume AudioContext for Web Audio API sounds
+      await this.resumeAudioContext();
+      
+      if (this.musicEnabled && this.backgroundMusic && this.backgroundMusic.paused) {
+        const playPromise = this.backgroundMusic.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log('🎵 Music resumed successfully');
+              this.audioUnlocked = true;
+            })
+            .catch(error => {
+              console.log('Could not start music yet:', error.message);
+              // Set up mobile audio unlock if not already done
+              this.setupMobileAudioUnlock();
+            });
+        }
+      } else if (this.musicEnabled && !this.backgroundMusic) {
+        // No music loaded yet, start it
+        this.playMusic('calm');
       }
-    } else if (this.musicEnabled && !this.backgroundMusic) {
-      // No music loaded yet, start it
-      this.playMusic('calm');
+    } catch (error) {
+      console.error('Error trying to start music:', error);
     }
   }
 }

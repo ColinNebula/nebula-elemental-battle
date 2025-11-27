@@ -78,15 +78,8 @@ function App() {
           console.log('🔊 Audio context unlocked for mobile/iOS');
           audioUnlockedRef.current = true;
           
-          // Resume any AudioContext (for Web Audio API sounds)
-          if (window.AudioContext || window.webkitAudioContext) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioContext.state === 'suspended') {
-              await audioContext.resume();
-              console.log('🔊 AudioContext resumed');
-            }
-            audioContext.close();
-          }
+          // Resume soundManager's persistent AudioContext (for Web Audio API sounds)
+          await soundManager.resumeAudioContext();
           
           // Now try to play any pending music
           if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
@@ -1456,13 +1449,8 @@ function App() {
                     silentAudio.setAttribute('playsinline', 'true');
                     await silentAudio.play();
                     
-                    if (window.AudioContext || window.webkitAudioContext) {
-                      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                      if (audioContext.state === 'suspended') {
-                        await audioContext.resume();
-                      }
-                      audioContext.close();
-                    }
+                    // Resume the soundManager's persistent AudioContext
+                    await soundManager.resumeAudioContext();
                     
                     audioUnlockedRef.current = true;
                     soundManager.audioUnlocked = true;
