@@ -922,42 +922,52 @@ function App() {
       const mockRoom = gameClient.mockState.rooms[roomId];
       const mockPlayer = mockRoom.players.find(p => p.id === playerId);
       if (mockPlayer) {
-        // Remove the two fused cards (remove higher index first to avoid index shift)
+        // Remove the two fused cards by creating new array without mutating
         const indices = [cardIndex1, cardIndex2].sort((a, b) => b - a);
-        indices.forEach(index => {
-          mockPlayer.hand.splice(index, 1);
-        });
+        const newHand = mockPlayer.hand.filter((_, idx) => !indices.includes(idx));
         
         // Add the fused card to hand
-        mockPlayer.hand.push(fusedCard);
+        newHand.push(fusedCard);
+        mockPlayer.hand = newHand;
         
         // Update card count
         mockPlayer.cardCount = mockPlayer.hand.length + (mockPlayer.deck?.length || 0);
         
-        console.log('✅ Mock state updated with fusion (synchronous)');
+        console.log('✅ Mock state updated with fusion (synchronous)', { handSize: mockPlayer.hand.length });
       }
     }
     
     // THEN: Update React state to reflect changes in UI
     setGameState(prevState => {
-      const newState = { ...prevState };
-      const currentPlayer = newState.players.find(p => p.id === playerId);
+      if (!prevState) return prevState;
       
-      if (currentPlayer) {
-        // Remove the two fused cards (remove higher index first to avoid index shift)
-        const indices = [cardIndex1, cardIndex2].sort((a, b) => b - a);
-        indices.forEach(index => {
-          currentPlayer.hand.splice(index, 1);
-        });
-        
-        // Add the fused card to hand
-        currentPlayer.hand.push(fusedCard);
-        
-        // Update card count
-        currentPlayer.cardCount = currentPlayer.hand.length + (currentPlayer.deck?.length || 0);
-        
-        console.log('✨ Updated hand after fusion:', currentPlayer.hand);
-      }
+      // Create deep copy to avoid mutation
+      const newState = {
+        ...prevState,
+        players: prevState.players.map(player => {
+          if (player.id === playerId) {
+            // Remove the two fused cards by creating new array
+            const indices = [cardIndex1, cardIndex2].sort((a, b) => b - a);
+            const newHand = player.hand.filter((_, idx) => !indices.includes(idx));
+            
+            // Add the fused card to the new hand
+            newHand.push(fusedCard);
+            
+            console.log('✨ Updated hand after fusion:', {
+              oldHandSize: player.hand.length,
+              newHandSize: newHand.length,
+              fusedCard: fusedCard.name
+            });
+            
+            return {
+              ...player,
+              hand: newHand,
+              cardCount: newHand.length + (player.deck?.length || 0)
+            };
+          }
+          return player;
+        })
+      };
       
       return newState;
     });

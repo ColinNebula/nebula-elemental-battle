@@ -668,3 +668,181 @@ export const createEnhancedVictoryPose = (winner, container) => {
 
   return pose;
 };
+
+// Elemental Merger Animation - Cards fly together and collide with energy burst
+export const createElementalMergerAnimation = (container, card1Element, card2Element, fusedCardElement) => {
+  if (!container) return;
+
+  // Element icons and colors
+  const elementIcons = {
+    FIRE: '🔥',
+    ICE: '❄️',
+    WATER: '💧',
+    ELECTRICITY: '⚡',
+    EARTH: '🌍',
+    POWER: '💪',
+    LIGHT: '✨',
+    DARK: '🌑',
+    NEUTRAL: '⭐',
+    TECHNOLOGY: '🤖',
+    METEOR: '☄️'
+  };
+
+  const elementColors = {
+    FIRE: '#ff4500',
+    ICE: '#00bfff',
+    WATER: '#1e90ff',
+    ELECTRICITY: '#ffd700',
+    EARTH: '#8b4513',
+    POWER: '#ff1493',
+    LIGHT: '#ffeb3b',
+    DARK: '#4b0082',
+    NEUTRAL: '#808080',
+    TECHNOLOGY: '#00ff00',
+    METEOR: '#ff6600'
+  };
+
+  const centerX = container.offsetWidth / 2;
+  const centerY = container.offsetHeight / 2;
+
+  // Create two card representations flying in from left and right
+  const card1 = document.createElement('div');
+  card1.className = 'merger-card merger-card-left';
+  card1.textContent = elementIcons[card1Element] || '🎴';
+  card1.style.cssText = `
+    position: absolute;
+    left: 10%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    z-index: 1000;
+    animation: mergerFlyIn 0.8s ease-out forwards;
+  `;
+  container.appendChild(card1);
+  activeAnimations.add(card1);
+
+  const card2 = document.createElement('div');
+  card2.className = 'merger-card merger-card-right';
+  card2.textContent = elementIcons[card2Element] || '🎴';
+  card2.style.cssText = `
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translate(50%, -50%);
+    font-size: 48px;
+    z-index: 1000;
+    animation: mergerFlyIn 0.8s ease-out forwards;
+  `;
+  container.appendChild(card2);
+  activeAnimations.add(card2);
+
+  // After cards meet, create collision burst
+  setTimeout(() => {
+    // Remove the flying cards
+    card1.remove();
+    card2.remove();
+
+    // Create energy burst with both element colors
+    const burstCount = isMobile() ? 20 : 40;
+    const color1 = elementColors[card1Element] || '#ffffff';
+    const color2 = elementColors[card2Element] || '#ffffff';
+    
+    for (let i = 0; i < burstCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'merger-burst-particle';
+      const useColor1 = i % 2 === 0;
+      const color = useColor1 ? color1 : color2;
+      const icon = useColor1 ? elementIcons[card1Element] : elementIcons[card2Element];
+      
+      particle.textContent = icon || '✨';
+      particle.style.cssText = `
+        position: absolute;
+        left: ${centerX}px;
+        top: ${centerY}px;
+        font-size: ${isMobile() ? '18px' : '24px'};
+        color: ${color};
+        filter: drop-shadow(0 0 4px ${color});
+        pointer-events: none;
+        z-index: 1001;
+      `;
+      
+      const angle = (i / burstCount) * Math.PI * 2;
+      const distance = isMobile() ? 80 : 150;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      
+      particle.style.setProperty('--tx', `${tx}px`);
+      particle.style.setProperty('--ty', `${ty}px`);
+      particle.style.animation = 'mergerBurst 1s ease-out forwards';
+      
+      container.appendChild(particle);
+      activeAnimations.add(particle);
+      setTimeout(() => particle.remove(), 1000);
+    }
+
+    // Create collision flash
+    const flash = document.createElement('div');
+    flash.className = 'merger-collision-flash';
+    flash.style.cssText = `
+      position: absolute;
+      left: ${centerX}px;
+      top: ${centerY}px;
+      width: ${isMobile() ? '100px' : '200px'};
+      height: ${isMobile() ? '100px' : '200px'};
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, ${color1} 0%, ${color2} 50%, transparent 70%);
+      border-radius: 50%;
+      z-index: 999;
+      animation: mergerFlash 0.5s ease-out forwards;
+    `;
+    container.appendChild(flash);
+    activeAnimations.add(flash);
+    setTimeout(() => flash.remove(), 500);
+
+    // After burst, show the fused card forming
+    setTimeout(() => {
+      const fusedIcon = document.createElement('div');
+      fusedIcon.className = 'merger-fused-icon';
+      fusedIcon.textContent = elementIcons[fusedCardElement] || '⭐';
+      fusedIcon.style.cssText = `
+        position: absolute;
+        left: ${centerX}px;
+        top: ${centerY}px;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: ${isMobile() ? '64px' : '96px'};
+        color: ${elementColors[fusedCardElement] || '#ffd700'};
+        filter: drop-shadow(0 0 20px ${elementColors[fusedCardElement] || '#ffd700'});
+        z-index: 1002;
+        animation: mergerFormCard 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+      `;
+      container.appendChild(fusedIcon);
+      activeAnimations.add(fusedIcon);
+
+      // Add glowing particles around fused card
+      for (let i = 0; i < (isMobile() ? 8 : 16); i++) {
+        const glow = document.createElement('div');
+        glow.textContent = '✨';
+        glow.style.cssText = `
+          position: absolute;
+          left: ${centerX}px;
+          top: ${centerY}px;
+          font-size: ${isMobile() ? '16px' : '20px'};
+          color: ${elementColors[fusedCardElement] || '#ffd700'};
+          animation: mergerGlow 2s ease-in-out infinite;
+          animation-delay: ${i * 0.1}s;
+          z-index: 1001;
+        `;
+        
+        const orbitAngle = (i / (isMobile() ? 8 : 16)) * Math.PI * 2;
+        glow.style.setProperty('--orbit-angle', `${orbitAngle}rad`);
+        
+        container.appendChild(glow);
+        activeAnimations.add(glow);
+        setTimeout(() => glow.remove(), 2000);
+      }
+
+      // Remove fused icon after animation
+      setTimeout(() => fusedIcon.remove(), 2000);
+    }, 300);
+  }, 800);
+};

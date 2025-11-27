@@ -1595,139 +1595,142 @@ const GameBoard = ({
     setTimeout(() => element.classList.remove('screen-shake'), 500);
   };
 
-  const handleFusionAttempt = () => {
-    if (selectedFusionCards.length === 2 && currentPlayer) {
-      const card1 = currentPlayer.hand[selectedFusionCards[0]];
-      const card2 = currentPlayer.hand[selectedFusionCards[1]];
-      
-      console.log('🔮 Attempting fusion:', {
-        card1: { element: card1?.element, strength: card1?.strength },
-        card2: { element: card2?.element, strength: card2?.strength }
+  const handleFusionAttempt = useCallback(() => {
+    if (selectedFusionCards.length !== 2 || !currentPlayer) {
+      console.warn('⚠️ Cannot fuse: Invalid state', {
+        selectedCount: selectedFusionCards.length,
+        hasPlayer: !!currentPlayer
       });
-      
-      const fusionResult = advancedMechanics.fuseCards(card1, card2);
-      console.log('🔮 Fusion result:', fusionResult);
-      
-      if (fusionResult.success) {
-        // Show enhanced fusion animation
-        if (gameBoardRef.current) {
-          // Create particle burst effect
-          for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'fusion-particle';
-            const angle = (Math.PI * 2 * i) / 30;
-            const distance = 150 + Math.random() * 100;
-            particle.style.setProperty('--angle', `${angle}rad`);
-            particle.style.setProperty('--distance', `${distance}px`);
-            particle.style.left = '50%';
-            particle.style.top = '50%';
-            gameBoardRef.current.appendChild(particle);
-            setTimeout(() => particle.remove(), 1500);
-          }
-          
-          // Create fusion circle effect
-          const fusionCircle = document.createElement('div');
-          fusionCircle.className = 'fusion-circle-effect';
-          gameBoardRef.current.appendChild(fusionCircle);
-          setTimeout(() => fusionCircle.remove(), 2000);
-          
-          // Create main fusion banner
-          const fusionDiv = document.createElement('div');
-          fusionDiv.className = 'fusion-complete-banner';
-          fusionDiv.innerHTML = `
-            <div class="fusion-glow-ring"></div>
-            <div class="fusion-sparkle-container">
-              <span class="fusion-sparkle" style="--delay: 0s;">✨</span>
-              <span class="fusion-sparkle" style="--delay: 0.2s;">✨</span>
-              <span class="fusion-sparkle" style="--delay: 0.4s;">✨</span>
-            </div>
-            <div class="fusion-title">🔥 FUSION SUCCESS! 🔥</div>
-            <div class="fusion-card-name">${fusionResult.fusedCard.name}</div>
-            <div class="fusion-elements">${fusionResult.fusionName}</div>
-            <div class="fusion-stats">
-              <span class="fusion-stat">⚡ Strength: ${fusionResult.fusedCard.strength}</span>
-              ${fusionResult.fusedCard.element ? `<span class="fusion-stat">🌟 ${fusionResult.fusedCard.element}</span>` : ''}
-            </div>
-          `;
-          gameBoardRef.current.appendChild(fusionDiv);
-          setTimeout(() => fusionDiv.remove(), 3500);
-          
-          // Trigger screen shake
-          triggerScreenShake(gameBoardRef.current);
-        }
+      return;
+    }
+    
+    const card1 = currentPlayer.hand[selectedFusionCards[0]];
+    const card2 = currentPlayer.hand[selectedFusionCards[1]];
+    
+    console.log('🔮 Attempting fusion on mobile:', {
+      card1: { element: card1?.element, strength: card1?.strength },
+      card2: { element: card2?.element, strength: card2?.strength },
+      handSizeBefore: currentPlayer.hand.length,
+      isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    });
+    
+    const fusionResult = advancedMechanics.fuseCards(card1, card2);
+    console.log('🔮 Fusion result:', fusionResult);
+    
+    if (fusionResult.success) {
+      // Show enhanced Elemental Merger animation
+      if (gameBoardRef.current) {
+        // Import and trigger the new animation
+        import('../utils/animations').then(({ createElementalMergerAnimation }) => {
+          createElementalMergerAnimation(
+            gameBoardRef.current,
+            card1.element,
+            card2.element,
+            fusionResult.fusedCard.element
+          );
+        }).catch(err => console.error('Failed to load animation:', err));
         
-        console.log('✨ Fusion successful:', fusionResult.fusionName, fusionResult.fusedCard);
+        // Create main fusion banner
+        const fusionDiv = document.createElement('div');
+        fusionDiv.className = 'fusion-complete-banner';
+        fusionDiv.innerHTML = `
+          <div class="fusion-glow-ring"></div>
+          <div class="fusion-sparkle-container">
+            <span class="fusion-sparkle" style="--delay: 0s;">✨</span>
+            <span class="fusion-sparkle" style="--delay: 0.2s;">✨</span>
+            <span class="fusion-sparkle" style="--delay: 0.4s;">✨</span>
+          </div>
+          <div class="fusion-title">🔥 FUSION SUCCESS! 🔥</div>
+          <div class="fusion-card-name">${fusionResult.fusedCard.name}</div>
+          <div class="fusion-elements">${fusionResult.fusionName}</div>
+          <div class="fusion-stats">
+            <span class="fusion-stat">⚡ Strength: ${fusionResult.fusedCard.strength}</span>
+            ${fusionResult.fusedCard.element ? `<span class="fusion-stat">🌟 ${fusionResult.fusedCard.element}</span>` : ''}
+          </div>
+        `;
+        gameBoardRef.current.appendChild(fusionDiv);
+        setTimeout(() => fusionDiv.remove(), 3500);
         
-        // Notify parent to update game state with fused card
-        if (onFuseCards) {
-          onFuseCards(selectedFusionCards[0], selectedFusionCards[1], fusionResult.fusedCard);
-        }
-        
-        // Close fusion UI but DON'T end turn - player can continue playing
-        setShowFusionUI(false);
-        setSelectedFusionCards([]);
-        
-        // Show a message that fusion is complete and player can continue
-        if (gameBoardRef.current) {
-          const continueDiv = document.createElement('div');
-          continueDiv.className = 'fusion-continue-message';
-          continueDiv.innerHTML = `
-            <div style="font-size: 20px; color: #4caf50;">✅ Fusion Complete!</div>
-            <div style="font-size: 16px; margin-top: 5px;">Select a card to play</div>
-          `;
-          continueDiv.style.cssText = `
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            z-index: 9999;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            animation: slideInUp 0.3s ease-out;
-          `;
-          gameBoardRef.current.appendChild(continueDiv);
-          setTimeout(() => continueDiv.remove(), 2000);
-        }
-        
-        return; // Exit early to prevent duplicate UI closing
-      } else {
-        // Show detailed error message
-        console.log('❌ Fusion failed:', fusionResult.message);
-        if (gameBoardRef.current) {
-          const errorDiv = document.createElement('div');
-          errorDiv.className = 'fusion-error-banner';
-          errorDiv.innerHTML = `
-            <div style="font-size: 24px; color: #f44336;">❌ Fusion Failed</div>
-            <div style="font-size: 18px; margin-top: 10px;">${fusionResult.message || 'Cards cannot be fused'}</div>
-            <div style="font-size: 14px; margin-top: 5px; opacity: 0.8;">Try different element combinations</div>
-          `;
-          errorDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(244, 67, 54, 0.95);
-            color: white;
-            padding: 30px 50px;
-            border-radius: 15px;
-            z-index: 10000;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-          `;
-          gameBoardRef.current.appendChild(errorDiv);
-          setTimeout(() => errorDiv.remove(), 3000);
-        }
+        // Trigger screen shake
+        triggerScreenShake(gameBoardRef.current);
       }
       
-      // Only close UI if we didn't already return after success
+      console.log('✨ Fusion successful:', fusionResult.fusionName, fusionResult.fusedCard);
+      
+      // Capture the selected cards before clearing state
+      const cardIndex1 = selectedFusionCards[0];
+      const cardIndex2 = selectedFusionCards[1];
+      
+      // Notify parent to update game state with fused card FIRST
+      if (onFuseCards) {
+        onFuseCards(cardIndex1, cardIndex2, fusionResult.fusedCard);
+        console.log('✅ Fusion state update triggered');
+      }
+      
+      // Close fusion UI after parent state is updated
       setShowFusionUI(false);
       setSelectedFusionCards([]);
+      
+      // Show a message that fusion is complete and player can continue
+      if (gameBoardRef.current) {
+        const continueDiv = document.createElement('div');
+        continueDiv.className = 'fusion-continue-message';
+        continueDiv.innerHTML = `
+          <div style="font-size: 20px; color: #4caf50;">✅ Fusion Complete!</div>
+          <div style="font-size: 16px; margin-top: 5px;">Select a card to play</div>
+        `;
+        continueDiv.style.cssText = `
+          position: fixed;
+          bottom: 120px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(76, 175, 80, 0.9);
+          color: white;
+          padding: 15px 30px;
+          border-radius: 10px;
+          z-index: 9999;
+          text-align: center;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+          animation: slideInUp 0.3s ease-out;
+        `;
+        gameBoardRef.current.appendChild(continueDiv);
+        setTimeout(() => continueDiv.remove(), 2500);
+      }
+      
+      return; // Exit early to prevent duplicate UI closing
+    } else {
+      // Show detailed error message
+      console.log('❌ Fusion failed:', fusionResult.message);
+      if (gameBoardRef.current) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fusion-error-banner';
+        errorDiv.innerHTML = `
+          <div style="font-size: 24px; color: #f44336;">❌ Fusion Failed</div>
+          <div style="font-size: 18px; margin-top: 10px;">${fusionResult.message || 'Cards cannot be fused'}</div>
+          <div style="font-size: 14px; margin-top: 5px; opacity: 0.8;">Try different element combinations</div>
+        `;
+        errorDiv.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(244, 67, 54, 0.95);
+          color: white;
+          padding: 30px 50px;
+          border-radius: 15px;
+          z-index: 10000;
+          text-align: center;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        `;
+        gameBoardRef.current.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 3000);
+      }
     }
-  };
+    
+    // Only close UI if we didn't already return after success
+    setShowFusionUI(false);
+    setSelectedFusionCards([]);
+  }, [selectedFusionCards, currentPlayer, onFuseCards, gameBoardRef]);
 
   const handleTrapPlacement = (position) => {
     if (selectedTrapCard !== null && currentPlayer) {
@@ -1999,23 +2002,22 @@ const GameBoard = ({
         </div>
       )}
 
-      {/* Turn Announcement Overlay */}
-      {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && (
+      {/* Turn Announcement Overlay - Opponent Turn at Top */}
+      {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && !isMyTurn && (
         <div className="turn-announcement">
-          {isMyTurn ? (
-            <>
-              <h1 className="turn-text your-turn-text">YOUR TURN!</h1>
-            </>
-          ) : (
-            <>
-              <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
-              <div className="ai-thinking">
-                {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
-                  ? '🚫 AI has no cards - Skipping turn...'
-                  : 'AI is thinking...'}
-              </div>
-            </>
-          )}
+          <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
+          <div className="ai-thinking">
+            {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
+              ? '🚫 AI has no cards - Skipping turn...'
+              : 'AI is thinking...'}
+          </div>
+        </div>
+      )}
+
+      {/* Your Turn Announcement - Above Player Hand */}
+      {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && isMyTurn && (
+        <div className="your-turn-announcement">
+          <h1 className="turn-text your-turn-text">YOUR TURN!</h1>
         </div>
       )}
 
@@ -2141,20 +2143,37 @@ const GameBoard = ({
             <div className="fusion-actions">
               <button 
                 className="fusion-confirm-btn"
-                onClick={handleFusionAttempt}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleFusionAttempt();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleFusionAttempt();
+                }}
                 disabled={selectedFusionCards.length !== 2}
                 title="Fuse Cards"
               >
-                🔮
+                🔮 Fuse Cards
               </button>
               <button 
                 className="fusion-cancel-btn"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowFusionUI(false);
+                  setSelectedFusionCards([]);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowFusionUI(false);
                   setSelectedFusionCards([]);
                 }}
               >
-                Cancel
+                ✕ Cancel
               </button>
             </div>
           </div>
@@ -2741,7 +2760,7 @@ const GameBoard = ({
                 })
               ) : (
                 <div className="empty-card-slot">
-                  {humanPlayer?.active ? 'Choose your card...' : 'No cards played yet'}
+                  Waiting for cards...
                 </div>
               )}
             </div>
@@ -2768,7 +2787,7 @@ const GameBoard = ({
                 }}
                 title="Fuse two cards together"
               >
-                🔮 Fusion
+                🔮
               </button>
               <button 
                 className={`trap-btn ${selectedTrapCard !== null ? 'selected' : ''}`}
@@ -2806,21 +2825,20 @@ const GameBoard = ({
                 }}
                 title={selectedTrapCard !== null ? "Choose trap position" : "Select a card first, then click to set as trap"}
               >
-                🕸️{selectedTrapCard !== null ? '✓' : ''}
+                {selectedTrapCard !== null ? '✅' : '🕸️'}
               </button>
-            </div>
-          )}
-          {/* Skip Turn Button - Always show when it's player's turn */}
-          {isMyTurn && (
-            <div className="skip-turn-container">
               <button 
                 className="skip-turn-btn"
                 onClick={handleSkipTurn}
                 title={humanPlayer.hand?.length === 0 ? "Skip Turn - No cards in hand" : !hasPlayableCards() ? "Skip Turn - No playable cards available" : "Skip Turn - Pass this round"}
               >
-                <span className="skip-turn-icon">⏭️</span>
-                <span className="skip-turn-text">Skip Turn</span>
+                ⏭️
               </button>
+            </div>
+          )}
+          {/* Skip turn message below buttons */}
+          {isMyTurn && (
+            <div className="skip-turn-message-container">
               {humanPlayer.hand?.length === 0 ? (
                 <p className="skip-turn-message">No cards in hand</p>
               ) : !hasPlayableCards() ? (

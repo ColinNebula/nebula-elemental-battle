@@ -548,7 +548,9 @@ class SoundManager {
       'swoosh': 'mixkit-soft-woosh-fire-1346.wav',
       'fairy': 'mixkit-spellcaster-fairy-swoosh-1463.wav',
       'victory': 'mixkit-game-success-alert-2039.wav',
-      'crowdCheer': 'mixkit-huge-crowd-cheering-victory-462.wav'
+      'crowdCheer': 'mixkit-huge-crowd-cheering-victory-462.wav',
+      'meteor': 'mixkit-small-meteor-falling-1337.wav',
+      'water': 'mixkit-bass-rumble-hum-2297.wav'
     };
     
     // If there's an audio file for this sound, use it
@@ -614,7 +616,7 @@ class SoundManager {
       'DARK': 'swoosh',
       'NEUTRAL': 'neutral',
       'TECHNOLOGY': 'technology',
-      'METEOR': 'fireball'
+      'METEOR': 'meteor'
     };
     
     const soundName = elementMap[element];

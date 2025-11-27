@@ -275,3 +275,73 @@ These optimizations provide:
 - **Maintained visual quality** while improving performance
 
 The game should now run smoothly on most mobile devices while maintaining an enjoyable visual experience.
+
+---
+
+## 🐛 Critical Bug Fix: Card Fusion on Mobile
+
+### Issue
+Card fusion was causing the game to freeze on mobile devices. After fusing cards, the fused card wouldn't appear in the player's hand and the UI would become unresponsive.
+
+### Root Cause
+The `handleFuseCards` function in `App.js` was **directly mutating the state arrays** using `splice()` and `push()` instead of creating new immutable arrays. This violated React's state management principles and prevented re-renders, especially critical on mobile where rendering can be more sensitive.
+
+### Fix Applied
+1. **Immutable State Updates** - Changed from `splice()` to `filter()` to create new arrays:
+   ```javascript
+   // Before (mutating state):
+   indices.forEach(index => {
+     currentPlayer.hand.splice(index, 1);
+   });
+   
+   // After (immutable):
+   const newHand = player.hand.filter((_, idx) => !indices.includes(idx));
+   ```
+
+2. **Proper Deep Copy** - Ensured players array is properly copied:
+   ```javascript
+   const newState = {
+     ...prevState,
+     players: prevState.players.map(player => {
+       if (player.id === playerId) {
+         return { ...player, hand: newHand, cardCount: newHand.length };
+       }
+       return player;
+     })
+   };
+   ```
+
+3. **Mobile Touch Event Handling** - Added proper touch event handlers:
+   ```javascript
+   onTouchEnd={(e) => {
+     e.preventDefault();
+     e.stopPropagation();
+     handleFusionAttempt();
+   }}
+   ```
+
+4. **UI State Management** - Improved fusion UI closing sequence:
+   - Close UI first before state update
+   - Capture card indices before clearing state
+   - Use `requestAnimationFrame` for smooth state transitions
+   - Added `useCallback` for stable function reference
+
+5. **Better Debugging** - Added mobile-specific logging:
+   ```javascript
+   console.log('🔮 Attempting fusion on mobile:', {
+     handSizeBefore: currentPlayer.hand.length,
+     isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+   });
+   ```
+
+### Files Modified
+- `src/App.js` - Fixed state mutation in `handleFuseCards`
+- `src/components/GameBoard.js` - Improved fusion flow and touch events
+
+### Testing
+After this fix, card fusion should work smoothly on mobile:
+- ✅ Fused card appears in hand immediately
+- ✅ UI doesn't freeze or become unresponsive
+- ✅ State updates trigger proper re-renders
+- ✅ Touch events work correctly
+- ✅ No duplicate cards or missing cards
