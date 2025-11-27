@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import './PlayerProfile.css';
+import userPreferences from '../utils/userPreferences';
 
 const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const [activeTab, setActiveTab] = useState('stats');
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState('heroes');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(player?.name || 'Player');
   
   const avatarCategories = {
     heroes: {
@@ -162,6 +165,36 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       setShowAvatarSelector(false);
     }
   };
+
+  const handleNameEdit = () => {
+    if (!isAI) {
+      setIsEditingName(true);
+      setEditedName(player?.name || 'Player');
+    }
+  };
+
+  const handleNameSave = () => {
+    if (editedName.trim() && editedName.trim() !== player.name) {
+      userPreferences.updatePlayerName(editedName.trim());
+      if (onUpdateProfile) {
+        onUpdateProfile({ name: editedName.trim() });
+      }
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameCancel = () => {
+    setEditedName(player?.name || 'Player');
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      handleNameCancel();
+    }
+  };
   
   const getAllAchievements = () => {
     return [
@@ -240,7 +273,40 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
           </div>
         </div>
         <div className="profile-info">
-          <div className="profile-name">{player.name}</div>
+          <div className="profile-name-container">
+            {isEditingName && !isAI ? (
+              <div className="name-edit-wrapper">
+                <input
+                  type="text"
+                  className="profile-name-input"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={handleNameKeyDown}
+                  onBlur={handleNameSave}
+                  maxLength={20}
+                  autoFocus
+                  placeholder="Enter your name"
+                />
+                <div className="name-edit-buttons">
+                  <button className="name-save-btn" onClick={handleNameSave} title="Save">✓</button>
+                  <button className="name-cancel-btn" onClick={handleNameCancel} title="Cancel">✕</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="profile-name">{player.name}</div>
+                {!isAI && (
+                  <button 
+                    className="name-edit-btn" 
+                    onClick={handleNameEdit}
+                    title="Edit name"
+                  >
+                    ✏️
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <div className="profile-rank" style={{ color: rank.color }}>
             {rank.icon} {rank.name}
           </div>

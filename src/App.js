@@ -485,8 +485,8 @@ function App() {
         setShowProfile(false);
         setShowThemeShop(false);
       }
-      // S to open settings (only when not in active game)
-      if (e.key === 's' || e.key === 'S') {
+      // Alt+S to open settings (only when not in active game)
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
         if (!inGame || gameState?.gameOver) {
           e.preventDefault();
           setShowSettings(true);
@@ -506,8 +506,8 @@ function App() {
           setShowStats(true);
         }
       }
-      // U to open profile (only when not in active game)
-      if (e.key === 'u' || e.key === 'U') {
+      // Alt+U to open profile (only when not in active game)
+      if (e.altKey && (e.key === 'u' || e.key === 'U')) {
         if (!inGame || gameState?.gameOver) {
           e.preventDefault();
           setShowProfile(true);

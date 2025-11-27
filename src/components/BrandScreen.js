@@ -8,7 +8,10 @@ const BrandScreen = ({ onComplete }) => {
 
   const playBrandSound = () => {
     if (!soundPlayed) {
-      const brandSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-terror-sweep-of-darkness-2630.wav`);
+      const audioPath = process.env.PUBLIC_URL 
+        ? `${process.env.PUBLIC_URL}/mixkit-terror-sweep-of-darkness-2630.wav`
+        : '/mixkit-terror-sweep-of-darkness-2630.wav';
+      const brandSound = new Audio(audioPath);
       brandSound.volume = 0.7;
       brandSound.setAttribute('playsinline', 'true');
       brandSound.setAttribute('webkit-playsinline', 'true');
