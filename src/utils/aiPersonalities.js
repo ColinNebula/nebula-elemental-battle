@@ -190,6 +190,61 @@ export const AI_PERSONALITIES = {
     }
   },
   
+  SHADOW_NINJA: {
+    name: 'Shadow Ninja',
+    avatar: '🥷',
+    avatarImage: 'ninja-avatar.png',
+    cardBackImage: 'shadow-ninja-card-back.png',
+    difficulty: 'Expert',
+    element: 'DARK',
+    description: 'A silent assassin who strikes from the shadows with lethal precision',
+    strategy: {
+      preferredElements: ['DARK', 'ELECTRICITY', 'NEUTRAL'],
+      aggressiveness: 0.8,
+      conservativeness: 0.5,
+      abilityUsage: 0.9,
+      counterPriority: 0.85,
+      exploitative: true,
+      unpredictable: true,
+      comboFocus: true // Masters swift combo strikes
+    },
+    quotes: {
+      start: "Silent death awaits...",
+      win: "The shadows claimed another...",
+      lose: "Vanished... into the void...",
+      taunt: "You cannot strike what you cannot see!"
+    },
+    specialCards: ['WIND_STORM'], // Exclusive epic card
+    hasWindStorm: true
+  },
+  
+  BLOOD_KNIGHT: {
+    name: 'Blood Knight',
+    avatar: '⚔️',
+    avatarImage: 'blood-avatar.png',
+    cardBackImage: 'blood-knight-card-back.png',
+    difficulty: 'Master',
+    element: 'FIRE',
+    description: 'A ruthless warrior who grows stronger with every drop of blood spilled',
+    strategy: {
+      preferredElements: ['FIRE', 'DARK', 'POWER', 'METEOR'],
+      aggressiveness: 0.95,
+      conservativeness: 0.2,
+      abilityUsage: 0.85,
+      counterPriority: 0.75,
+      perfectPlay: true,
+      adaptive: true,
+      bloodlust: true // Gets more aggressive as battle progresses
+    },
+    quotes: {
+      start: "Blood and steel! CHARGE!",
+      win: "Baptized in BLOOD!",
+      lose: "My blade... grows cold...",
+      taunt: "I FEAST ON YOUR WEAKNESS!"
+    },
+    isBoss: true
+  },
+  
   NEXUS: {
     name: 'Nexus the Omnipotent',
     avatar: '⭐',
@@ -225,7 +280,7 @@ export const AI_PERSONALITIES = {
     element: 'NEUTRAL',
     description: 'An erratic wildcard who defies all logic',
     strategy: {
-      preferredElements: ['NEUTRAL', 'random', 'METEOR'],
+      preferredElements: ['NEUTRAL', 'random', 'METEOR', 'DARK'],
       aggressiveness: 0.5,
       conservativeness: 0.5,
       abilityUsage: 0.5,
@@ -239,7 +294,9 @@ export const AI_PERSONALITIES = {
       lose: "Order restored...",
       taunt: "Expect the unexpected!"
     },
-    isBoss: true
+    isBoss: true,
+    specialCards: ['BLACKHOLE'], // Exclusive legendary card
+    hasBlackhole: true
   }
 };
 
@@ -249,66 +306,92 @@ export const STORY_MODE_CAMPAIGN = [
     name: 'Trial of Rage',
     opponent: 'DONOVAN_RAGE',
     description: 'Face Donovan Rage in the volcanic arena and survive his fury',
-    reward: 'Unlock: Rage Mastery Badge'
+    reward: 'Unlock: Rage Mastery Badge',
+    levelImage: 'trial-of-rage.png'
   },
   {
     stage: 2,
     name: 'Frozen Fortress',
     opponent: 'FROST',
     description: 'Battle Frost in the icy tundra to break the freeze',
-    reward: 'Unlock: Ice Mastery Badge'
+    reward: 'Unlock: Ice Mastery Badge',
+    levelImage: 'frozen-fortress.png'
   },
   {
     stage: 3,
     name: 'Tidal Challenge',
     opponent: 'AQUA',
     description: 'Defeat Aqua in the ocean depths to master the flow',
-    reward: 'Unlock: Water Mastery Badge'
+    reward: 'Unlock: Water Mastery Badge',
+    levelImage: 'aqua-the-tidekeeper-level.png'
   },
   {
     stage: 4,
     name: 'Lightning Storm',
     opponent: 'VOLT',
     description: 'Survive Volt\'s shocking assault in the thunderdome',
-    reward: 'Unlock: Electricity Mastery Badge'
+    reward: 'Unlock: Electricity Mastery Badge',
+    levelImage: 'lightning-storm.png'
   },
   {
     stage: 5,
     name: 'Earthquake Arena',
     opponent: 'TERRA',
     description: 'Shake Terra\'s foundation in the mountain stronghold',
-    reward: 'Unlock: Earth Mastery Badge'
+    reward: 'Unlock: Earth Mastery Badge',
+    levelImage: 'earthquake-arena-level.png'
   },
   {
     stage: 6,
     name: 'Radiant Temple',
     opponent: 'LUMINA',
     description: 'Challenge Lumina in the celestial sanctuary',
-    reward: 'Unlock: Light Mastery Badge'
+    reward: 'Unlock: Light Mastery Badge',
+    levelImage: 'mech3.png'
   },
   {
     stage: 7,
     name: 'Void Dimension',
     opponent: 'SHADOW',
     description: 'Confront Shadow in the realm of darkness',
-    reward: 'Unlock: Dark Mastery Badge'
+    reward: 'Unlock: Dark Mastery Badge',
+    levelImage: 'void-demension.png'
   },
   {
     stage: 8,
+    name: 'Shadow Realm',
+    opponent: 'SHADOW_NINJA',
+    description: 'Face the silent assassin in the realm where shadows come alive',
+    reward: 'Unlock: Ninja Mastery Badge',
+    levelImage: 'wind-level.png'
+  },
+  {
+    stage: 9,
+    name: 'Blood Arena',
+    opponent: 'BLOOD_KNIGHT',
+    description: 'Battle the ruthless Blood Knight in his crimson domain',
+    reward: 'Unlock: Blood Mastery Badge',
+    isBoss: true,
+    levelImage: 'trial-of-rage.png'
+  },
+  {
+    stage: 10,
     name: 'BOSS: Power Nexus',
     opponent: 'NEXUS',
     description: 'Face the ultimate champion in the Grand Arena',
     reward: 'Unlock: Master Champion Title',
-    isBoss: true
+    isBoss: true,
+    levelImage: 'mech3.png'
   },
   {
-    stage: 9,
+    stage: 11,
     name: 'FINAL BOSS: Chaos Unleashed',
     opponent: 'CHAOS',
     description: 'Battle the embodiment of chaos itself',
     reward: 'Complete Story Mode - Unlock All',
     isBoss: true,
-    finalBoss: true
+    finalBoss: true,
+    levelImage: 'chaos-unleached-level.png'
   }
 ];
 

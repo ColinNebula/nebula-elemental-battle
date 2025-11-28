@@ -56,6 +56,132 @@ const BASE_AVATARS = [
   }
 ];
 
+// Story mode characters that appear locked until defeated
+const LOCKED_STORY_CHARACTERS = [
+  {
+    id: 'frost',
+    storyKey: 'FROST',
+    name: 'Frost the Frozen',
+    image: 'frost-the-frozen-avatar.png',
+    description: 'A calculated strategist who freezes opponents in their tracks',
+    element: 'ICE',
+    icon: '❄️',
+    unlockRequirement: 'Defeat in Story Mode Stage 2',
+    isLocked: true
+  },
+  {
+    id: 'aqua',
+    storyKey: 'AQUA',
+    name: 'Aqua the Tidekeeper',
+    image: 'water-avatar.png',
+    description: 'A flowing fighter who adapts to any situation',
+    element: 'WATER',
+    icon: '💧',
+    unlockRequirement: 'Defeat in Story Mode Stage 3',
+    isLocked: true
+  },
+  {
+    id: 'volt',
+    storyKey: 'VOLT',
+    name: 'Volt the Electrifier',
+    image: 'vol- the-electrifier-avatar.png',
+    description: 'A shocking speedster with lightning-fast combos',
+    element: 'ELECTRICITY',
+    icon: '⚡',
+    unlockRequirement: 'Defeat in Story Mode Stage 4',
+    isLocked: true
+  },
+  {
+    id: 'terra',
+    storyKey: 'TERRA',
+    name: 'Terra the Earthshaker',
+    image: 'terra-the-earthshaker-avatar.png',
+    description: 'A defensive powerhouse who wears opponents down',
+    element: 'EARTH',
+    icon: '🌍',
+    unlockRequirement: 'Defeat in Story Mode Stage 5',
+    isLocked: true
+  },
+  {
+    id: 'lumina',
+    storyKey: 'LUMINA',
+    name: 'Lumina the Radiant',
+    image: 'lumina-the-radiant-avatar.png',
+    description: 'A brilliant tactician with divine powers',
+    element: 'LIGHT',
+    icon: '☀️',
+    unlockRequirement: 'Defeat in Story Mode Stage 6',
+    isLocked: true
+  },
+  {
+    id: 'shadow',
+    storyKey: 'SHADOW',
+    name: 'Shadow the Voidwalker',
+    image: 'void-walker-avatar.png',
+    description: 'A mysterious fighter who exploits weaknesses',
+    element: 'DARK',
+    icon: '🌙',
+    unlockRequirement: 'Defeat in Story Mode Stage 7',
+    isLocked: true
+  },
+  {
+    id: 'shadow_ninja',
+    storyKey: 'SHADOW_NINJA',
+    name: 'Shadow Ninja',
+    image: 'ninja-avatar.png',
+    description: 'A silent assassin who strikes from the shadows with lethal precision',
+    element: 'DARK',
+    icon: '🥷',
+    unlockRequirement: 'Defeat in Story Mode Stage 8',
+    isLocked: true
+  },
+  {
+    id: 'blood_knight',
+    storyKey: 'BLOOD_KNIGHT',
+    name: 'Blood Knight',
+    image: 'blood-avatar.png',
+    description: 'A ruthless warrior who grows stronger with every drop of blood spilled',
+    element: 'FIRE',
+    icon: '⚔️',
+    unlockRequirement: 'Defeat BOSS in Story Mode Stage 9',
+    isLocked: true
+  },
+  {
+    id: 'nexus',
+    storyKey: 'NEXUS',
+    name: 'Nexus the Omnipotent',
+    image: 'power-nexus--avatar.png',
+    description: 'The ultimate champion who masters all elements',
+    element: 'POWER',
+    icon: '⭐',
+    unlockRequirement: 'Defeat BOSS in Story Mode Stage 10',
+    isLocked: true
+  },
+  {
+    id: 'chaos',
+    storyKey: 'CHAOS',
+    name: 'Chaos the Unpredictable',
+    image: 'chaos-the-unpredictable-avatar.png',
+    description: 'An erratic wildcard who defies all logic',
+    element: 'NEUTRAL',
+    icon: '🔮',
+    unlockRequirement: 'Defeat FINAL BOSS in Story Mode Stage 11',
+    isLocked: true
+  },
+  {
+    id: 'samurai',
+    storyKey: 'SAMURAI_SECRET',
+    name: 'Legendary Samurai',
+    image: 'samurai-avatar.png',
+    description: 'A legendary warrior of unmatched skill. Master of all combat styles and elements.',
+    element: 'ALL',
+    icon: '⚔️🎌',
+    unlockRequirement: 'Defeat Shadow Ninja & Complete Story Mode',
+    isLocked: true,
+    isSecret: true
+  }
+];
+
 const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }) => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [hoveredAvatar, setHoveredAvatar] = useState(null);
@@ -83,39 +209,65 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
       }
     }
 
-    // Load unlocked characters from story progress
+    // Load story progress and determine which characters to show
     const storyProgress = secureStorage.getItem('storyModeProgress');
-    if (storyProgress && storyProgress.completedStages) {
-      const unlockedCharacters = [];
-      
-      // Map defeated opponents to unlockable avatars
-      Object.keys(storyProgress.completedStages).forEach(stageKey => {
-        const personality = AI_PERSONALITIES[stageKey];
-        if (personality && personality.avatarImage) {
-          unlockedCharacters.push({
-            id: stageKey.toLowerCase(),
-            name: personality.name,
-            image: personality.avatarImage,
-            description: personality.description,
-            element: personality.element || 'NEUTRAL',
-            icon: personality.avatar,
-            unlocked: true,
-            unlockedFrom: 'Story Mode'
+    const completedStages = storyProgress?.completedStages || [];
+    
+    // Start with base avatars
+    const allAvatars = [...BASE_AVATARS];
+    
+    // Check if story mode is completed (all 11 stages done)
+    const isStoryModeComplete = completedStages.length >= 11;
+    const hasShadowNinja = completedStages.includes('SHADOW_NINJA');
+    
+    // Process each locked story character
+    LOCKED_STORY_CHARACTERS.forEach(lockedChar => {
+      // Special handling for secret Samurai character
+      if (lockedChar.isSecret) {
+        // Only show Samurai if Shadow Ninja defeated AND story mode complete
+        if (hasShadowNinja && isStoryModeComplete) {
+          allAvatars.push({
+            ...lockedChar,
+            isLocked: true // Always locked for now (future unlock mechanic)
           });
         }
-      });
-
-      // Combine base avatars with unlocked characters (remove duplicates)
-      const allAvatars = [...BASE_AVATARS];
-      unlockedCharacters.forEach(unlockedChar => {
-        if (!allAvatars.find(a => a.id === unlockedChar.id)) {
-          allAvatars.push(unlockedChar);
-        }
+        return;
+      }
+      
+      // Check if this character's stage has been completed
+      const isUnlocked = completedStages.some(stage => {
+        // Match the opponent from STORY_MODE_CAMPAIGN with this character
+        const campaignStage = AI_PERSONALITIES[lockedChar.storyKey];
+        return campaignStage && completedStages.includes(lockedChar.storyKey);
       });
       
-      setAvailableAvatars(allAvatars);
-      console.log('🎮 Unlocked characters loaded:', unlockedCharacters.map(c => c.name));
-    }
+      if (isUnlocked) {
+        // Add as unlocked character
+        allAvatars.push({
+          id: lockedChar.id,
+          name: lockedChar.name,
+          image: lockedChar.image,
+          description: lockedChar.description,
+          element: lockedChar.element,
+          icon: lockedChar.icon,
+          unlocked: true,
+          unlockedFrom: 'Story Mode'
+        });
+      } else {
+        // Add as locked character (visible but not selectable)
+        allAvatars.push({
+          ...lockedChar,
+          isLocked: true
+        });
+      }
+    });
+    
+    setAvailableAvatars(allAvatars);
+    console.log('🎮 Characters loaded:', {
+      total: allAvatars.length,
+      unlocked: allAvatars.filter(a => !a.isLocked).length,
+      locked: allAvatars.filter(a => a.isLocked).length
+    });
   }, []);
 
   const handleConfirm = () => {
@@ -160,10 +312,16 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
           {availableAvatars.map((avatar) => (
             <div
               key={avatar.id}
-              className={`avatar-card ${selectedAvatar?.id === avatar.id ? 'selected' : ''} ${hoveredAvatar?.id === avatar.id ? 'hovered' : ''}`}
-              onClick={() => { playSelectSound(); setSelectedAvatar(avatar); }}
-              onMouseEnter={() => setHoveredAvatar(avatar)}
+              className={`avatar-card ${selectedAvatar?.id === avatar.id ? 'selected' : ''} ${hoveredAvatar?.id === avatar.id ? 'hovered' : ''} ${avatar.isLocked ? 'locked' : ''}`}
+              onClick={() => { 
+                if (!avatar.isLocked) {
+                  playSelectSound(); 
+                  setSelectedAvatar(avatar);
+                }
+              }}
+              onMouseEnter={() => !avatar.isLocked && setHoveredAvatar(avatar)}
               onMouseLeave={() => setHoveredAvatar(null)}
+              style={{ cursor: avatar.isLocked ? 'not-allowed' : 'pointer' }}
             >
               <div className="avatar-image-container">
                 {avatar.isRandom ? (
@@ -189,18 +347,28 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
                 )}
               </div>
               <div className="avatar-info">
-                <h3 className="avatar-name">{avatar.name}</h3>
+                <h3 className="avatar-name">{avatar.isLocked ? '???' : avatar.name}</h3>
                 <div className="avatar-element">
-                  {avatar.icon} {avatar.element}
+                  {avatar.isLocked ? '🔒' : avatar.icon} {avatar.isLocked ? 'LOCKED' : avatar.element}
                 </div>
-                {avatar.unlocked && (
+                {avatar.unlocked && !avatar.isLocked && (
                   <div className="avatar-unlocked-badge">
                     🔓 Unlocked from {avatar.unlockedFrom}
                   </div>
                 )}
+                {avatar.isLocked && (
+                  <div className="avatar-locked-badge">
+                    {avatar.unlockRequirement}
+                  </div>
+                )}
               </div>
-              {selectedAvatar?.id === avatar.id && (
+              {selectedAvatar?.id === avatar.id && !avatar.isLocked && (
                 <div className="selected-indicator">✓</div>
+              )}
+              {avatar.isLocked && (
+                <div className="locked-overlay">
+                  <div className="lock-icon-large">🔒</div>
+                </div>
               )}
             </div>
           ))}

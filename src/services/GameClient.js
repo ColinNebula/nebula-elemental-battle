@@ -2393,6 +2393,148 @@ class GameClient {
       console.log('🌑 DARK: AI applied curse and poison debuffs');
     }
     
+    // BLACKHOLE: Gravitational Collapse - Damage ALL cards on arena by -5
+    if (player1Card.ability === 'gravitational_collapse' && !player1Silenced) {
+      console.log('🌌🕳️ BLACKHOLE: Gravitational collapse initiated!');
+      let totalDamaged = 0;
+      
+      // Damage all player's cards on arena
+      if (player1.playedCards && Array.isArray(player1.playedCards)) {
+        player1.playedCards.forEach((card, index) => {
+          if (card && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 5);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 5);
+              }
+              totalDamaged++;
+            }
+          }
+        });
+      }
+      
+      // Damage all opponent's cards on arena
+      if (player2.playedCards && Array.isArray(player2.playedCards)) {
+        player2.playedCards.forEach((card, index) => {
+          if (card && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 5);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 5);
+              }
+              totalDamaged++;
+            }
+          }
+        });
+      }
+      
+      console.log(`🌌🕳️ BLACKHOLE: Massive swirling blackhole damaged ${totalDamaged} cards on arena (-5 strength each)`);
+    }
+    
+    if (player2Card.ability === 'gravitational_collapse' && !player2Silenced) {
+      console.log('🌌🕳️ BLACKHOLE: AI activated gravitational collapse!');
+      let totalDamaged = 0;
+      
+      // Damage all AI's cards on arena
+      if (player2.playedCards && Array.isArray(player2.playedCards)) {
+        player2.playedCards.forEach((card, index) => {
+          if (card && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 5);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 5);
+              }
+              totalDamaged++;
+            }
+          }
+        });
+      }
+      
+      // Damage all player's cards on arena
+      if (player1.playedCards && Array.isArray(player1.playedCards)) {
+        player1.playedCards.forEach((card, index) => {
+          if (card && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 5);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 5);
+              }
+              totalDamaged++;
+            }
+          }
+        });
+      }
+      
+      console.log(`🌌🕳️ BLACKHOLE: AI's massive swirling blackhole damaged ${totalDamaged} cards on arena (-5 strength each)`);
+    }
+    
+    // WIND STORM: Damage EARTH cards on arena for 2 turns
+    if (player1Card.ability === 'wind_storm' && !player1Silenced) {
+      console.log('🌪️💨 WIND STORM: Creating powerful wind storms!');
+      
+      // Initialize wind storm tracking
+      if (!room.windStormTurns) room.windStormTurns = {};
+      room.windStormTurns.player1 = 2; // Active for 2 turns
+      
+      let earthDamaged = 0;
+      
+      // Damage opponent's EARTH cards on arena
+      if (player2.playedCards && Array.isArray(player2.playedCards)) {
+        player2.playedCards.forEach((card) => {
+          if (card && card.element === 'EARTH' && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 1);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 1);
+              }
+              earthDamaged++;
+            }
+          }
+        });
+      }
+      
+      console.log(`🌪️💨 WIND STORM: Damaged ${earthDamaged} EARTH cards on arena (-1 strength, active for 2 turns)`);
+    }
+    
+    if (player2Card.ability === 'wind_storm' && !player2Silenced) {
+      console.log('🌪️💨 WIND STORM: AI creating powerful wind storms!');
+      
+      // Initialize wind storm tracking
+      if (!room.windStormTurns) room.windStormTurns = {};
+      room.windStormTurns.player2 = 2; // Active for 2 turns
+      
+      let earthDamaged = 0;
+      
+      // Damage player's EARTH cards on arena
+      if (player1.playedCards && Array.isArray(player1.playedCards)) {
+        player1.playedCards.forEach((card) => {
+          if (card && card.element === 'EARTH' && typeof card.strength === 'number') {
+            const currentStrength = card.modifiedStrength || card.strength;
+            if (currentStrength > 0) {
+              if (card.modifiedStrength !== undefined) {
+                card.modifiedStrength = Math.max(0, card.modifiedStrength - 1);
+              } else {
+                card.modifiedStrength = Math.max(0, card.strength - 1);
+              }
+              earthDamaged++;
+            }
+          }
+        });
+      }
+      
+      console.log(`🌪️💨 WIND STORM: AI damaged ${earthDamaged} EARTH cards on arena (-1 strength, active for 2 turns)`);
+    }
+    
     // NEUTRAL: Copy or Boost abilities
     
     if (player2Card.element === 'NEUTRAL') {

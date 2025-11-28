@@ -1,4 +1,4 @@
-﻿# ============================================
+# ============================================
 # GitHub Preparation Script
 # ============================================
 # Prepares the repository for GitHub deployment
@@ -11,10 +11,10 @@ param(
 )
 
 Write-Host ""
-Write-Host "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—" -ForegroundColor Cyan
-Write-Host "â•‘   GITHUB PREPARATION SCRIPT                â•‘" -ForegroundColor Cyan
-Write-Host "â•‘   Nebula Elemental Battle                  â•‘" -ForegroundColor Cyan
-Write-Host "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "   GITHUB PREPARATION SCRIPT                   " -ForegroundColor Cyan
+Write-Host "   Nebula Elemental Battle                     " -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
 $ErrorCount = 0
@@ -25,27 +25,27 @@ $StartTime = Get-Date
 # 1. SECURITY CHECKS
 # ============================================
 if (-not $SkipSecurity) {
-    Write-Host "ðŸ”’ SECURITY CHECKS" -ForegroundColor Yellow
-    Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+    Write-Host "SECURITY CHECKS" -ForegroundColor Yellow
+    Write-Host "---------------------------------------------" -ForegroundColor Gray
     
     # Check for .env files
-    Write-Host "  âž¤ Checking for .env files..." -NoNewline
+    Write-Host "  > Checking for .env files..." -NoNewline
     $envFiles = Get-ChildItem -Path . -Filter ".env*" -File -Recurse -ErrorAction SilentlyContinue | 
                 Where-Object { $_.Name -ne ".env.example" }
     
     if ($envFiles) {
-        Write-Host " âš ï¸  WARNING" -ForegroundColor Yellow
+        Write-Host " WARNING" -ForegroundColor Yellow
         $envFiles | ForEach-Object {
             Write-Host "    Found: $($_.FullName)" -ForegroundColor Yellow
             $WarningCount++
         }
         Write-Host "    These files should be in .gitignore!" -ForegroundColor Yellow
     } else {
-        Write-Host " âœ“ Clean" -ForegroundColor Green
+        Write-Host " Clean" -ForegroundColor Green
     }
     
     # Check for sensitive patterns in code
-    Write-Host "  âž¤ Scanning for sensitive data..." -NoNewline
+    Write-Host "  > Scanning for sensitive data..." -NoNewline
     $sensitivePatterns = @(
         "(?i)(api[_-]?key|apikey)\s*[:=]\s*['\`"][^'\`"]{8,}['\`"]",
         "(?i)(secret[_-]?key|secretkey)\s*[:=]\s*['\`"][^'\`"]{8,}['\`"]",
@@ -66,7 +66,7 @@ if (-not $SkipSecurity) {
         foreach ($pattern in $sensitivePatterns) {
             if ($content -match $pattern) {
                 if (-not $sensitiveFound) {
-                    Write-Host " âš ï¸  WARNING" -ForegroundColor Yellow
+                    Write-Host " WARNING" -ForegroundColor Yellow
                     $sensitiveFound = $true
                 }
                 Write-Host "    Potential sensitive data in: $($file.Name)" -ForegroundColor Yellow
@@ -77,13 +77,13 @@ if (-not $SkipSecurity) {
     }
     
     if (-not $sensitiveFound) {
-        Write-Host " âœ“ Clean" -ForegroundColor Green
+        Write-Host " Clean" -ForegroundColor Green
     }
     
     # Check .gitignore exists
-    Write-Host "  âž¤ Validating .gitignore..." -NoNewline
+    Write-Host "  > Validating .gitignore..." -NoNewline
     if (-not (Test-Path ".gitignore")) {
-        Write-Host " âŒ MISSING" -ForegroundColor Red
+        Write-Host " MISSING" -ForegroundColor Red
         $ErrorCount++
     } else {
         $gitignoreContent = Get-Content ".gitignore" -Raw
@@ -97,11 +97,11 @@ if (-not $SkipSecurity) {
         }
         
         if ($missingPatterns.Count -gt 0) {
-            Write-Host " âš ï¸  INCOMPLETE" -ForegroundColor Yellow
+            Write-Host " INCOMPLETE" -ForegroundColor Yellow
             Write-Host "    Missing patterns: $($missingPatterns -join ', ')" -ForegroundColor Yellow
             $WarningCount++
         } else {
-            Write-Host " âœ“ Valid" -ForegroundColor Green
+            Write-Host " Valid" -ForegroundColor Green
         }
     }
     
@@ -111,20 +111,20 @@ if (-not $SkipSecurity) {
 # ============================================
 # 2. FILE SIZE ANALYSIS
 # ============================================
-Write-Host "ðŸ“Š FILE SIZE ANALYSIS" -ForegroundColor Yellow
-Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+Write-Host "FILE SIZE ANALYSIS" -ForegroundColor Yellow
+Write-Host "---------------------------------------------" -ForegroundColor Gray
 
 # Check public folder size
-Write-Host "  âž¤ Analyzing public folder..." -NoNewline
+Write-Host "  > Analyzing public folder..." -NoNewline
 if (Test-Path "public") {
     $publicSize = (Get-ChildItem -Path "public" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
     $publicSizeRounded = [math]::Round($publicSize, 2)
     
     if ($publicSize -gt 100) {
-        Write-Host " âš ï¸  LARGE ($publicSizeRounded MB)" -ForegroundColor Yellow
+        Write-Host " LARGE ($publicSizeRounded MB)" -ForegroundColor Yellow
         $WarningCount++
     } else {
-        Write-Host " âœ“ $publicSizeRounded MB" -ForegroundColor Green
+        Write-Host " $publicSizeRounded MB" -ForegroundColor Green
     }
     
     # List largest files
@@ -139,12 +139,12 @@ if (Test-Path "public") {
             }
     }
 } else {
-    Write-Host " âš ï¸  NOT FOUND" -ForegroundColor Yellow
+    Write-Host " NOT FOUND" -ForegroundColor Yellow
     $WarningCount++
 }
 
 # Check build folder size
-Write-Host "  âž¤ Analyzing build folder..." -NoNewline
+Write-Host "  > Analyzing build folder..." -NoNewline
 if (Test-Path "build") {
     $buildSize = (Get-ChildItem -Path "build" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
     $buildSizeRounded = [math]::Round($buildSize, 2)
@@ -154,19 +154,19 @@ if (Test-Path "build") {
 }
 
 # Check for oversized files
-Write-Host "  âž¤ Checking for oversized files (>5MB)..." -NoNewline
+Write-Host "  > Checking for oversized files (>5MB)..." -NoNewline
 $largeFiles = Get-ChildItem -Path "public" -File -Recurse -ErrorAction SilentlyContinue | 
               Where-Object { $_.Length -gt 5MB }
 
 if ($largeFiles) {
-    Write-Host " âš ï¸  FOUND $($largeFiles.Count)" -ForegroundColor Yellow
+    Write-Host " FOUND $($largeFiles.Count)" -ForegroundColor Yellow
     $largeFiles | ForEach-Object {
         $sizeMB = [math]::Round($_.Length/1MB, 2)
         Write-Host "    $($_.Name): $sizeMB MB" -ForegroundColor Yellow
         $WarningCount++
     }
 } else {
-    Write-Host " âœ“ Clean" -ForegroundColor Green
+    Write-Host " Clean" -ForegroundColor Green
 }
 
 Write-Host ""
@@ -174,10 +174,10 @@ Write-Host ""
 # ============================================
 # 3. PACKAGE.JSON VALIDATION
 # ============================================
-Write-Host "ðŸ“¦ PACKAGE.JSON VALIDATION" -ForegroundColor Yellow
-Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+Write-Host "PACKAGE.JSON VALIDATION" -ForegroundColor Yellow
+Write-Host "---------------------------------------------" -ForegroundColor Gray
 
-Write-Host "  âž¤ Checking package.json..." -NoNewline
+Write-Host "  > Checking package.json..." -NoNewline
 if (Test-Path "package.json") {
     $packageJson = Get-Content "package.json" -Raw | ConvertFrom-Json
     
@@ -192,17 +192,17 @@ if (Test-Path "package.json") {
     }
     
     if ($missingFields.Count -gt 0) {
-        Write-Host " âš ï¸  INCOMPLETE" -ForegroundColor Yellow
+        Write-Host " INCOMPLETE" -ForegroundColor Yellow
         Write-Host "    Missing: $($missingFields -join ', ')" -ForegroundColor Yellow
         $WarningCount++
     } else {
-        Write-Host " âœ“ Valid" -ForegroundColor Green
+        Write-Host " Valid" -ForegroundColor Green
         Write-Host "    Name: $($packageJson.name)" -ForegroundColor Gray
         Write-Host "    Version: $($packageJson.version)" -ForegroundColor Gray
         Write-Host "    License: $($packageJson.license)" -ForegroundColor Gray
     }
 } else {
-    Write-Host " âŒ NOT FOUND" -ForegroundColor Red
+    Write-Host " NOT FOUND" -ForegroundColor Red
     $ErrorCount++
 }
 
@@ -212,35 +212,35 @@ Write-Host ""
 # 4. ASSET OPTIMIZATION CHECK
 # ============================================
 if (-not $SkipOptimization) {
-    Write-Host "ðŸŽ¨ ASSET OPTIMIZATION" -ForegroundColor Yellow
-    Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+    Write-Host "ASSET OPTIMIZATION" -ForegroundColor Yellow
+    Write-Host "---------------------------------------------" -ForegroundColor Gray
     
     # Check for unoptimized images
-    Write-Host "  âž¤ Checking image formats..." -NoNewline
+    Write-Host "  > Checking image formats..." -NoNewline
     $unoptimizedImages = Get-ChildItem -Path "public" -File -Recurse -Include "*.bmp","*.tiff","*.tif" -ErrorAction SilentlyContinue
     
     if ($unoptimizedImages) {
-        Write-Host " âš ï¸  FOUND UNOPTIMIZED" -ForegroundColor Yellow
+        Write-Host " FOUND UNOPTIMIZED" -ForegroundColor Yellow
         $unoptimizedImages | ForEach-Object {
             Write-Host "    $($_.Name) (use PNG or WebP instead)" -ForegroundColor Yellow
             $WarningCount++
         }
     } else {
-        Write-Host " âœ“ Optimized" -ForegroundColor Green
+        Write-Host " Optimized" -ForegroundColor Green
     }
     
     # Check audio format
-    Write-Host "  âž¤ Checking audio formats..." -NoNewline
+    Write-Host "  > Checking audio formats..." -NoNewline
     $unoptimizedAudio = Get-ChildItem -Path "public" -File -Recurse -Include "*.wav","*.aiff","*.flac" -ErrorAction SilentlyContinue
     
     if ($unoptimizedAudio) {
-        Write-Host " âš ï¸  FOUND UNCOMPRESSED" -ForegroundColor Yellow
+        Write-Host " FOUND UNCOMPRESSED" -ForegroundColor Yellow
         $unoptimizedAudio | ForEach-Object {
             Write-Host "    $($_.Name) (use MP3 or OGG instead)" -ForegroundColor Yellow
             $WarningCount++
         }
     } else {
-        Write-Host " âœ“ Compressed" -ForegroundColor Green
+        Write-Host " Compressed" -ForegroundColor Green
     }
     
     Write-Host ""
@@ -249,36 +249,36 @@ if (-not $SkipOptimization) {
 # ============================================
 # 5. GIT REPOSITORY CHECK
 # ============================================
-Write-Host "ðŸ”§ GIT REPOSITORY" -ForegroundColor Yellow
-Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+Write-Host "GIT REPOSITORY" -ForegroundColor Yellow
+Write-Host "---------------------------------------------" -ForegroundColor Gray
 
-Write-Host "  âž¤ Checking git initialization..." -NoNewline
+Write-Host "  > Checking git initialization..." -NoNewline
 if (Test-Path ".git") {
-    Write-Host " âœ“ Initialized" -ForegroundColor Green
+    Write-Host " Initialized" -ForegroundColor Green
     
     # Check for uncommitted changes
     $gitStatus = git status --porcelain 2>$null
     if ($gitStatus) {
-        Write-Host "  âž¤ Git status..." -NoNewline
+        Write-Host "  > Git status..." -NoNewline
         $changedFiles = ($gitStatus | Measure-Object).Count
-        Write-Host " âš ï¸  $changedFiles uncommitted changes" -ForegroundColor Yellow
+        Write-Host " $changedFiles uncommitted changes" -ForegroundColor Yellow
     } else {
-        Write-Host "  âž¤ Git status..." -NoNewline
-        Write-Host " âœ“ Clean working tree" -ForegroundColor Green
+        Write-Host "  > Git status..." -NoNewline
+        Write-Host " Clean working tree" -ForegroundColor Green
     }
     
     # Check remote
     $gitRemote = git remote get-url origin 2>$null
     if ($gitRemote) {
-        Write-Host "  âž¤ Remote configured..." -NoNewline
-        Write-Host " âœ“ $gitRemote" -ForegroundColor Green
+        Write-Host "  > Remote configured..." -NoNewline
+        Write-Host " $gitRemote" -ForegroundColor Green
     } else {
-        Write-Host "  âž¤ Remote configured..." -NoNewline
-        Write-Host " âš ï¸  No remote configured" -ForegroundColor Yellow
+        Write-Host "  > Remote configured..." -NoNewline
+        Write-Host " No remote configured" -ForegroundColor Yellow
         $WarningCount++
     }
 } else {
-    Write-Host " âš ï¸  NOT INITIALIZED" -ForegroundColor Yellow
+    Write-Host " NOT INITIALIZED" -ForegroundColor Yellow
     Write-Host "    Run: git init" -ForegroundColor Yellow
     $WarningCount++
 }
@@ -288,28 +288,28 @@ Write-Host ""
 # ============================================
 # 6. README & LICENSE CHECK
 # ============================================
-Write-Host "ðŸ“„ DOCUMENTATION" -ForegroundColor Yellow
-Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+Write-Host "DOCUMENTATION" -ForegroundColor Yellow
+Write-Host "---------------------------------------------" -ForegroundColor Gray
 
-Write-Host "  âž¤ Checking README.md..." -NoNewline
+Write-Host "  > Checking README.md..." -NoNewline
 if (Test-Path "README.md") {
     $readmeSize = (Get-Item "README.md").Length
     if ($readmeSize -lt 500) {
-        Write-Host " âš ï¸  TOO SHORT" -ForegroundColor Yellow
+        Write-Host " TOO SHORT" -ForegroundColor Yellow
         $WarningCount++
     } else {
-        Write-Host " âœ“ Exists" -ForegroundColor Green
+        Write-Host " Exists" -ForegroundColor Green
     }
 } else {
-    Write-Host " âš ï¸  MISSING" -ForegroundColor Yellow
+    Write-Host " MISSING" -ForegroundColor Yellow
     $WarningCount++
 }
 
-Write-Host "  âž¤ Checking LICENSE..." -NoNewline
+Write-Host "  > Checking LICENSE..." -NoNewline
 if (Test-Path "LICENSE") {
-    Write-Host " âœ“ Exists" -ForegroundColor Green
+    Write-Host " Exists" -ForegroundColor Green
 } else {
-    Write-Host " âš ï¸  MISSING" -ForegroundColor Yellow
+    Write-Host " MISSING" -ForegroundColor Yellow
     $WarningCount++
 }
 
@@ -318,15 +318,15 @@ Write-Host ""
 # ============================================
 # 7. BUILD TEST
 # ============================================
-Write-Host "ðŸ—ï¸  BUILD VERIFICATION" -ForegroundColor Yellow
-Write-Host "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€" -ForegroundColor Gray
+Write-Host "BUILD VERIFICATION" -ForegroundColor Yellow
+Write-Host "---------------------------------------------" -ForegroundColor Gray
 
-Write-Host "  âž¤ Testing production build..." -NoNewline
+Write-Host "  > Testing production build..." -NoNewline
 $buildOutput = npm run build 2>&1
 if ($LASTEXITCODE -eq 0) {
-    Write-Host " âœ“ Success" -ForegroundColor Green
+    Write-Host " Success" -ForegroundColor Green
 } else {
-    Write-Host " âŒ FAILED" -ForegroundColor Red
+    Write-Host " FAILED" -ForegroundColor Red
     Write-Host "    Build errors detected. Fix before deploying!" -ForegroundColor Red
     $ErrorCount++
 }
@@ -339,16 +339,16 @@ Write-Host ""
 $Duration = (Get-Date) - $StartTime
 $DurationSeconds = [math]::Round($Duration.TotalSeconds, 1)
 
-Write-Host "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—" -ForegroundColor Cyan
-Write-Host "â•‘   PREPARATION COMPLETE                     â•‘" -ForegroundColor Cyan
-Write-Host "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "   PREPARATION COMPLETE                        " -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
-Write-Host "â±ï¸  Duration: $DurationSeconds seconds" -ForegroundColor Gray
+Write-Host "Duration: $DurationSeconds seconds" -ForegroundColor Gray
 Write-Host ""
 
 if ($ErrorCount -eq 0 -and $WarningCount -eq 0) {
-    Write-Host "âœ… READY FOR GITHUB!" -ForegroundColor Green
+    Write-Host "READY FOR GITHUB!" -ForegroundColor Green
     Write-Host "   No errors or warnings detected." -ForegroundColor Green
     Write-Host ""
     
@@ -361,12 +361,12 @@ if ($ErrorCount -eq 0 -and $WarningCount -eq 0) {
     
     exit 0
 } elseif ($ErrorCount -eq 0) {
-    Write-Host "âš ï¸  READY WITH WARNINGS" -ForegroundColor Yellow
+    Write-Host "READY WITH WARNINGS" -ForegroundColor Yellow
     Write-Host "   $WarningCount warnings found. Review before deploying." -ForegroundColor Yellow
     Write-Host ""
     exit 0
 } else {
-    Write-Host "âŒ NOT READY" -ForegroundColor Red
+    Write-Host "NOT READY" -ForegroundColor Red
     Write-Host "   $ErrorCount errors and $WarningCount warnings found." -ForegroundColor Red
     Write-Host ""
     Write-Host "   Fix errors before deploying to GitHub!" -ForegroundColor Red

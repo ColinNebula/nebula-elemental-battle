@@ -141,6 +141,40 @@ export const RARE_CARDS = {
     icon: '⏰',
     uses: 1,
     cooldown: 5
+  },
+  BLACKHOLE: {
+    id: 'blackhole',
+    name: 'Blackhole',
+    element: 'DARK',
+    baseStrength: 15,
+    rarity: 'LEGENDARY',
+    ability: 'gravitational_collapse',
+    description: 'Creates a massive swirling blackhole that damages ALL cards on the arena by -5 strength points. Ultimate weapon of mass destruction.',
+    icon: '🌌🕳️',
+    image: 'black-hole-card.png',
+    uses: 1,
+    cooldown: 999, // One-time use per battle
+    specialEffect: 'black_hole_collapse',
+    exclusiveTo: 'CHAOS',
+    unlockRequirement: 'Defeat Chaos in Story Mode Stage 11',
+    unlocked: false
+  },
+  WIND_STORM: {
+    id: 'wind_storm',
+    name: 'Wind Storm',
+    element: 'ELECTRICITY',
+    baseStrength: 10,
+    rarity: 'EPIC',
+    ability: 'wind_storm',
+    description: 'Creates powerful wind storms that damage EARTH cards on arena by -1 strength for 2 turns. The winds scatter the earth.',
+    icon: '🌪️💨',
+    image: 'wind-card.png',
+    uses: 2,
+    cooldown: 3,
+    specialEffect: 'wind_storm_damage',
+    exclusiveTo: 'SHADOW_NINJA',
+    unlockRequirement: 'Defeat Shadow Ninja in Story Mode Stage 8',
+    unlocked: false
   }
 };
 
@@ -585,9 +619,42 @@ export class PlayerInventory {
   }
 }
 
+// Special story mode boss rewards
+export const getStoryModeBossReward = (opponentKey) => {
+  // Special reward for defeating Chaos - Blackhole card
+  if (opponentKey === 'CHAOS') {
+    return [{
+      ...RARE_CARDS.BLACKHOLE,
+      type: 'rare_card',
+      isStoryReward: true,
+      unlocked: true
+    }];
+  }
+  
+  // Special reward for defeating Shadow Ninja - Wind Storm card
+  if (opponentKey === 'SHADOW_NINJA') {
+    return [{
+      ...RARE_CARDS.WIND_STORM,
+      type: 'rare_card',
+      isStoryReward: true,
+      unlocked: true
+    }];
+  }
+  
+  return null;
+};
+
 // Loot drop system
-export const generateLoot = (playerLevel = 1, defeatedOpponent = false) => {
+export const generateLoot = (playerLevel = 1, defeatedOpponent = false, opponentKey = null) => {
   const lootTable = [];
+  
+  // Check for special story boss rewards
+  if (opponentKey) {
+    const bossReward = getStoryModeBossReward(opponentKey);
+    if (bossReward) {
+      lootTable.push(...bossReward);
+    }
+  }
   
   // Base currency reward
   const baseCurrency = defeatedOpponent ? 50 + (playerLevel * 10) : 25 + (playerLevel * 5);
@@ -701,6 +768,7 @@ export default {
   EQUIPMENT,
   PlayerInventory,
   generateLoot,
+  getStoryModeBossReward,
   applyEquipmentToCard,
   ELEMENT_EFFECTIVENESS,
   getBestElementForWildCard,

@@ -218,10 +218,17 @@ function App() {
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
-    // Load saved avatar from playerProfile
+    // Load saved avatar from userPreferences first, then playerProfile as fallback
+    const savedAvatar = userPreferences.getAvatar();
+    if (savedAvatar) {
+      console.log('🎮 Loaded saved avatar from preferences:', savedAvatar.name);
+      return savedAvatar;
+    }
+    
+    // Fallback to playerProfile
     const profile = recoverProfile();
     if (profile?.selectedAvatar) {
-      console.log('🎮 Loaded saved avatar:', profile.selectedAvatar.name);
+      console.log('🎮 Loaded saved avatar from profile:', profile.selectedAvatar.name);
       return profile.selectedAvatar;
     }
     return null;
@@ -368,6 +375,15 @@ function App() {
   useEffect(() => {
     secureStorage.setItem('playerInventory', playerInventory);
   }, [playerInventory]);
+
+  // Sync selectedCharacter with userPreferences on mount and when preferences change
+  useEffect(() => {
+    const savedAvatar = userPreferences.getAvatar();
+    if (savedAvatar && (!selectedCharacter || selectedCharacter.id !== savedAvatar.id)) {
+      console.log('🔄 Syncing avatar from preferences:', savedAvatar.name);
+      setSelectedCharacter(savedAvatar);
+    }
+  }, []);
 
   // Inventory handlers
   const handleUseConsumable = (item) => {
@@ -593,7 +609,8 @@ function App() {
         let loot = [];
         if (playerWon === true || playerWon === null) {
           const playerLevel = Math.floor((playerProfile.gamesPlayed || 0) / 10) + 1;
-          loot = generateLoot(playerLevel, playerWon === true);
+          // Pass currentOpponent for special story boss rewards
+          loot = generateLoot(playerLevel, playerWon === true, currentOpponent);
           
           loot.forEach(item => {
             if (item.type === 'currency') {
@@ -602,6 +619,11 @@ function App() {
             } else {
               playerInventory.addItem(item);
               console.log(`✨ Obtained: ${item.name} (${item.rarity})`);
+              
+              // Special notification for Blackhole card
+              if (item.id === 'blackhole') {
+                console.log('🌌🕳️ LEGENDARY BLACKHOLE CARD UNLOCKED! Defeat Chaos to obtain this exclusive weapon of mass destruction!');
+              }
             }
           });
           
@@ -1116,7 +1138,7 @@ function App() {
       element: character.element
     };
     
-    // Update userPreferences system
+    // Update userPreferences system (primary storage)
     userPreferences.updateAvatar(avatarData);
     
     // Update playerProfile for backwards compatibility
@@ -1126,8 +1148,11 @@ function App() {
       avatar: character.icon || character.name
     };
     setPlayerProfile(updatedProfile);
-    secureStorage.setItem('playerProfile', JSON.stringify(updatedProfile));
+    secureStorage.setItem('playerProfile', updatedProfile);
     console.log('💾 Saved avatar to profile and preferences:', character.name);
+    
+    // Update selectedCharacter state
+    setSelectedCharacter(avatarData);
     
     // Check if coming from lobby or story mode
     if (currentOpponent) {

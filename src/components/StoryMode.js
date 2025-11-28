@@ -189,12 +189,15 @@ function StoryMode({ onStartBattle, onBack, storyProgress }) {
               key={stage.stage}
               className={`stage-node ${status} ${stage.isBoss ? 'boss' : ''}`}
               onClick={() => !isLocked && handleStageClick(stage)}
-              style={{ '--delay': `${index * 0.1}s` }}
+              style={{ 
+                '--delay': `${index * 0.1}s`,
+                backgroundImage: stage.levelImage ? `url(${process.env.PUBLIC_URL}/${stage.levelImage})` : 'none'
+              }}
             >
               <div className="stage-number">{stage.stage}</div>
               <div className="stage-avatar">
                 {opponent?.avatarImage ? (
-                  <img src={`${process.env.PUBLIC_URL}/${opponent.avatarImage}`} alt={opponent.name} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <img src={`${process.env.PUBLIC_URL}/${opponent.avatarImage}`} alt={opponent.name} />
                 ) : (
                   opponent?.avatar || '❓'
                 )}
@@ -219,7 +222,7 @@ function StoryMode({ onStartBattle, onBack, storyProgress }) {
             <div className="opponent-info">
               <div className="opponent-avatar-large">
                 {AI_PERSONALITIES[selectedStage.opponent]?.avatarImage ? (
-                  <img src={`${process.env.PUBLIC_URL}/${AI_PERSONALITIES[selectedStage.opponent].avatarImage}`} alt={AI_PERSONALITIES[selectedStage.opponent]?.name} style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <img src={`${process.env.PUBLIC_URL}/${AI_PERSONALITIES[selectedStage.opponent].avatarImage}`} alt={AI_PERSONALITIES[selectedStage.opponent]?.name} />
                 ) : (
                   AI_PERSONALITIES[selectedStage.opponent]?.avatar
                 )}
