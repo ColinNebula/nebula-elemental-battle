@@ -8,6 +8,7 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const [avatarCategory, setAvatarCategory] = useState('heroes');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(player?.name || 'Player');
+  const [saveMessage, setSaveMessage] = useState(null);
   
   const avatarCategories = {
     heroes: {
@@ -71,7 +72,17 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       const aiAvatars = ['🤖', '👾', '🎮', '💻', '🦾'];
       return aiAvatars[Math.floor(Math.random() * aiAvatars.length)];
     }
-    return stats?.avatar || '👤';
+    // Check for selectedAvatar object first (from character selection)
+    const selectedAvatar = stats?.selectedAvatar || player?.selectedAvatar;
+    if (selectedAvatar && selectedAvatar.icon) {
+      return selectedAvatar.icon;
+    }
+    // Also check userPreferences
+    const prefsAvatar = userPreferences.getAvatar();
+    if (prefsAvatar && prefsAvatar.icon) {
+      return prefsAvatar.icon;
+    }
+    return stats?.avatar || player?.avatar || '👤';
   };
 
   const getRank = () => {
@@ -176,11 +187,47 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const handleNameSave = () => {
     if (editedName.trim() && editedName.trim() !== player.name) {
       userPreferences.updatePlayerName(editedName.trim());
+      // Also save directly to localStorage for persistence
+      localStorage.setItem('playerName', editedName.trim());
       if (onUpdateProfile) {
         onUpdateProfile({ name: editedName.trim() });
       }
     }
     setIsEditingName(false);
+  };
+
+  // Save all settings to ensure persistence
+  const saveAllSettings = () => {
+    try {
+      // Get current avatar
+      const currentAvatar = userPreferences.getAvatar() || stats?.selectedAvatar;
+      const currentName = editedName.trim() || player?.name || 'Player';
+      
+      // Save name
+      userPreferences.updatePlayerName(currentName);
+      localStorage.setItem('playerName', currentName);
+      
+      // Save avatar if exists
+      if (currentAvatar) {
+        userPreferences.updateAvatar(currentAvatar);
+        localStorage.setItem('savedAvatar', JSON.stringify(currentAvatar));
+      }
+      
+      // Update profile
+      if (onUpdateProfile) {
+        onUpdateProfile({ name: currentName });
+      }
+      
+      // Show success message
+      setSaveMessage('✅ Settings saved!');
+      setTimeout(() => setSaveMessage(null), 3000);
+      
+      console.log('💾 All settings saved:', { name: currentName, avatar: currentAvatar });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSaveMessage('❌ Error saving settings');
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
   };
 
   const handleNameCancel = () => {
@@ -497,6 +544,18 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Save Settings Button */}
+        {!isAI && (
+          <div className="save-settings-container">
+            <button className="save-settings-btn" onClick={saveAllSettings}>
+              💾 Save Settings
+            </button>
+            {saveMessage && (
+              <span className="save-message">{saveMessage}</span>
+            )}
           </div>
         )}
 

@@ -9,12 +9,15 @@ class SecureStorage {
   constructor() {
     this.protectedKeys = [
       'playerProfile',
+      'playerInventory',
       'inventory', 
       'gameSettings',
       'statistics',
       'themeUnlocks',
       'storyProgress',
-      'achievements'
+      'achievements',
+      'userPreferences',
+      'gameProgress'
     ];
   }
 

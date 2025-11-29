@@ -17,6 +17,7 @@ import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/p
 import mobileScreenManager from './utils/mobileScreenManager';
 import soundManager from './utils/sounds';
 import userPreferences from './utils/userPreferences';
+import gameProgress from './utils/gameProgress';
 
 // Lazy load heavy components for code splitting
 const StoryMode = lazy(() => import('./components/StoryMode'));
@@ -197,6 +198,11 @@ function App() {
   const [showStoryMode, setShowStoryMode] = useState(false);
   const [storyModeStage, setStoryModeStage] = useState(null);
   const [completedStoryStages, setCompletedStoryStages] = useState(() => {
+    // Try gameProgress first (unified storage), fall back to legacy recovery
+    const progress = gameProgress.getGameProgress();
+    if (progress.completedStoryStages && progress.completedStoryStages.length > 0) {
+      return progress.completedStoryStages;
+    }
     return recoverStoryProgress();
   });
   const [showCredits, setShowCredits] = useState(false);
@@ -218,24 +224,75 @@ function App() {
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
-    // Load saved avatar from userPreferences first, then playerProfile as fallback
+    // Try multiple sources to find saved avatar
+    console.log('🎮 [INIT] Loading saved avatar...');
+    
+    // 0. Try direct localStorage first (most reliable, no encryption)
+    try {
+      const directSaved = localStorage.getItem('savedAvatar');
+      if (directSaved) {
+        const parsed = JSON.parse(directSaved);
+        console.log('🎮 [INIT] Found savedAvatar in localStorage:', parsed);
+        if (parsed && (parsed.id || parsed.icon)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.log('🎮 [INIT] Could not parse savedAvatar:', e);
+    }
+    
+    // 1. Try userPreferences first (primary storage)
     const savedAvatar = userPreferences.getAvatar();
-    if (savedAvatar) {
-      console.log('🎮 Loaded saved avatar from preferences:', savedAvatar.name);
+    console.log('🎮 [INIT] userPreferences.getAvatar():', savedAvatar);
+    if (savedAvatar && (savedAvatar.id || savedAvatar.icon)) {
+      console.log('🎮 [INIT] Loaded saved avatar from preferences:', savedAvatar.name || savedAvatar.icon);
       return savedAvatar;
     }
     
-    // Fallback to playerProfile
+    // 2. Fallback to playerProfile
     const profile = recoverProfile();
-    if (profile?.selectedAvatar) {
-      console.log('🎮 Loaded saved avatar from profile:', profile.selectedAvatar.name);
+    console.log('🎮 [INIT] recoverProfile() selectedAvatar:', profile?.selectedAvatar);
+    if (profile?.selectedAvatar && (profile.selectedAvatar.id || profile.selectedAvatar.icon)) {
+      console.log('🎮 [INIT] Loaded saved avatar from profile:', profile.selectedAvatar.name || profile.selectedAvatar.icon);
+      // Also save to userPreferences for future consistency
+      userPreferences.updateAvatar(profile.selectedAvatar);
       return profile.selectedAvatar;
     }
+    
+    // 3. Try direct secureStorage as last resort
+    const directProfile = secureStorage.getItem('playerProfile');
+    console.log('🎮 [INIT] secureStorage playerProfile:', directProfile);
+    console.log('🎮 [INIT] directProfile.selectedAvatar:', directProfile?.selectedAvatar);
+    console.log('🎮 [INIT] directProfile.avatar:', directProfile?.avatar);
+    
+    if (directProfile?.selectedAvatar && (directProfile.selectedAvatar.id || directProfile.selectedAvatar.icon)) {
+      console.log('🎮 [INIT] Loaded saved avatar from direct storage:', directProfile.selectedAvatar.name || directProfile.selectedAvatar.icon);
+      userPreferences.updateAvatar(directProfile.selectedAvatar);
+      return directProfile.selectedAvatar;
+    }
+    
+    // 4. Check for legacy avatar format (just an emoji string)
+    if (directProfile?.avatar && typeof directProfile.avatar === 'string') {
+      const legacyAvatar = { id: 'legacy', name: 'Avatar', icon: directProfile.avatar, element: 'NEUTRAL' };
+      console.log('🎮 [INIT] Loaded legacy avatar from profile:', legacyAvatar);
+      userPreferences.updateAvatar(legacyAvatar);
+      return legacyAvatar;
+    }
+    
+    console.log('🎮 [INIT] No saved avatar found, will show selection on first play');
     return null;
   });
   const [showVictoryRewards, setShowVictoryRewards] = useState(false);
   const [victoryRewardsData, setVictoryRewardsData] = useState(null);
-  const [playerProfile, setPlayerProfile] = useState(() => recoverProfile());
+  const [playerProfile, setPlayerProfile] = useState(() => {
+    const profile = recoverProfile();
+    // Also check localStorage for saved player name
+    const savedName = localStorage.getItem('playerName');
+    if (savedName && profile) {
+      profile.name = savedName;
+    }
+    return profile;
+  });
   const [gameStartTime, setGameStartTime] = useState(null);
   const [lastRoundWinner, setLastRoundWinner] = useState(null);
   const [rewardsAwarded, setRewardsAwarded] = useState(false);
@@ -376,13 +433,14 @@ function App() {
     secureStorage.setItem('playerInventory', playerInventory);
   }, [playerInventory]);
 
-  // Sync selectedCharacter with userPreferences on mount and when preferences change
+  // Sync selectedCharacter with userPreferences on mount
   useEffect(() => {
     const savedAvatar = userPreferences.getAvatar();
-    if (savedAvatar && (!selectedCharacter || selectedCharacter.id !== savedAvatar.id)) {
+    if (savedAvatar && savedAvatar.id) {
       console.log('🔄 Syncing avatar from preferences:', savedAvatar.name);
       setSelectedCharacter(savedAvatar);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Inventory handlers
@@ -422,9 +480,17 @@ function App() {
       const storyBackup = localStorage.getItem('storyModeBackup');
       const tutorialCompleted = localStorage.getItem('tutorialCompleted');
       const gameSettings = secureStorage.getItem('gameSettings');
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      const playerName = localStorage.getItem('playerName');
       
-      // Clear only cache data
-      const keysToPreserve = ['playerThemes', 'playerProfile', 'storyModeProgress', 'storyModeBackup', 'tutorialCompleted', 'gameSettings', '_encKey', 'checksums'];
+      // Clear only cache data - preserve all user data keys
+      const keysToPreserve = [
+        'playerThemes', 'playerProfile', 'storyModeProgress', 'storyModeBackup', 
+        'tutorialCompleted', 'gameSettings', '_encKey', 'checksums',
+        'savedAvatar', 'playerName', 'userPreferences', 'gameProgress',
+        'elementalBattleStats', 'profileBackup', 'gameProgressBackup', 'settingsBackup',
+        'secureStorageMigrated', 'appVersion'
+      ];
       const allKeys = Object.keys(localStorage);
       allKeys.forEach(key => {
         if (!keysToPreserve.includes(key)) {
@@ -439,6 +505,8 @@ function App() {
       if (storyBackup) localStorage.setItem('storyModeBackup', storyBackup);
       if (tutorialCompleted) localStorage.setItem('tutorialCompleted', tutorialCompleted);
       if (gameSettings) secureStorage.setItem('gameSettings', gameSettings);
+      if (savedAvatar) localStorage.setItem('savedAvatar', savedAvatar);
+      if (playerName) localStorage.setItem('playerName', playerName);
       
       localStorage.setItem('appVersion', APP_VERSION);
       console.log('✅ User data preserved during version update');
@@ -598,6 +666,18 @@ function App() {
           aiScore: aiPlayer.score
         }, !!storyModeStage);
         
+        // Record game result in unified gameProgress system
+        gameProgress.recordGameResult({
+          won: playerWon === true,
+          lost: playerWon === false,
+          tied: playerWon === null
+        });
+        
+        // Add coins to unified progress
+        if (coinReward.coinsEarned > 0) {
+          gameProgress.addCoins(coinReward.coinsEarned, storyModeStage ? 'story_mode_win' : 'game_win');
+        }
+        
         // Mark rewards as awarded for this game
         setRewardsAwarded(true);
         
@@ -620,9 +700,10 @@ function App() {
               playerInventory.addItem(item);
               console.log(`✨ Obtained: ${item.name} (${item.rarity})`);
               
-              // Special notification for Blackhole card
+              // Special notification for Blackhole card and track unlock
               if (item.id === 'blackhole') {
                 console.log('🌌🕳️ LEGENDARY BLACKHOLE CARD UNLOCKED! Defeat Chaos to obtain this exclusive weapon of mass destruction!');
+                gameProgress.unlockCard('blackhole');
               }
             }
           });
@@ -647,7 +728,10 @@ function App() {
           setCompletedStoryStages(prev => {
             const newProgress = [...prev, storyModeStage].sort((a, b) => a - b);
             
-            // Primary autosave
+            // Save to unified gameProgress system (primary)
+            gameProgress.completeStoryStage(storyModeStage);
+            
+            // Also save to legacy locations for backwards compatibility
             localStorage.setItem('storyModeProgress', JSON.stringify(newProgress));
             
             // Backup save with timestamp
@@ -709,6 +793,8 @@ function App() {
     console.log('✅ Tutorial completed');
     setShowTutorialMode(false);
     setShowMainMenu(true);
+    // Save to unified gameProgress system
+    gameProgress.completeTutorial();
     localStorage.setItem('tutorialCompleted', 'true');
   };
 
@@ -775,6 +861,25 @@ function App() {
     setShowSplash(false);
     setIsReturningToSplash(false);
     setShowMainMenu(true);
+    
+    // Restore saved avatar and player name from storage
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed && (parsed.id || parsed.icon)) {
+          setSelectedCharacter(parsed);
+          console.log('🎮 Restored saved avatar on quit:', parsed.name);
+        }
+      }
+      const savedName = localStorage.getItem('playerName');
+      if (savedName && playerProfile) {
+        setPlayerProfile(prev => ({ ...prev, name: savedName }));
+        console.log('🎮 Restored saved player name on quit:', savedName);
+      }
+    } catch (e) {
+      console.log('Could not restore avatar/name:', e);
+    }
   };
 
   const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS', strategicMode = null) => {
@@ -1115,14 +1220,14 @@ function App() {
     if (window.gameStateInterval) {
       clearInterval(window.gameStateInterval);
     }
-    // Reset to main menu
+    // Reset to main menu but preserve avatar
     setInGame(false);
     setRoomId(null);
     setGameState(null);
     setGameStartTime(null);
     setShowMainMenu(true);
     setShowCharacterSelection(false);
-    setSelectedCharacter(null);
+    // Don't reset selectedCharacter - preserve the saved avatar
   };
 
   const handleCharacterSelect = async (character) => {
@@ -1141,6 +1246,9 @@ function App() {
     // Update userPreferences system (primary storage)
     userPreferences.updateAvatar(avatarData);
     
+    // Save directly to localStorage (most reliable)
+    localStorage.setItem('savedAvatar', JSON.stringify(avatarData));
+    
     // Update playerProfile for backwards compatibility
     const updatedProfile = {
       ...playerProfile,
@@ -1149,7 +1257,7 @@ function App() {
     };
     setPlayerProfile(updatedProfile);
     secureStorage.setItem('playerProfile', updatedProfile);
-    console.log('💾 Saved avatar to profile and preferences:', character.name);
+    console.log('💾 Saved avatar to profile, preferences, and localStorage:', character.name);
     
     // Update selectedCharacter state
     setSelectedCharacter(avatarData);
@@ -1168,7 +1276,22 @@ function App() {
 
   const handleBackFromCharacterSelection = () => {
     setShowCharacterSelection(false);
-    setSelectedCharacter(null);
+    
+    // Restore saved avatar from storage instead of clearing it
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed && (parsed.id || parsed.icon)) {
+          setSelectedCharacter(parsed);
+          console.log('🎮 Restored saved avatar on back:', parsed.name);
+        }
+      } else {
+        setSelectedCharacter(null);
+      }
+    } catch (e) {
+      setSelectedCharacter(null);
+    }
     
     // Return to either lobby or main menu based on where we came from
     if (currentOpponent) {
@@ -1314,24 +1437,38 @@ function App() {
                 onUpdateProfile={(updates) => {
                   // Update avatar in userPreferences if avatar changed
                   if (updates.avatar) {
-                    userPreferences.updateAvatar({
+                    const avatarData = {
                       id: 'custom',
                       name: 'Custom Avatar',
                       icon: updates.avatar,
                       element: 'NEUTRAL'
-                    });
+                    };
+                    console.log('🎭 [APP] Saving avatar to userPreferences:', avatarData);
+                    userPreferences.updateAvatar(avatarData);
+                    
                     // Also update selectedCharacter to reflect on main menu
-                    setSelectedCharacter({
-                      id: 'custom',
-                      name: 'Custom Avatar',
-                      icon: updates.avatar,
-                      element: 'NEUTRAL'
-                    });
+                    setSelectedCharacter(avatarData);
+                    
+                    // Also save to playerProfile directly for MainMenu fallback
+                    const currentProfile = secureStorage.getItem('playerProfile') || {};
+                    currentProfile.selectedAvatar = avatarData;
+                    currentProfile.avatar = updates.avatar;
+                    secureStorage.setItem('playerProfile', currentProfile);
+                    console.log('🎭 [APP] Also saved to playerProfile:', currentProfile);
+                    
+                    // DIRECT localStorage backup (bypasses encryption for debugging)
+                    localStorage.setItem('savedAvatar', JSON.stringify(avatarData));
+                    console.log('🎭 [APP] Also saved directly to localStorage savedAvatar');
+                    
+                    // Force dispatch event to update MainMenu
+                    window.dispatchEvent(new CustomEvent('userPreferencesUpdated', { 
+                      detail: { selectedAvatar: avatarData }
+                    }));
+                    console.log('🎭 [APP] Dispatched userPreferencesUpdated event');
                   }
                   
                   const updatedProfile = { ...playerProfile, ...updates };
                   setPlayerProfile(updatedProfile);
-                  updateProfile(updatedProfile);
                   
                   console.log('✅ Profile updated, avatar synced to main menu');
                 }}
@@ -1362,6 +1499,8 @@ function App() {
           onShowInventory={() => setShowInventory(true)}
           onShowSettings={() => setShowSettings(true)}
           onQuit={handleQuit}
+          playerAvatar={selectedCharacter}
+          playerName={playerProfile?.name || 'Player'}
         />
       ) : !showSplash && showStoryMode && !inGame ? (
         <Suspense fallback={<LoadingFallback />}>
@@ -1448,7 +1587,9 @@ function App() {
             <Suspense fallback={<LoadingFallback />}>
               <CoinToss
                 playerName={gameState?.players?.find(p => p.id === playerId)?.name || 'Player'}
+                playerAvatar={selectedCharacter?.image || selectedCharacter?.icon || '👤'}
                 opponentName={gameState?.players?.find(p => p.id !== playerId)?.name || 'Opponent'}
+                opponentAvatar={gameState?.players?.find(p => p.id !== playerId)?.avatarImage || gameState?.players?.find(p => p.id !== playerId)?.avatar || '🤖'}
                 onComplete={handleCoinTossComplete}
               />
             </Suspense>

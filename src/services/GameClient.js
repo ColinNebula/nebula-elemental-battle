@@ -601,8 +601,8 @@ class GameClient {
             });
             
             // AI plays after delay (give player time to see their card)
-            // Tutorial mode uses faster timing: 2s instead of 6s
-            const aiActivationDelay = chooseRoom.isTutorial ? 2000 : 6000;
+            // Tutorial mode uses faster timing: 1.5s instead of 3s
+            const aiActivationDelay = chooseRoom.isTutorial ? 1500 : 3000;
             const aiActivationTimeout = setTimeout(() => {
               console.log(`⏰ AI activation timeout triggered (${aiActivationDelay}ms after player card)`);
               console.log('🔍 Checking AI availability:', {
@@ -672,7 +672,7 @@ class GameClient {
                 ai.active = true;
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
                 console.log('📤 AI activation notified');
-                const aiCardDelay = chooseRoom.isTutorial ? 1000 : 2000;
+                const aiCardDelay = chooseRoom.isTutorial ? 800 : 1500;
                 console.log(`⏱️ About to create AI card selection timeout (${aiCardDelay}ms)...`);
                 
                 const aiCardSelectionTimeout = setTimeout(() => {
@@ -938,9 +938,124 @@ class GameClient {
                   });
                   
                   console.log('📢 AI card added to played cards, notifying listeners...');
+                  
+                  // First update to show both cards played
                   this.notifyListeners('GAME_UPDATE', chooseRoom);
-                  const battleDelay = chooseRoom.isTutorial ? 3000 : 6000;
-                  console.log(`✅ Listeners notified, starting battle resolution timer (${battleDelay}ms)...`);
+                  
+                  // Check if any POWER cards were played - delay generation for visual effect
+                  const playerPlayedPower = player.chosenCard?.element === 'POWER';
+                  const aiPlayedPower = ai.chosenCard?.element === 'POWER';
+                  const playerPowerIsLegendary = playerPlayedPower && player.chosenCard?.tier === 'LEGENDARY';
+                  const aiPowerIsLegendary = aiPlayedPower && ai.chosenCard?.tier === 'LEGENDARY';
+                  const powerCardDelay = (playerPlayedPower || aiPlayedPower) ? 1000 : 0;
+                  
+                  // Helper function to create a TECHNOLOGY shield card
+                  const createShieldCard = () => ({
+                    element: 'TECHNOLOGY',
+                    strength: 7,
+                    tier: 'RARE',
+                    id: Date.now() + '_shield_' + Math.random().toString(36).substr(2, 9),
+                    techAbility: 'SHIELD',
+                    shield: 4,
+                    evolved: false,
+                    isCounter: false,
+                    isNewlyGenerated: true,
+                    isShieldCard: true
+                  });
+                  
+                  // POWER card effect - generate card with 1 second delay for visual feedback
+                  if (powerCardDelay > 0) {
+                    console.log('⭐ POWER card played, waiting 1 second before generating...');
+                    setTimeout(() => {
+                      if (playerPlayedPower) {
+                        // Generate random card
+                        const randomCards = this.generateAdvancedCards(1);
+                        const generatedCard = randomCards[0];
+                        generatedCard.isNewlyGenerated = true; // Flag for animation
+                        player.playedCards.push(generatedCard);
+                        chooseRoom.playedCards.push({
+                          playerId: player.id,
+                          playerName: player.name + ' (POWER)',
+                          card: generatedCard,
+                          round: chooseRoom.currentRound + 1,
+                          isGenerated: true
+                        });
+                        console.log('⭐ POWER: Generated card on arena:', generatedCard.element, generatedCard.strength);
+                        
+                        // LEGENDARY POWER card bonus: also generate a TECHNOLOGY shield card
+                        if (playerPowerIsLegendary) {
+                          const shieldCard = createShieldCard();
+                          player.playedCards.push(shieldCard);
+                          chooseRoom.playedCards.push({
+                            playerId: player.id,
+                            playerName: player.name + ' (LEGENDARY ⭐)',
+                            card: shieldCard,
+                            round: chooseRoom.currentRound + 1,
+                            isGenerated: true,
+                            isShieldBonus: true
+                          });
+                          console.log('🛡️ LEGENDARY POWER: Also generated TECHNOLOGY shield card!');
+                          chooseRoom.lastGeneratedCard = { 
+                            playerId: player.id, 
+                            card: generatedCard, 
+                            bonusCard: shieldCard,
+                            isLegendary: true 
+                          };
+                        } else {
+                          chooseRoom.lastGeneratedCard = { playerId: player.id, card: generatedCard };
+                        }
+                      }
+                      
+                      if (aiPlayedPower) {
+                        // Generate random card
+                        const randomCards = this.generateAdvancedCards(1);
+                        const generatedCard = randomCards[0];
+                        generatedCard.isNewlyGenerated = true; // Flag for animation
+                        ai.playedCards.push(generatedCard);
+                        chooseRoom.playedCards.push({
+                          playerId: ai.id,
+                          playerName: ai.name + ' (POWER)',
+                          card: generatedCard,
+                          round: chooseRoom.currentRound + 1,
+                          isGenerated: true
+                        });
+                        console.log('⭐ POWER: AI generated card on arena:', generatedCard.element, generatedCard.strength);
+                        
+                        // LEGENDARY POWER card bonus: also generate a TECHNOLOGY shield card
+                        if (aiPowerIsLegendary) {
+                          const shieldCard = createShieldCard();
+                          ai.playedCards.push(shieldCard);
+                          chooseRoom.playedCards.push({
+                            playerId: ai.id,
+                            playerName: ai.name + ' (LEGENDARY ⭐)',
+                            card: shieldCard,
+                            round: chooseRoom.currentRound + 1,
+                            isGenerated: true,
+                            isShieldBonus: true
+                          });
+                          console.log('🛡️ LEGENDARY POWER: AI also generated TECHNOLOGY shield card!');
+                          chooseRoom.lastGeneratedCard = { 
+                            playerId: ai.id, 
+                            card: generatedCard, 
+                            bonusCard: shieldCard,
+                            isLegendary: true 
+                          };
+                        } else {
+                          chooseRoom.lastGeneratedCard = { playerId: ai.id, card: generatedCard };
+                        }
+                      }
+                      
+                      // Notify listeners again to show the newly generated card(s)
+                      this.notifyListeners('GAME_UPDATE', chooseRoom);
+                    }, powerCardDelay);
+                  }
+                  
+                  // Add extra delay if POWER card was played (1s for generation + 1s to view it, +1s more for legendary bonus)
+                  const baseBattleDelay = chooseRoom.isTutorial ? 2000 : 3000;
+                  const legendaryBonusDelay = (playerPowerIsLegendary || aiPowerIsLegendary) ? 500 : 0;
+                  const battleDelay = baseBattleDelay + (powerCardDelay > 0 ? 1500 + legendaryBonusDelay : 0);
+                  const nextRoundDelay = chooseRoom.isTutorial ? 3000 : 5000; // Reduced: 3s tutorial, 5s normal after battle for next round
+                  console.log(`✅ Listeners notified, starting battle resolution timer (${battleDelay}ms), next round in (${nextRoundDelay}ms)...`);
                   console.log('⏱️ About to create setTimeout for battle resolution...');
                   
                   // Resolve battle with advanced mechanics (tutorial: 3s, normal: 6s delay to view AI card)
@@ -1191,7 +1306,7 @@ class GameClient {
                         console.log('📤 Notifying listeners of GAME OVER after delay...');
                         this.notifyListeners('GAME_UPDATE', chooseRoom);
                         console.log('✅ Game over notification sent');
-                      }, 3000); // 3 second delay to show the winning card
+                      }, 2000); // 2 second delay to show the winning card
                       
                       // Send immediate battle result update (without gameOver flag yet)
                       const battleResultState = { ...chooseRoom };
@@ -1267,6 +1382,17 @@ class GameClient {
                           player.active = false;
                           ai.active = false;
                           console.log('⏸️ Waiting for EARTH ability resolution before continuing');
+                          
+                          // Auto-skip ability after 20 seconds if not resolved (safety)
+                          setTimeout(() => {
+                            if (chooseRoom.pendingAbility) {
+                              console.log('⏱️ Auto-skipping unresolved ability after 20 seconds');
+                              delete chooseRoom.pendingAbility;
+                              player.active = true;
+                              ai.active = false;
+                              this.notifyListeners('GAME_UPDATE', chooseRoom);
+                            }
+                          }, 20000);
                         }
                         
                         // Check if both players are out of cards before starting next round
@@ -1313,7 +1439,7 @@ class GameClient {
                         console.log('📤 Notifying listeners for new round...');
                         this.notifyListeners('GAME_UPDATE', chooseRoom);
                         console.log('✅ New round notification sent');
-                      }, battleDelay); // Tutorial: 3s, Normal: 6s delay for next round
+                      }, nextRoundDelay); // Tutorial: 6s, Normal: 12s delay for next round (includes 6s pause after battle)
                     }
                     console.log('📤 Notifying listeners of battle result...');
                     this.notifyListeners('GAME_UPDATE', chooseRoom);
@@ -1479,12 +1605,27 @@ class GameClient {
       case 'FORFEIT_TURN':
         const [, forfeitRoomId, forfeitPlayerId] = parts;
         const forfeitRoom = this.mockState.rooms[forfeitRoomId];
+        console.log('🔄 FORFEIT_TURN received:', { 
+          roomId: forfeitRoomId, 
+          playerId: forfeitPlayerId,
+          roomExists: !!forfeitRoom,
+          gameStarted: forfeitRoom?.gameStarted
+        });
+        
         if (forfeitRoom && forfeitRoom.gameStarted) {
           const forfeitPlayer = forfeitRoom.players.find(p => p.id === forfeitPlayerId);
           const opponent = forfeitRoom.players.find(p => p.id !== forfeitPlayerId);
           
-          if (forfeitPlayer && forfeitPlayer.active) {
-            console.log('⏭️ Player forfeited turn (fusion/trap action)');
+          console.log('🔄 FORFEIT_TURN state:', {
+            forfeitPlayerExists: !!forfeitPlayer,
+            forfeitPlayerActive: forfeitPlayer?.active,
+            opponentExists: !!opponent,
+            opponentIsAI: opponent?.isAI
+          });
+          
+          // Allow forfeit even if not strictly "active" - handles ultimate ability case
+          if (forfeitPlayer) {
+            console.log('⏭️ Player forfeited turn (ultimate/fusion/trap action)');
             
             // Don't penalize for strategic actions like fusion
             // forfeitPlayer.score = Math.max(0, forfeitPlayer.score - 1);
@@ -2137,47 +2278,15 @@ class GameClient {
       }
     }
     
-    // POWER: Generate a random card on the arena
+    // POWER: Apply strength boost (card generation happens instantly before battle)
     if (player1Card.element === 'POWER' && !player1Silenced) {
-      // Generate a random card directly on the arena
-      const randomCards = this.generateAdvancedCards(1);
-      const generatedCard = randomCards[0];
-      
-      // Add the generated card to played cards for visual display
-      player1.playedCards.push(generatedCard);
-      room.playedCards.push({
-        playerId: player1.id,
-        playerName: player1.name + ' (POWER)',
-        card: generatedCard,
-        round: room.currentRound,
-        isGenerated: true // Mark as generated for special display
-      });
-      
-      console.log('⭐ POWER: Generated random card on arena:', generatedCard.element, generatedCard.strength);
-      
-      // Also apply strength boost as bonus
       this.applyStatusEffect(room, player1, 'STRENGTH_BOOST', 2, 2);
+      console.log('⭐ POWER: Applied strength boost');
     }
     
     if (player2Card.element === 'POWER' && !player2Silenced) {
-      // Generate a random card directly on the arena
-      const randomCards = this.generateAdvancedCards(1);
-      const generatedCard = randomCards[0];
-      
-      // Add the generated card to played cards for visual display
-      player2.playedCards.push(generatedCard);
-      room.playedCards.push({
-        playerId: player2.id,
-        playerName: player2.name + ' (POWER)',
-        card: generatedCard,
-        round: room.currentRound,
-        isGenerated: true // Mark as generated for special display
-      });
-      
-      console.log('⭐ POWER: AI generated random card on arena:', generatedCard.element, generatedCard.strength);
-      
-      // Also apply strength boost as bonus
       this.applyStatusEffect(room, player2, 'STRENGTH_BOOST', 2, 2);
+      console.log('⭐ POWER: AI applied strength boost');
     }
     
     // TECHNOLOGY: Shield EARTH cards from attacks and protect from METEOR
@@ -2575,10 +2684,16 @@ class GameClient {
   }
 
   async send(command) {
-    console.log('🎮 GameClient sending command:', command);
+    // Only log non-polling commands to reduce console noise
+    const isPollingCommand = command.startsWith('GET_STATE');
+    if (!isPollingCommand) {
+      console.log('🎮 GameClient sending command:', command);
+    }
     
     if (this.mockMode) {
-      console.log('Mock mode - processing command:', command);
+      if (!isPollingCommand) {
+        console.log('Mock mode - processing command:', command);
+      }
       const data = this.mockCommand(command);
       this.handleMessage(data);
       return data;

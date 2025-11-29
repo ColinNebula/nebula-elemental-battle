@@ -8,7 +8,6 @@ import {
   createParticles, 
   createDamageNumber, 
   triggerScreenShake, 
-  createVictoryCelebration,
   createCardDrawAnimation,
   createVictoryPose,
   createEnvironmentalEffect,
@@ -17,8 +16,7 @@ import {
   createShuffleAnimation,
   createCardFlipAnimation,
   createComboMultiplierAnimation,
-  createElementPlayAnimation,
-  createEnhancedVictoryPose
+  createElementPlayAnimation
 } from '../utils/animations';
 import {
   handleCriticalHit,
@@ -30,7 +28,15 @@ import {
   applyElementalBackground,
   createSlowMotionReplay,
   isDecisivePlay,
-  createEpicMoment
+  createEpicMoment,
+  createUltimateActivation,
+  createCardTrail,
+  createFloatingDamage,
+  createImpactSparks,
+  createPowerChargeAura,
+  createRoundClash,
+  add3DCardTilt,
+  createWinStreakFire
 } from '../utils/visualEffects';
 import {
   initializeMana,
@@ -119,6 +125,32 @@ const GameBoard = ({
   const [hasAutoSkipped, setHasAutoSkipped] = useState(false);
   const timerIntervalRef = useRef(null);
   
+  // Mobile detection and speed optimization
+  const isMobile = useMemo(() => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           ('ontouchstart' in window) ||
+           (navigator.maxTouchPoints > 0) ||
+           window.innerWidth <= 768;
+  }, []);
+  
+  // Speed multiplier for animations (lower = faster)
+  const speedMultiplier = useMemo(() => {
+    // Base multiplier based on device
+    let multiplier = isMobile ? 0.6 : 1.0;
+    
+    // Adjust based on user's game speed setting
+    const gameSpeed = settings?.gameSpeed || 'normal';
+    if (gameSpeed === 'fast') multiplier *= 0.5;
+    else if (gameSpeed === 'slow') multiplier *= 1.5;
+    
+    return multiplier;
+  }, [isMobile, settings?.gameSpeed]);
+  
+  // Helper function to get adjusted delay
+  const getDelay = useCallback((baseDelay) => {
+    return Math.round(baseDelay * speedMultiplier);
+  }, [speedMultiplier]);
+  
   // Sidebar visibility
   const [sidebarState, setSidebarState] = useState({
     left: false,
@@ -130,6 +162,10 @@ const GameBoard = ({
   const [meteorDamageDisplay, setMeteorDamageDisplay] = useState([]);
   const [meteorStrikeInfo, setMeteorStrikeInfo] = useState(null);
   const [defeatCountdown, setDefeatCountdown] = useState(null);
+  
+  // Win streak tracking for visual effects
+  const [playerWinStreak, setPlayerWinStreak] = useState(0);
+  const lastScoresRef = useRef({ player: 0, ai: 0 });
   
   // Theme state
   const [themeState, setThemeState] = useState({
@@ -173,6 +209,7 @@ const GameBoard = ({
   const [swapMode, setSwapMode] = useState(false);
   const [selectedSideboardCard, setSelectedSideboardCard] = useState(null);
   const [showEquipmentStats, setShowEquipmentStats] = useState(false);
+  const [powerCardMessage, setPowerCardMessage] = useState(null); // For POWER card generation announcement
   
   // Refs
   const gameBoardRef = useRef(null);
@@ -406,6 +443,19 @@ const GameBoard = ({
             // Apply rarity glow based on card power
             const power = cardPlay.card.modifiedStrength || cardPlay.card.strength;
             applyCardRarityGlow(cardEl, power);
+            
+            // NEW: Card trail effect when played
+            createCardTrail(cardEl, gameBoardRef.current, cardPlay.card.element);
+            
+            // NEW: Power charge aura for strong cards
+            if (power >= 6) {
+              setTimeout(() => {
+                createPowerChargeAura(cardEl, power, cardPlay.card.element);
+              }, 200);
+            }
+            
+            // NEW: Add 3D tilt effect for desktop
+            add3DCardTilt(cardEl);
           }
           
           // Particle effects (only if animations enabled)
@@ -438,6 +488,30 @@ const GameBoard = ({
       setLastPlayedCards(gameState.playedCards);
     }
   }, [gameState?.playedCards?.length, gameBoardRef]);
+
+  // Detect POWER card generation and show message
+  useEffect(() => {
+    if (gameState?.lastGeneratedCard) {
+      const { playerId, card, bonusCard, isLegendary } = gameState.lastGeneratedCard;
+      const isPlayerCard = playerId === currentPlayerId;
+      const playerName = isPlayerCard ? 'You' : (aiPlayer?.name || 'Opponent');
+      
+      setPowerCardMessage({
+        playerName,
+        card,
+        bonusCard,
+        isLegendary,
+        isPlayer: isPlayerCard
+      });
+      
+      // Clear message after 2.5 seconds (3.5s for legendary to show both cards)
+      const timer = setTimeout(() => {
+        setPowerCardMessage(null);
+      }, isLegendary ? 3500 : 2500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.lastGeneratedCard, currentPlayerId, aiPlayer?.name]);
 
   // Dynamic music intensity based on game state
   useEffect(() => {
@@ -575,41 +649,62 @@ const GameBoard = ({
                 animation: slideInDown 0.5s ease-out;
               `;
               gameBoardRef.current.appendChild(rewardDiv);
-              setTimeout(() => rewardDiv.remove(), 4000);
+              setTimeout(() => rewardDiv.remove(), getDelay(4000));
             }
           }
         }
         
-        // Play single victory/defeat music and stop all other sounds (ONLY ONCE)
+        // Play single victory/defeat music and ONE winner voice line (ONLY ONCE)
         if (soundManager && !gameOverSoundsPlayedRef.current) {
           gameOverSoundsPlayedRef.current = true;
           
-          // Stop all ongoing sounds and music first
+          // Stop all ongoing sounds, music, and any ongoing speech
           soundManager.stopMusic();
           soundManager.stopAllSounds();
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Stop any ongoing voice lines
+          }
           
-          // Wait a moment then play appropriate game over music
+          // Derive AI personality from name for voice lines
+          const getAiPersonality = () => {
+            const aiName = aiPlayer?.name?.toLowerCase() || '';
+            if (aiName.includes('mage') || aiName.includes('wizard') || aiName.includes('scholar')) return 'mage';
+            if (aiName.includes('rogue') || aiName.includes('shadow') || aiName.includes('thief')) return 'rogue';
+            if (aiName.includes('sage') || aiName.includes('elder') || aiName.includes('master')) return 'sage';
+            return 'warrior'; // Default
+          };
+          const aiVoice = getAiPersonality();
+          
+          // Wait a moment then play appropriate game over sound (only one sound + one voice line)
           setTimeout(() => {
             if (winner === 'Tie') {
+              // Just play victory music for ties, no voice line
               soundManager.playSound('victory');
             } else if (winner === humanPlayer?.name) {
-              // Play victory music only
+              // Player won - play victory music and ONE player voice line
               soundManager.playSound('victory');
+              
+              // Play winner's voice line after a short delay
+              setTimeout(() => {
+                if (soundManager) soundManager.playVoiceLine(avatarPersonality, 'victory');
+              }, 1500);
             } else {
-              // Play defeat sound only
+              // AI won - play defeat sound and ONE AI voice (taunt)
               soundManager.playSound('defeat');
+              
+              // Play AI's victory taunt after a short delay
+              setTimeout(() => {
+                if (soundManager) soundManager.playVoiceLine(aiVoice, 'victory');
+              }, 1500);
             }
           }, 300);
         }
         
-        // Create enhanced victory pose animation
-        createEnhancedVictoryPose(winner, gameBoardRef.current);
-        
-        // Also create traditional victory celebration
-        createVictoryCelebration(winner === 'Tie' ? 'tie' : winner, gameBoardRef.current);
+        // Note: Victory celebration removed to avoid duplicate overlays with game-over screen
+        // The game-over-overlay already shows winner info with animations
       }, 500);
     }
-  }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name]);
+  }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, avatarPersonality, aiPlayer?.name]);
 
   // Show turn announcement AFTER round announcement completes
   useEffect(() => {
@@ -646,8 +741,8 @@ const GameBoard = ({
         console.log('📢 Showing turn announcement for:', activePlayerId === currentPlayerId ? 'Player' : 'AI');
         setShowTurnAnnouncement(true);
         
-        // Play turn sound
-        if (soundManager) {
+        // Play turn sound only if no round announcement (otherwise handleRoundAnnouncementComplete will play it)
+        if (soundManager && !showRoundAnnouncement) {
           if (activePlayerId === currentPlayerId) {
             soundManager.playSound('yourTurn');
           } else {
@@ -655,8 +750,8 @@ const GameBoard = ({
           }
         }
         
-        // Keep announcement visible - shorter for AI turn
-        const announcementDuration = activePlayerId === currentPlayerId ? 2000 : 1500;
+        // Keep announcement visible - shorter for AI turn, optimized for mobile
+        const announcementDuration = getDelay(activePlayerId === currentPlayerId ? 2000 : 1500);
         const timer = setTimeout(() => {
           setShowTurnAnnouncement(false);
         }, announcementDuration);
@@ -681,7 +776,7 @@ const GameBoard = ({
         });
       }
       
-      // After 6 seconds, show "Battle Begin!" phase transition
+      // After 6 seconds, show "Battle Begin!" phase transition (optimized for mobile)
       const battleBeginTimer = setTimeout(() => {
         if (gameBoardRef.current) {
           const battleTransition = createPhaseTransition('⚔️ BATTLE BEGIN! ⚔️', gameBoardRef.current);
@@ -689,12 +784,12 @@ const GameBoard = ({
             battleTransition.classList.add('battle-start-epic');
           }
         }
-      }, 6000);
+      }, getDelay(6000));
       
       // After 11 seconds total (6s arena + 2s battle begin + 3s delay), hide initial arena and allow round announcements
       const arenaTimer = setTimeout(() => {
         setShowInitialArena(false);
-      }, 11000);
+      }, getDelay(11000));
       
       return () => {
         clearTimeout(battleBeginTimer);
@@ -722,7 +817,7 @@ const GameBoard = ({
           lastAnnouncedRoundRef.current = roundToDisplay;
           setCurrentRoundNumber(roundToDisplay);
           setShowRoundAnnouncement(true);
-          if (soundManager) soundManager.playSound('yourTurn');
+          // Note: Turn sound will play in handleRoundAnnouncementComplete to avoid duplicates
           
           // Add phase transition animation
           if (gameBoardRef.current) {
@@ -752,7 +847,7 @@ const GameBoard = ({
           
           createEnvironmentalEffect(effect, gameBoardRef.current);
         }
-        }, 500); // Small delay to ensure "Battle Begin!" has completed
+        }, getDelay(500)); // Small delay to ensure "Battle Begin!" has completed (optimized for mobile)
         
         return () => clearTimeout(roundAnnouncementTimer);
       }
@@ -816,8 +911,8 @@ const GameBoard = ({
         }
       }
       
-      // Keep announcement visible - shorter for AI turn
-      const announcementDuration = activePlayerId === currentPlayerId ? 2000 : 1500;
+      // Keep announcement visible - shorter for AI turn, optimized for mobile
+      const announcementDuration = getDelay(activePlayerId === currentPlayerId ? 2000 : 1500);
       setTimeout(() => {
         setShowTurnAnnouncement(false);
       }, announcementDuration);
@@ -826,14 +921,18 @@ const GameBoard = ({
 
   // Turn timer countdown - starts after turn announcement finishes
   useEffect(() => {
-    // Clean up any existing timer
+    // Store refs for cleanup
+    let startDelayTimer = null;
+    let countdownInterval = null;
+    
+    // Clean up any existing timer from ref
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
 
     // Don't run timer if disabled or game conditions prevent it
-    if (!settings?.timerEnabled || gameState?.gameOver || gameState?.pendingAbility || isPaused || showRoundAnnouncement) {
+    if (!settings?.timerEnabled || gameState?.gameOver || gameState?.pendingAbility || isPaused || showRoundAnnouncement || showInitialArena) {
       return;
     }
 
@@ -848,11 +947,20 @@ const GameBoard = ({
     }
     
     // Wait 1 second after turn announcement finishes before starting countdown
-    const startDelay = setTimeout(() => {
-      timerIntervalRef.current = setInterval(() => {
+    startDelayTimer = setTimeout(() => {
+      // Double-check conditions haven't changed during the delay
+      if (!isMyTurn || showTurnAnnouncement || showRoundAnnouncement || showInitialArena || gameState?.gameOver) {
+        return;
+      }
+      
+      countdownInterval = setInterval(() => {
         setTurnTimer((prev) => {
           if (prev <= 1) {
             // Clear the interval when timer expires
+            if (countdownInterval) {
+              clearInterval(countdownInterval);
+              countdownInterval = null;
+            }
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
@@ -891,17 +999,25 @@ const GameBoard = ({
           return prev - 1;
         });
       }, 1000);
+      
+      // Store in ref for external cleanup
+      timerIntervalRef.current = countdownInterval;
     }, 1000);
 
     return () => {
-      clearTimeout(startDelay);
+      if (startDelayTimer) {
+        clearTimeout(startDelayTimer);
+      }
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement]);
+  }, [isMyTurn, settings?.timerEnabled, gameState?.gameOver, gameState?.pendingAbility, isPaused, showRoundAnnouncement, showTurnAnnouncement, showInitialArena]);
 
   // Keyboard shortcuts for card selection
   useEffect(() => {
@@ -952,10 +1068,11 @@ const GameBoard = ({
     }
   }, [gameState?.gameStarted]);
 
-  // Victory pose for winning cards
+  // Victory pose for winning cards (skip if game is over to avoid conflicts with game over screen)
   useEffect(() => {
     if (!gameState?.playedCards || gameState.playedCards.length < 2) return;
     if (!gameBoardRef.current) return;
+    if (gameState?.gameOver) return; // Skip battle effects when game is over
     
     // Check if both players have played cards this round
     const humanCard = humanPlayer?.playedCards?.[humanPlayer.playedCards.length - 1];
@@ -983,6 +1100,20 @@ const GameBoard = ({
         if (winningCardElements.length > 0) {
           const winnerElement = winningCardElements[winningCardElements.length - 1];
           const loserElement = losingCardElements.length > 0 ? losingCardElements[losingCardElements.length - 1] : null;
+          
+          // NEW: Create round clash effect with impact sparks and floating damage
+          setTimeout(() => {
+            createRoundClash(
+              isHumanWinner ? winnerElement : loserElement,
+              isHumanWinner ? loserElement : winnerElement,
+              gameBoardRef.current,
+              {
+                winner: isHumanWinner ? 'player' : 'ai',
+                playerCard: humanCard,
+                aiCard: aiCard
+              }
+            );
+          }, 200);
           
           setTimeout(() => {
             if (winnerElement) {
@@ -1177,12 +1308,45 @@ const GameBoard = ({
       return;
     }
 
-    // Detect stuck states
+    // Detect stuck states - including pending ability timeout
     const isStuck = 
-      // Both players inactive
+      // Both players inactive (not during battle or pending ability)
       (humanPlayer && aiPlayer && !humanPlayer.active && !aiPlayer.active && !gameState.battlePhase && !gameState.pendingAbility) ||
       // Battle phase but cards missing
       (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard));
+    
+    // Pending ability timeout - auto-skip after 15 seconds
+    const hasPendingAbility = gameState.pendingAbility && !humanPlayer?.active && !aiPlayer?.active;
+    
+    // AI turn stuck - AI is active but not playing for too long
+    const aiTurnStuck = aiPlayer?.active && !humanPlayer?.active && !gameState.battlePhase && aiPlayer?.hand?.length > 0;
+
+    // Handle pending ability timeout
+    if (hasPendingAbility) {
+      console.log('⏱️ Pending ability detected, will auto-skip in 15 seconds if not resolved');
+      const abilityTimeout = setTimeout(() => {
+        console.log('🔧 Auto-skipping pending ability due to timeout');
+        if (onSkipAbility) {
+          onSkipAbility();
+        }
+      }, 15000);
+      
+      return () => clearTimeout(abilityTimeout);
+    }
+    
+    // Handle AI turn stuck - force AI to play after 10 seconds
+    if (aiTurnStuck && !showRoundAnnouncement && !showTurnAnnouncement && !showInitialArena) {
+      console.log('⏱️ AI turn detected, setting 10 second watchdog');
+      const aiStuckTimer = setTimeout(() => {
+        console.log('🔧 AI STUCK: Forcing AI to play a card');
+        if (aiPlayer?.hand?.length > 0 && onPlayCard) {
+          const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
+          onPlayCard(randomIndex, aiPlayer.id);
+        }
+      }, 10000);
+      
+      return () => clearTimeout(aiStuckTimer);
+    }
 
     if (isStuck) {
       console.warn('⚠️ STUCK DETECTOR: Game appears stuck!', {
@@ -1224,7 +1388,38 @@ const GameBoard = ({
       
       return () => clearTimeout(recoveryTimer);
     }
-  }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve]);
+  }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve, onSkipAbility, showRoundAnnouncement, showTurnAnnouncement, showInitialArena]);
+
+  // Master activity watchdog - if player should be playing but nothing is happening, force reset
+  useEffect(() => {
+    if (!gameState?.gameStarted || gameState?.gameOver) return;
+    
+    // Player's turn but waiting message shown means something is wrong
+    const playerShouldBePlaying = humanPlayer?.active && !gameState.battlePhase && !gameState.pendingAbility;
+    
+    if (playerShouldBePlaying && humanPlayer?.hand?.length > 0) {
+      // Player can play - set a 30 second master timeout to catch any stuck state
+      const masterTimeout = setTimeout(() => {
+        console.log('🚨 MASTER WATCHDOG: Player turn has been stuck for 30 seconds, checking state...');
+        console.log('State:', {
+          playerActive: humanPlayer?.active,
+          aiActive: aiPlayer?.active,
+          battlePhase: gameState.battlePhase,
+          pendingAbility: gameState.pendingAbility,
+          playerHand: humanPlayer?.hand?.length,
+          aiHand: aiPlayer?.hand?.length
+        });
+        
+        // If still stuck after 30s, game client might have a bug - request state refresh
+        if (humanPlayer?.active && !gameState.battlePhase) {
+          console.log('🔧 Requesting game state refresh...');
+          // The game should recover on its own if state is actually correct
+        }
+      }, 30000);
+      
+      return () => clearTimeout(masterTimeout);
+    }
+  }, [humanPlayer?.active, gameState?.battlePhase, gameState?.pendingAbility, gameState?.gameStarted, gameState?.gameOver, humanPlayer?.hand?.length, aiPlayer?.active, aiPlayer?.hand?.length]);
 
   // Check if both players have 0 cards - end the game
   useEffect(() => {
@@ -1397,7 +1592,7 @@ const GameBoard = ({
           const cardElement = cardElements[pendingCardIndex];
           if (cardElement) {
             cardElement.classList.add('evolution-glow');
-            setTimeout(() => cardElement.classList.remove('evolution-glow'), 1500);
+            setTimeout(() => cardElement.classList.remove('evolution-glow'), getDelay(1500));
           }
         }
       }
@@ -1428,7 +1623,7 @@ const GameBoard = ({
           comboDiv.className = 'combo-indicator';
           comboDiv.textContent = `${comboResult.combo.name} +${comboResult.combo.bonus}!`;
           gameBoardRef.current.appendChild(comboDiv);
-          setTimeout(() => comboDiv.remove(), 2000);
+          setTimeout(() => comboDiv.remove(), getDelay(2000));
         }
       }
       
@@ -1875,6 +2070,30 @@ const GameBoard = ({
         />
       )}
 
+      {/* POWER Card Generation Message */}
+      {powerCardMessage && (
+        <div className={`power-card-message ${powerCardMessage.isPlayer ? 'player' : 'opponent'} ${powerCardMessage.isLegendary ? 'legendary' : ''}`}>
+          <div className="power-message-content">
+            <span className="power-icon">{powerCardMessage.isLegendary ? '👑' : '⭐'}</span>
+            <div className="power-cards-info">
+              <span className="power-text">
+                {powerCardMessage.playerName} generated a {powerCardMessage.card?.element} card!
+              </span>
+              <span className="power-strength">+{powerCardMessage.card?.strength}</span>
+              {powerCardMessage.isLegendary && powerCardMessage.bonusCard && (
+                <div className="legendary-bonus">
+                  <span className="bonus-icon">🛡️</span>
+                  <span className="bonus-text">
+                    + BONUS Shield Card!
+                  </span>
+                  <span className="bonus-strength">+{powerCardMessage.bonusCard?.strength}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pause Menu */}
       {isPaused && (
         <PauseMenu
@@ -1999,25 +2218,6 @@ const GameBoard = ({
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Turn Announcement Overlay - Opponent Turn at Top */}
-      {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && !isMyTurn && (
-        <div className="turn-announcement">
-          <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
-          <div className="ai-thinking">
-            {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
-              ? '🚫 AI has no cards - Skipping turn...'
-              : 'AI is thinking...'}
-          </div>
-        </div>
-      )}
-
-      {/* Your Turn Announcement - Above Player Hand */}
-      {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && isMyTurn && (
-        <div className="your-turn-announcement">
-          <h1 className="turn-text your-turn-text">YOUR TURN!</h1>
         </div>
       )}
 
@@ -2378,13 +2578,15 @@ const GameBoard = ({
       )}
 
       {/* Left Sidebar Toggle - Outside sidebar for mobile visibility */}
-      <button 
-        className="sidebar-toggle left-toggle"
-        onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
-        aria-label="Toggle player stats"
-      >
-        {leftSidebarVisible ? '◀' : '▶'}
-      </button>
+      {!isPaused && !showFusionUI && (
+        <button 
+          className="sidebar-toggle left-toggle"
+          onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
+          aria-label="Toggle player stats"
+        >
+          {leftSidebarVisible ? '◀' : '▶'}
+        </button>
+      )}
 
       {/* Left Sidebar - Both Players */}
       <div className={`left-sidebar ${leftSidebarVisible ? 'visible' : ''}`}>
@@ -2499,13 +2701,15 @@ const GameBoard = ({
       </div>
 
       {/* Right Sidebar Toggle - Outside sidebar for mobile visibility */}
-      <button 
-        className="sidebar-toggle right-toggle"
-        onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
-        aria-label="Toggle card decks"
-      >
-        {rightSidebarVisible ? '▶' : '◀'}
-      </button>
+      {!isPaused && !showFusionUI && (
+        <button 
+          className="sidebar-toggle right-toggle"
+          onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
+          aria-label="Toggle card decks"
+        >
+          {rightSidebarVisible ? '▶' : '◀'}
+        </button>
+      )}
 
       {/* Right Sidebar - Card Decks */}
       <div className={`right-sidebar ${rightSidebarVisible ? 'visible' : ''}`}>
@@ -2590,51 +2794,133 @@ const GameBoard = ({
               <div className="ultimate-sidebar-section">
                 <h3>⚡ Ultimate Ability</h3>
                 <div 
-                  className={`ultimate-sidebar-display ${ultimateSystem.currentCooldown === 0 ? 'ready' : 'cooldown'}`}
-                  onClick={() => {
-                    if (ultimateSystem.currentCooldown === 0) {
-                      const result = powerUpSystem?.useUltimate?.(ultimateSystem, humanPlayer, aiPlayer, gameState);
-                      if (result?.success) {
-                        setUltimateSystem(result.updatedSystem);
+                  className={`ultimate-sidebar-display ${ultimateSystem.currentCooldown === 0 && isMyTurn ? 'ready' : 'cooldown'}`}
+                  onClick={async () => {
+                    if (ultimateSystem.currentCooldown === 0 && isMyTurn) {
+                      const ultimateId = ultimateSystem.selectedUltimate || ultimateSystem.id || 'meteor_strike';
+                      const ultimate = powerUpSystem.ULTIMATE_ABILITIES[ultimateId.toUpperCase()];
+                      
+                      if (!ultimate) {
+                        console.error('Invalid ultimate ability');
+                        return;
+                      }
+                      
+                      // Hide sidebar immediately for cinematic effect
+                      setRightSidebarVisible(false);
+                      
+                      // Update ultimate cooldown
+                      setUltimateSystem(prev => ({
+                        ...prev,
+                        currentCooldown: ultimate.cooldown,
+                        isReady: false,
+                        timesUsed: (prev.timesUsed || 0) + 1
+                      }));
+                      
+                      // Apply damage to opponent's arena cards (played cards)
+                      let totalDamageDealt = 0;
+                      if (ultimate.effect.type === 'AOE_DAMAGE' && aiPlayer?.playedCards) {
+                        const damageAmount = ultimate.effect.damage || 15;
+                        aiPlayer.playedCards.forEach((card, index) => {
+                          if (card) {
+                            const oldStrength = card.modifiedStrength || card.strength || 0;
+                            const newStrength = Math.max(1, oldStrength - damageAmount);
+                            card.modifiedStrength = newStrength;
+                            card.strength = newStrength;
+                            totalDamageDealt += (oldStrength - newStrength);
+                            console.log(`⚡ Ultimate hit card ${index}: ${card.element} ${oldStrength} → ${newStrength}`);
+                          }
+                        });
                         
-                        // Apply ultimate effects
-                        if (result.effects) {
-                          result.effects.forEach(effect => {
-                            if (effect.type === 'DAMAGE') {
-                              console.log(`Ultimate dealt ${effect.amount} damage`);
+                        // Also damage cards in opponent's hand
+                        if (aiPlayer?.hand) {
+                          aiPlayer.hand.forEach((card, index) => {
+                            if (card) {
+                              const oldStrength = card.modifiedStrength || card.strength || 0;
+                              const newStrength = Math.max(1, oldStrength - damageAmount);
+                              card.modifiedStrength = newStrength;
+                              card.strength = newStrength;
+                              totalDamageDealt += (oldStrength - newStrength);
                             }
                           });
                         }
                         
-                        // Visual feedback
-                        if (gameBoardRef.current) {
-                          triggerScreenShake(gameBoardRef.current);
-                          createElementalWeather('METEOR', gameBoardRef.current);
-                        }
+                        console.log(`⚡ ULTIMATE TOTAL DAMAGE: ${totalDamageDealt}`);
+                      }
+                      
+                      // Enhanced visual feedback with unique animations
+                      if (gameBoardRef.current) {
+                        createUltimateActivation(ultimateId, gameBoardRef.current);
                         
-                        setShowMatchBonus({ 
-                          message: `⚡ ${result.ultimateData.name.toUpperCase()}!`,
-                          type: 'ultimate'
-                        });
-                        setTimeout(() => setShowMatchBonus(false), 2500);
-                        
-                        if (soundManager) {
-                          soundManager.playSound('powerPlay');
-                          soundManager.playVoiceLine(avatarPersonality, 'combo');
+                        // Show damage numbers on opponent's cards
+                        if (totalDamageDealt > 0) {
+                          const damageDiv = document.createElement('div');
+                          damageDiv.className = 'ultimate-damage-display';
+                          damageDiv.innerHTML = `<span class="damage-number">-${ultimate.effect.damage || 15}</span><span class="damage-text">to all enemy cards!</span>`;
+                          damageDiv.style.cssText = `
+                            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                            font-size: 48px; font-weight: bold; color: #ff4444;
+                            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+                            z-index: 10002; animation: ultimateDamagePopup 2s ease-out forwards;
+                            display: flex; flex-direction: column; align-items: center; gap: 10px;
+                          `;
+                          gameBoardRef.current.appendChild(damageDiv);
+                          setTimeout(() => damageDiv.remove(), 2000);
                         }
                       }
+                      
+                      setShowMatchBonus({ 
+                        message: `⚡ ${ultimate.name.toUpperCase()}! -${ultimate.effect.damage || 15} to all enemies!`,
+                        type: 'ultimate'
+                      });
+                      setTimeout(() => setShowMatchBonus(false), 3000);
+                      
+                      if (soundManager) {
+                        soundManager.playVoiceLine(avatarPersonality, 'combo');
+                        soundManager.playSound('meteorStrike');
+                      }
+                      
+                      // Ultimate counts as a turn - switch to opponent's turn after animation
+                      // Use a shorter delay and ensure we're still the active player
+                      setTimeout(async () => {
+                        console.log('⚡ Ultimate animation complete - checking turn state:', {
+                          isMyTurn,
+                          humanPlayerActive: humanPlayer?.active,
+                          aiPlayerActive: aiPlayer?.active
+                        });
+                        
+                        if (onForfeit && humanPlayer?.active) {
+                          console.log('⚡ Ultimate used - ending turn via forfeit');
+                          try {
+                            await onForfeit();
+                            console.log('✅ Turn ended after ultimate');
+                          } catch (error) {
+                            console.error('❌ Error ending turn after ultimate:', error);
+                          }
+                        } else if (!humanPlayer?.active) {
+                          console.log('⚠️ Player not active - turn may have already ended');
+                        } else {
+                          console.warn('⚠️ onForfeit not available');
+                        }
+                      }, 1500); // Reduced delay
                     }
                   }}
                 >
                   <div className="ultimate-icon">
-                    {ultimateSystem.currentCooldown === 0 ? '⚡' : ultimateSystem.currentCooldown}
+                    {ultimateSystem.currentCooldown === 0 
+                      ? (powerUpSystem.ULTIMATE_ABILITIES[(ultimateSystem.selectedUltimate || ultimateSystem.id || 'METEOR_STRIKE').toUpperCase()]?.icon || '⚡')
+                      : ultimateSystem.currentCooldown}
                   </div>
                   <div className="ultimate-info">
                     <div className="ultimate-name">
-                      {powerUpSystem.ULTIMATE_ABILITIES[ultimateSystem.selectedUltimate || ultimateSystem.id || 'METEOR_STRIKE']?.name || 'Meteor Strike'}
+                      {powerUpSystem.ULTIMATE_ABILITIES[(ultimateSystem.selectedUltimate || ultimateSystem.id || 'METEOR_STRIKE').toUpperCase()]?.name || 'Meteor Strike'}
                     </div>
                     <div className="ultimate-status">
-                      {ultimateSystem.currentCooldown === 0 ? '✅ READY!' : `Cooldown: ${ultimateSystem.currentCooldown}`}
+                      {ultimateSystem.currentCooldown === 0 
+                        ? (isMyTurn ? '✅ READY!' : '⏳ Wait for turn') 
+                        : `Cooldown: ${ultimateSystem.currentCooldown}`}
+                    </div>
+                    <div className="ultimate-description">
+                      {powerUpSystem.ULTIMATE_ABILITIES[(ultimateSystem.selectedUltimate || ultimateSystem.id || 'METEOR_STRIKE').toUpperCase()]?.description || ''}
                     </div>
                   </div>
                 </div>
@@ -2711,6 +2997,17 @@ const GameBoard = ({
           
           {/* AI's Played Cards - Top */}
           <div className="battle-card-row ai-row">
+            {/* Player 2 Turn Announcement - Hovers over AI cards */}
+            {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && !isMyTurn && (
+              <div className="turn-announcement-inline">
+                <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
+                <div className="ai-thinking">
+                  {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
+                    ? '🚫 AI has no cards - Skipping turn...'
+                    : 'AI is thinking...'}
+                </div>
+              </div>
+            )}
             <div className="played-cards-container">
               {aiPlayer?.playedCards && aiPlayer.playedCards.length > 0 ? (
                 aiPlayer.playedCards.map((card, index) => {
@@ -2722,10 +3019,13 @@ const GameBoard = ({
                     image: card.image,
                     hasImage: !!card.image,
                     isFusion: card.isFusion,
+                    isNewlyGenerated: card.isNewlyGenerated,
+                    isShieldCard: card.isShieldCard,
                     allProps: Object.keys(card)
                   });
+                  const animationClass = card.isShieldCard ? 'shield-generated' : (card.isNewlyGenerated ? 'power-generated' : '');
                   return (
-                    <div key={index} className="played-card-wrapper ai-card">
+                    <div key={index} className={`played-card-wrapper ai-card ${animationClass}`}>
                       <Card card={card} isPlayable={false} />
                     </div>
                   );
@@ -2740,6 +3040,12 @@ const GameBoard = ({
 
           {/* Player's Played Cards - Bottom */}
           <div className="battle-card-row player-row">
+            {/* Your Turn Announcement - Above player's arena cards */}
+            {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && isMyTurn && (
+              <div className="turn-announcement-inline your-turn-inline">
+                <h1 className="turn-text your-turn-text">YOUR TURN!</h1>
+              </div>
+            )}
             <div className="played-cards-container">
               {humanPlayer?.playedCards && humanPlayer.playedCards.length > 0 ? (
                 humanPlayer.playedCards.map((card, index) => {
@@ -2750,10 +3056,13 @@ const GameBoard = ({
                     strength: card.strength,
                     image: card.image,
                     hasImage: !!card.image,
-                    isFusion: card.isFusion
+                    isFusion: card.isFusion,
+                    isNewlyGenerated: card.isNewlyGenerated,
+                    isShieldCard: card.isShieldCard
                   });
+                  const animationClass = card.isShieldCard ? 'shield-generated' : (card.isNewlyGenerated ? 'power-generated' : '');
                   return (
-                    <div key={index} className="played-card-wrapper">
+                    <div key={index} className={`played-card-wrapper ${animationClass}`}>
                       <Card card={card} isPlayable={false} />
                     </div>
                   );
@@ -2827,27 +3136,30 @@ const GameBoard = ({
               >
                 {selectedTrapCard !== null ? '✅' : '🕸️'}
               </button>
-              <button 
-                className="skip-turn-btn"
-                onClick={handleSkipTurn}
-                title={humanPlayer.hand?.length === 0 ? "Skip Turn - No cards in hand" : !hasPlayableCards() ? "Skip Turn - No playable cards available" : "Skip Turn - Pass this round"}
-              >
-                ⏭️
-              </button>
             </div>
           )}
-          {/* Skip turn message below buttons */}
-          {isMyTurn && (
-            <div className="skip-turn-message-container">
-              {humanPlayer.hand?.length === 0 ? (
-                <p className="skip-turn-message">No cards in hand</p>
-              ) : !hasPlayableCards() ? (
-                <p className="skip-turn-message">No playable cards - Not enough mana</p>
-              ) : (
-                <p className="skip-turn-message">Pass this round</p>
-              )}
-            </div>
-          )}
+          {/* Skip turn button - always visible and active regardless of turn */}
+          <div className="skip-turn-controls">
+            <button 
+              className={`skip-turn-btn ${!isMyTurn ? 'waiting-turn' : ''}`}
+              onClick={handleSkipTurn}
+              title={humanPlayer.hand?.length === 0 ? "Skip Turn - No cards in hand" : !hasPlayableCards() ? "Skip Turn - No playable cards available" : "Skip Turn - Pass this round"}
+            >
+              ⏭️
+            </button>
+          </div>
+          {/* Skip turn message below button */}
+          <div className="skip-turn-message-container">
+            {!isMyTurn ? (
+              <p className="skip-turn-message">Skip (waiting)</p>
+            ) : humanPlayer.hand?.length === 0 ? (
+              <p className="skip-turn-message">No cards in hand</p>
+            ) : !hasPlayableCards() ? (
+              <p className="skip-turn-message">No playable cards - Not enough mana</p>
+            ) : (
+              <p className="skip-turn-message">Pass this round</p>
+            )}
+          </div>
           <div className={`hand themed ${isMyTurn ? 'your-turn' : ''}`} style={{
             background: HAND_THEMES[handTheme]?.handBackground || HAND_THEMES.standard.handBackground,
             boxShadow: `${HAND_THEMES[handTheme]?.glowEffect || HAND_THEMES.standard.glowEffect}, inset 0 2px 8px rgba(0, 0, 0, 0.2)`,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './CoinToss.css';
 import soundManager from '../utils/sounds';
 
-const CoinToss = ({ onComplete, playerName, opponentName }) => {
+const CoinToss = ({ onComplete, playerName, playerAvatar, opponentName, opponentAvatar }) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
@@ -93,7 +93,20 @@ const CoinToss = ({ onComplete, playerName, opponentName }) => {
 
         <div className="players-display">
           <div className={`player-side ${playerWon && showResult ? 'winner' : ''}`}>
-            <div className="player-avatar">👤</div>
+            <div className="player-avatar">
+              {playerAvatar && !playerAvatar.startsWith('👤') && !playerAvatar.includes('emoji') ? (
+                <img 
+                  src={`${process.env.PUBLIC_URL}/${playerAvatar}`} 
+                  alt={playerName}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                />
+              ) : null}
+              <span style={{ display: playerAvatar && !playerAvatar.startsWith('👤') ? 'none' : 'flex' }}>
+                {playerAvatar || '👤'}
+              </span>
+            </div>
             <div className="player-name">{playerName}</div>
             <div className="coin-choice">HEADS</div>
           </div>
@@ -101,7 +114,20 @@ const CoinToss = ({ onComplete, playerName, opponentName }) => {
           <div className="vs-divider">VS</div>
           
           <div className={`player-side ${!playerWon && showResult ? 'winner' : ''}`}>
-            <div className="player-avatar">🤖</div>
+            <div className="player-avatar">
+              {opponentAvatar && opponentAvatar.endsWith('.png') ? (
+                <img 
+                  src={`${process.env.PUBLIC_URL}/${opponentAvatar}`} 
+                  alt={opponentName}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                />
+              ) : null}
+              <span style={{ display: opponentAvatar && opponentAvatar.endsWith('.png') ? 'none' : 'flex' }}>
+                {opponentAvatar || '🤖'}
+              </span>
+            </div>
             <div className="player-name">{opponentName}</div>
             <div className="coin-choice">TAILS</div>
           </div>

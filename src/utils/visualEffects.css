@@ -771,3 +771,1123 @@
     letter-spacing: 1px;
   }
 }
+
+/* ===== ULTIMATE ABILITY VISUAL EFFECTS ===== */
+
+/* Flash overlay for ultimate activation */
+.ultimate-flash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 500;
+  pointer-events: none;
+  animation: ultimateFlash 0.8s ease-out forwards;
+}
+
+.meteor-flash {
+  background: radial-gradient(circle at center, rgba(255, 107, 53, 0.8) 0%, rgba(255, 50, 0, 0.4) 50%, transparent 70%);
+}
+
+.phoenix-flash {
+  background: radial-gradient(circle at center, rgba(255, 69, 0, 0.8) 0%, rgba(255, 140, 0, 0.4) 50%, transparent 70%);
+}
+
+.void-flash {
+  background: radial-gradient(circle at center, rgba(74, 0, 128, 0.9) 0%, rgba(20, 0, 40, 0.6) 50%, transparent 70%);
+}
+
+.divine-flash {
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.9) 0%, rgba(255, 255, 200, 0.5) 50%, transparent 70%);
+}
+
+.fury-flash {
+  background: radial-gradient(circle at center, rgba(255, 23, 68, 0.8) 0%, rgba(255, 100, 0, 0.4) 50%, transparent 70%);
+}
+
+.freeze-flash {
+  background: radial-gradient(circle at center, rgba(0, 188, 212, 0.8) 0%, rgba(100, 200, 255, 0.4) 50%, transparent 70%);
+}
+
+.shuffle-flash {
+  background: radial-gradient(circle at center, rgba(156, 39, 176, 0.8) 0%, rgba(200, 100, 255, 0.4) 50%, transparent 70%);
+}
+
+.mirror-flash {
+  background: radial-gradient(circle at center, rgba(33, 150, 243, 0.8) 0%, rgba(100, 200, 255, 0.4) 50%, transparent 70%);
+}
+
+@keyframes ultimateFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* Ultimate burst container */
+.ultimate-burst-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 550;
+  pointer-events: none;
+}
+
+.ultimate-main-icon {
+  font-size: 120px;
+  text-shadow: 0 0 30px var(--ultimate-color),
+               0 0 60px var(--ultimate-color),
+               0 0 90px var(--ultimate-color);
+  animation: ultimateIconBurst 1.5s ease-out forwards;
+  filter: drop-shadow(0 0 20px var(--ultimate-color));
+}
+
+@keyframes ultimateIconBurst {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.5) rotate(10deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.2) rotate(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* Expanding rings */
+.ultimate-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 4px solid var(--ultimate-color);
+  border-radius: 50%;
+  animation: ultimateRingExpand 1.5s ease-out var(--ring-delay) forwards;
+  opacity: 0;
+}
+
+@keyframes ultimateRingExpand {
+  0% {
+    width: 50px;
+    height: 50px;
+    opacity: 1;
+  }
+  100% {
+    width: 600px;
+    height: 600px;
+    opacity: 0;
+  }
+}
+
+/* Ultimate particles */
+.ultimate-particle-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 540;
+  pointer-events: none;
+}
+
+.ultimate-particle {
+  position: absolute;
+  font-size: 32px;
+  animation: ultimateParticleExplode 1.5s ease-out var(--particle-delay) forwards;
+  opacity: 0;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+@keyframes ultimateParticleExplode {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.5);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--particle-x), var(--particle-y)) rotate(var(--particle-rotation)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Meteor Rain Effect */
+.meteor-rain-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 530;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.falling-meteor {
+  position: absolute;
+  top: -100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: meteorFallDown 0.8s ease-in forwards;
+}
+
+.meteor-head {
+  font-size: 48px;
+  filter: drop-shadow(0 0 20px #ff6b35);
+}
+
+.meteor-trail {
+  width: 6px;
+  height: 100px;
+  background: linear-gradient(to bottom, #ff6b35, transparent);
+  margin-top: -10px;
+  animation: trailFlicker 0.1s ease-in-out infinite;
+}
+
+@keyframes meteorFallDown {
+  0% {
+    transform: translateY(-100px) rotate(30deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes trailFlicker {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Phoenix Rise Effect */
+.phoenix-rise-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 530;
+  pointer-events: none;
+}
+
+.rising-phoenix {
+  position: relative;
+  animation: phoenixAscend 2.5s ease-out forwards;
+}
+
+.phoenix-body {
+  font-size: 100px;
+  filter: drop-shadow(0 0 30px #ff4500);
+}
+
+.phoenix-wings {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 80px;
+  opacity: 0.8;
+  animation: wingFlap 0.3s ease-in-out infinite;
+}
+
+.phoenix-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 69, 0, 0.6) 0%, transparent 70%);
+  animation: auraPulse 0.5s ease-in-out infinite;
+}
+
+.phoenix-flame {
+  position: absolute;
+  bottom: 0;
+  font-size: 30px;
+  animation: flameRise 2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes phoenixAscend {
+  0% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50vh);
+    opacity: 0;
+  }
+}
+
+@keyframes wingFlap {
+  0%, 100% {
+    transform: translateX(-50%) scaleX(1);
+  }
+  50% {
+    transform: translateX(-50%) scaleX(1.2);
+  }
+}
+
+@keyframes auraPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.8;
+  }
+}
+
+@keyframes flameRise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60vh);
+    opacity: 0;
+  }
+}
+
+/* Void Vortex Effect */
+.void-vortex-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 530;
+  pointer-events: none;
+}
+
+.void-vortex {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0%, #4a0080 50%, transparent 70%);
+  animation: vortexSpin 2s linear forwards, vortexGrow 2s ease-out forwards;
+  box-shadow: 0 0 50px #4a0080, inset 0 0 50px #000;
+}
+
+.void-particle {
+  position: absolute;
+  font-size: 24px;
+  top: 50%;
+  left: 50%;
+  animation: voidOrbit 2s ease-in forwards;
+  opacity: 0;
+}
+
+@keyframes vortexSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+@keyframes vortexGrow {
+  0% {
+    width: 50px;
+    height: 50px;
+    opacity: 0;
+  }
+  50% {
+    width: 200px;
+    height: 200px;
+    opacity: 1;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
+}
+
+@keyframes voidOrbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(var(--orbit-distance));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(720deg) translateX(0);
+    opacity: 0;
+  }
+}
+
+/* Time Freeze Effect */
+.time-freeze-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 530;
+  pointer-events: none;
+}
+
+.frozen-clock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.clock-face {
+  font-size: 120px;
+  animation: clockFreeze 1.5s ease-out forwards;
+  filter: drop-shadow(0 0 30px #00bcd4);
+}
+
+.clock-shatter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  border: 3px solid #00bcd4;
+  border-radius: 50%;
+  animation: shatterRing 1s ease-out 0.5s forwards;
+  opacity: 0;
+}
+
+.ice-crystal {
+  position: absolute;
+  font-size: 28px;
+  animation: crystalAppear 2s ease-out var(--crystal-delay, 0s) forwards;
+  opacity: 0;
+  filter: drop-shadow(0 0 10px #00bcd4);
+}
+
+.freeze-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(0, 188, 212, 0.8);
+  border-radius: 50%;
+  animation: freezeWaveExpand 1.5s ease-out forwards;
+}
+
+@keyframes clockFreeze {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1) rotate(0deg);
+  }
+  70%, 85% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes shatterRing {
+  0% {
+    width: 50px;
+    height: 50px;
+    opacity: 1;
+  }
+  100% {
+    width: 400px;
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+@keyframes crystalAppear {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes freezeWaveExpand {
+  0% {
+    width: 50px;
+    height: 50px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 150vmax;
+    height: 150vmax;
+    opacity: 0;
+  }
+}
+
+/* Divine Light Effect */
+.divine-light-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 530;
+  pointer-events: none;
+}
+
+.divine-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 0;
+  background: linear-gradient(to top, transparent, rgba(255, 215, 0, 0.8), rgba(255, 255, 200, 1));
+  transform-origin: bottom center;
+  transform: translate(-50%, -50%) rotate(var(--beam-angle));
+  animation: beamExtend 1.5s ease-out var(--beam-delay, 0s) forwards;
+}
+
+.divine-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 80px;
+  animation: divineGlow 2s ease-in-out forwards;
+  filter: drop-shadow(0 0 30px #ffd700);
+}
+
+.divine-sparkle {
+  position: absolute;
+  top: 0;
+  font-size: 24px;
+  animation: sparkleFloat 2s ease-out var(--sparkle-delay, 0s) forwards;
+  opacity: 0;
+}
+
+@keyframes beamExtend {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  30% {
+    height: 300px;
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+@keyframes divineGlow {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkleFloat {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50vh) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Mobile optimizations for ultimates */
+@media (max-width: 768px) {
+  .ultimate-main-icon {
+    font-size: 80px;
+  }
+  
+  .meteor-head {
+    font-size: 36px;
+  }
+  
+  .meteor-trail {
+    height: 60px;
+  }
+  
+  .phoenix-body {
+    font-size: 70px;
+  }
+  
+  .phoenix-wings {
+    font-size: 50px;
+  }
+  
+  .clock-face {
+    font-size: 80px;
+  }
+  
+  .divine-center {
+    font-size: 60px;
+  }
+  
+  .ultimate-particle {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ultimate-main-icon {
+    font-size: 60px;
+  }
+  
+  .meteor-head {
+    font-size: 28px;
+  }
+  
+  .meteor-trail {
+    height: 40px;
+    width: 4px;
+  }
+  
+  .phoenix-body {
+    font-size: 50px;
+  }
+  
+  .phoenix-wings {
+    font-size: 35px;
+  }
+  
+  .clock-face {
+    font-size: 60px;
+  }
+  
+  .divine-center {
+    font-size: 45px;
+  }
+  
+  .ultimate-particle {
+    font-size: 18px;
+  }
+  
+  .ice-crystal {
+    font-size: 20px;
+  }
+  
+  .divine-sparkle {
+    font-size: 18px;
+  }
+}
+
+/* ============================================
+   NEW AAA-QUALITY VISUAL EFFECTS
+   ============================================ */
+
+/* Card Trail Effects */
+@keyframes trailFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-20px);
+  }
+}
+
+.card-trail-particle {
+  animation: trailFade 0.3s ease-out forwards;
+}
+
+/* Floating Damage Numbers */
+@keyframes floatDamageUp {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(0.5);
+  }
+  20% {
+    transform: translateX(-50%) translateY(-20px) scale(1.3);
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(-50%) translateY(-40px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-100px) scale(0.8);
+  }
+}
+
+.floating-damage {
+  font-family: 'Arial Black', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.floating-damage.critical {
+  animation: floatDamageUp 1.5s ease-out forwards, criticalShake 0.1s ease-in-out 3;
+}
+
+.floating-damage .damage-icon {
+  animation: iconPop 0.3s ease-out;
+}
+
+.floating-damage .damage-number {
+  animation: numberBounce 0.4s ease-out;
+}
+
+@keyframes criticalShake {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  25% { transform: translateX(-50%) rotate(-3deg); }
+  75% { transform: translateX(-50%) rotate(3deg); }
+}
+
+@keyframes iconPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes numberBounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Impact Sparks */
+@keyframes impactFlash {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkFly {
+  0% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(-50% + cos(var(--angle)) * var(--distance)),
+      calc(-50% + sin(var(--angle)) * var(--distance))
+    );
+    opacity: 0;
+  }
+}
+
+@keyframes shockwaveExpand {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+  }
+}
+
+.impact-spark {
+  animation: sparkFly 0.6s ease-out forwards;
+}
+
+.impact-flash {
+  animation: impactFlash 0.3s ease-out forwards;
+}
+
+.impact-shockwave {
+  animation: shockwaveExpand 0.5s ease-out forwards;
+}
+
+/* Power Charge-up Aura */
+@keyframes powerPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes orbitCard {
+  0% {
+    transform: rotate(var(--orbit-angle)) translateX(60px) rotate(calc(-1 * var(--orbit-angle)));
+  }
+  100% {
+    transform: rotate(calc(var(--orbit-angle) + 360deg)) translateX(60px) rotate(calc(-1 * (var(--orbit-angle) + 360deg)));
+  }
+}
+
+.power-charge-aura {
+  animation: powerPulse 1s ease-in-out infinite;
+}
+
+.charge-particle {
+  animation: orbitCard 2s linear infinite;
+}
+
+/* Combo Chain Effects */
+@keyframes chainPulse {
+  0% {
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+  100% {
+    stroke-width: 5px;
+    filter: drop-shadow(0 0 15px currentColor) drop-shadow(0 0 25px currentColor);
+  }
+}
+
+@keyframes comboTextPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.combo-chain-text {
+  animation: comboTextPop 0.5s ease-out forwards;
+}
+
+.combo-chain-text span {
+  display: inline-block;
+  animation: textGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+  100% {
+    text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor;
+  }
+}
+
+/* 3D Card Hover Tilt */
+.card-3d-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.card-3d-tilt:hover {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+/* Win Streak Fire Effect */
+@keyframes flameRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-15px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-30px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px #ff4500;
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px #ff4500, 0 0 30px #ff8c00;
+  }
+}
+
+.win-streak-fire {
+  pointer-events: none;
+}
+
+.streak-flame {
+  animation: flameRise 0.5s ease-out infinite;
+}
+
+.streak-badge {
+  animation: badgePulse 1s ease-in-out infinite;
+}
+
+/* Card Play Impact - Screen Shake Classes */
+.screen-shake-light {
+  animation: shakeLight 0.3s ease-out;
+}
+
+.screen-shake-medium {
+  animation: shakeMedium 0.3s ease-out;
+}
+
+.screen-shake-heavy {
+  animation: shakeHeavy 0.4s ease-out;
+}
+
+@keyframes shakeLight {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  60% { transform: translate(-1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+}
+
+@keyframes shakeMedium {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-4px, 3px); }
+  30% { transform: translate(4px, -3px); }
+  45% { transform: translate(-3px, 2px); }
+  60% { transform: translate(3px, -2px); }
+  75% { transform: translate(-2px, 1px); }
+  90% { transform: translate(2px, -1px); }
+}
+
+@keyframes shakeHeavy {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-8px, 6px); }
+  20% { transform: translate(8px, -6px); }
+  30% { transform: translate(-6px, 4px); }
+  40% { transform: translate(6px, -4px); }
+  50% { transform: translate(-4px, 3px); }
+  60% { transform: translate(4px, -3px); }
+  70% { transform: translate(-3px, 2px); }
+  80% { transform: translate(3px, -2px); }
+  90% { transform: translate(-1px, 1px); }
+}
+
+/* Ambient Particles */
+@keyframes ambientFloat {
+  0% {
+    transform: translateY(100%) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--particle-opacity, 0.6);
+    transform: translateY(90%) translateX(10px) scale(1);
+  }
+  50% {
+    transform: translateY(50%) translateX(-10px) scale(1);
+  }
+  90% {
+    opacity: var(--particle-opacity, 0.6);
+    transform: translateY(10%) translateX(10px) scale(1);
+  }
+  100% {
+    transform: translateY(0%) translateX(0) scale(0);
+    opacity: 0;
+  }
+}
+
+.ambient-particle {
+  animation: ambientFloat var(--particle-duration, 8s) ease-in-out infinite;
+  animation-delay: var(--particle-delay, 0s);
+}
+
+/* Victory Confetti Enhancement */
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0.5;
+  }
+}
+
+.victory-confetti {
+  animation: confettiFall var(--confetti-duration, 3s) ease-in forwards;
+  animation-delay: var(--confetti-delay, 0s);
+}
+
+/* Elemental Aura Glow */
+@keyframes elementalAura {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px var(--element-color),
+      0 0 20px var(--element-color),
+      inset 0 0 10px var(--element-color-dim);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px var(--element-color),
+      0 0 40px var(--element-color),
+      0 0 60px var(--element-color-dim),
+      inset 0 0 15px var(--element-color);
+  }
+}
+
+.elemental-aura {
+  animation: elementalAura 2s ease-in-out infinite;
+}
+
+/* Mobile Optimizations for New Effects */
+@media (max-width: 768px) {
+  .floating-damage {
+    font-size: 18px !important;
+  }
+  
+  .floating-damage.critical {
+    font-size: 24px !important;
+  }
+  
+  .combo-chain-text {
+    font-size: 22px !important;
+  }
+  
+  .impact-spark-container .impact-flash {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .streak-badge {
+    font-size: 12px !important;
+    padding: 2px 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-damage {
+    font-size: 14px !important;
+  }
+  
+  .floating-damage.critical {
+    font-size: 18px !important;
+  }
+  
+  .combo-chain-text {
+    font-size: 16px !important;
+  }
+  
+  .power-charge-aura {
+    display: none; /* Hide on very small screens for performance */
+  }
+  
+  .win-streak-fire .streak-flame {
+    font-size: 12px !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .card-trail-particle,
+  .floating-damage,
+  .impact-spark,
+  .impact-flash,
+  .impact-shockwave,
+  .power-charge-aura,
+  .charge-particle,
+  .combo-chain-text,
+  .streak-flame,
+  .streak-badge,
+  .ambient-particle {
+    animation: none !important;
+  }
+  
+  .card-3d-tilt {
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  .screen-shake-light,
+  .screen-shake-medium,
+  .screen-shake-heavy {
+    animation: none !important;
+  }
+}

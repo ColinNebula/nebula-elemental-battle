@@ -10,6 +10,8 @@ class SoundManager {
     this.audioContext = null; // Persistent AudioContext for iOS compatibility
     this.audioContextCreationAttempts = 0;
     this.maxAudioContextAttempts = 3;
+    this.unlockListenersAdded = false; // Track if unlock listeners are set up
+    this.silentAudioElement = null; // Silent audio element for iOS unlock
     // Load saved volumes from localStorage or use defaults
     const savedVolume = localStorage.getItem('soundVolume');
     const savedMusicVolume = localStorage.getItem('musicVolume');
@@ -21,6 +23,10 @@ class SoundManager {
     this.comboChainCount = 0;
     this.lastScoreDifference = 0;
     this.intensityCheckInterval = null;
+    
+    // Detect iOS
+    this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
     // Available background music tracks (8 tracks, ~30MB optimized for deployment)
     this.musicTracks = [
@@ -125,11 +131,56 @@ class SoundManager {
     
     // Try to resume if suspended (iOS requirement)
     if (context.state === 'suspended') {
-      console.log('⏸️ AudioContext suspended, waiting for user interaction');
-      // Will be resumed on first user interaction
+      console.log('⏸️ AudioContext suspended, setting up iOS unlock');
+      this.setupMobileAudioUnlock();
     } else if (context.state === 'running') {
       console.log('✅ AudioContext running');
       this.audioUnlocked = true;
+    }
+    
+    // iOS-specific: Create a silent audio element to help unlock audio
+    if (this.isIOS && !this.silentAudioElement) {
+      this.createSilentAudioElement();
+    }
+  }
+  
+  // Create a silent audio element for iOS unlock
+  createSilentAudioElement() {
+    try {
+      // Create a tiny silent audio buffer
+      const context = this.getAudioContext();
+      if (!context) return;
+      
+      // Create a 1-sample silent buffer
+      const silentBuffer = context.createBuffer(1, 1, 22050);
+      this.silentBuffer = silentBuffer;
+      
+      console.log('🔊 Silent audio buffer created for iOS');
+    } catch (e) {
+      console.log('Silent buffer creation skipped');
+    }
+  }
+  
+  // Play silent sound to unlock iOS audio
+  async playSilentSound() {
+    try {
+      const context = this.getAudioContext();
+      if (!context || !this.silentBuffer) return;
+      
+      const source = context.createBufferSource();
+      source.buffer = this.silentBuffer;
+      source.connect(context.destination);
+      source.start(0);
+      
+      // Also resume context
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+      
+      this.audioUnlocked = true;
+      console.log('🔊 iOS audio unlocked via silent sound');
+    } catch (e) {
+      // Silent fail
     }
   }
   
@@ -660,20 +711,30 @@ class SoundManager {
     
     console.log('🔊 Attempting to play sound:', soundName, 'unlocked:', this.audioUnlocked);
     
+    // Prevent duplicate sounds playing in quick succession
+    const now = Date.now();
+    if (!this.lastSoundTimes) this.lastSoundTimes = {};
+    if (this.lastSoundTimes[soundName] && now - this.lastSoundTimes[soundName] < 500) {
+      console.log('🔇 Skipping duplicate sound:', soundName);
+      return;
+    }
+    this.lastSoundTimes[soundName] = now;
+    
     // Map of sound names to audio files
     const audioFiles = {
-      'fire': 'mixkit-fire-swoosh-burning-1328.wav',
-      'fireball': 'mixkit-fireball-spell-1347.wav',
-      'meteorStrike': 'mixkit-fireball-spell-1347.wav',
-      'ice': 'mixkit-thin-icicles-spell-882.wav',
-      'magic': 'mixkit-magic-sparkle-whoosh-2350.wav',
-      'light': 'mixkit-shot-light-energy-flowing-2589.wav',
-      'swoosh': 'mixkit-soft-woosh-fire-1346.wav',
-      'fairy': 'mixkit-spellcaster-fairy-swoosh-1463.wav',
-      'victory': 'mixkit-game-success-alert-2039.wav',
-      'crowdCheer': 'mixkit-huge-crowd-cheering-victory-462.wav',
-      'meteor': 'mixkit-small-meteor-falling-1337.wav',
-      'water': 'mixkit-bass-rumble-hum-2297.wav'
+      'fire': 'mixkit-fire-swoosh-burning-1328.mp3',
+      'fireball': 'mixkit-fireball-spell-1347.mp3',
+      'meteorStrike': 'mixkit-fireball-spell-1347.mp3',
+      'ice': 'mixkit-thin-icicles-spell-882.mp3',
+      'magic': 'mixkit-magic-sparkle-whoosh-2350.mp3',
+      'light': 'mixkit-shot-light-energy-flowing-2589.mp3',
+      'swoosh': 'mixkit-soft-woosh-fire-1346.mp3',
+      'fairy': 'mixkit-spellcaster-fairy-swoosh-1463.mp3',
+      'victory': 'mixkit-game-success-alert-2039.mp3',
+      'defeat': 'mixkit-terror-sweep-of-darkness-2630.mp3',
+      'crowdCheer': 'mixkit-huge-crowd-cheering-victory-462.mp3',
+      'meteor': 'mixkit-small-meteor-falling-1337.mp3',
+      'water': 'mixkit-bass-rumble-hum-2297.mp3'
     };
     
     // If there's an audio file for this sound, use it
@@ -702,7 +763,10 @@ class SoundManager {
         }
         return;
       } catch (error) {
-        console.error('Error playing audio file:', error);
+        // Only log in development to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Audio playback skipped:', error.message);
+        }
       }
     }
     
@@ -714,7 +778,7 @@ class SoundManager {
         
         const context = this.getAudioContext();
         if (!context) {
-          console.warn('⚠️ AudioContext not available');
+          // Silent fallback - audio not available
           return;
         }
         
@@ -722,11 +786,14 @@ class SoundManager {
           this.sounds[soundName].call(this);
           this.audioUnlocked = true;
         } else {
-          console.log('⏸️ AudioContext not running, state:', context.state);
+          // Silent fallback - context not ready
           this.setupMobileAudioUnlock();
         }
       } catch (error) {
-        console.error('Error playing sound:', error);
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Sound synthesis skipped:', error.message);
+        }
       }
     }
   }
@@ -765,7 +832,7 @@ class SoundManager {
       
       const audioContext = this.getAudioContext();
       if (!audioContext || audioContext.state !== 'running') {
-        console.warn('⚠️ AudioContext not running for combo sound');
+        // Silent fallback - context not ready
         return;
       }
       
@@ -779,7 +846,10 @@ class SoundManager {
         }, 200);
       }
     } catch (error) {
-      console.error('Error playing combo sound:', error);
+      // Silent fallback for combo sounds
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Combo sound skipped:', error.message);
+      }
     }
   }
 
@@ -834,7 +904,7 @@ class SoundManager {
         
         const audioContext = this.getAudioContext();
         if (!audioContext || audioContext.state !== 'running') {
-          console.warn('⚠️ AudioContext not running for crowd gasp');
+          // Silent fallback - context not ready
           return;
         }
         
@@ -842,7 +912,10 @@ class SoundManager {
         this.audioUnlocked = true;
       }
     } catch (error) {
-      console.error('Error playing crowd reaction:', error);
+      // Silent fallback for crowd reactions
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Crowd reaction skipped:', error.message);
+      }
     }
   }
 
@@ -859,7 +932,7 @@ class SoundManager {
       return;
     }
     
-    console.log('🎵 Starting music with intensity:', intensity, 'unlocked:', this.audioUnlocked);
+    console.log('🎵 Starting music with intensity:', intensity, 'iOS:', this.isIOS, 'unlocked:', this.audioUnlocked);
     
     // Stop any existing music first
     this.stopMusic();
@@ -886,67 +959,119 @@ class SoundManager {
       this.backgroundMusic.volume = this.getMusicVolumeForIntensity(intensity);
       this.backgroundMusic.loop = true;
       
-      // Mobile-specific audio handling
+      // iOS-specific audio handling
       this.backgroundMusic.setAttribute('playsinline', 'true');
       this.backgroundMusic.setAttribute('webkit-playsinline', 'true');
+      this.backgroundMusic.muted = false;
       
-      // Preload the audio
+      // iOS requires load() before play()
       this.backgroundMusic.load();
       
-      // Play the track with enhanced mobile support
+      // For iOS, we need to wait for canplaythrough event
+      if (this.isIOS) {
+        this.backgroundMusic.addEventListener('canplaythrough', () => {
+          if (this.backgroundMusic && this.audioUnlocked && this.musicEnabled) {
+            this.backgroundMusic.play().catch(() => {
+              // Will retry on next interaction
+            });
+          }
+        }, { once: true });
+      }
+      
+      // Try to play - will succeed if audio is unlocked
       const playPromise = this.backgroundMusic.play();
       
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          console.log('🎵 Music playing successfully:', this.currentTrack);
-          // Mark that audio context is unlocked
           this.audioUnlocked = true;
-        }).catch(error => {
-          console.warn('⚠️ Music autoplay prevented - user interaction required:', error.message);
-          console.log('💡 Music will start after any button click or card play');
-          // Set up one-time event listeners for mobile unlock
+          console.log('🎵 Music playing:', this.currentTrack);
+        }).catch(() => {
+          // Music autoplay prevented - set up unlock and wait
+          console.log('🎵 Music waiting for user interaction');
           this.setupMobileAudioUnlock();
         });
       }
-      
-      console.log(`🎵 Now playing [${intensity}]:`, this.currentTrack);
     } catch (error) {
-      console.error('Error playing music:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Music playback issue:', error.message);
+      }
+      this.setupMobileAudioUnlock();
     }
   }
   
   // Setup mobile audio unlock on first user interaction
   setupMobileAudioUnlock() {
-    if (this.audioUnlocked) return;
+    if (this.audioUnlocked || this.unlockListenersAdded) return;
     
-    const unlockAudio = async () => {
+    this.unlockListenersAdded = true;
+    
+    const unlockAudio = async (event) => {
+      // Prevent multiple unlocks
+      if (this.audioUnlocked) return;
+      
       try {
-        // Resume AudioContext for Web Audio API sounds
-        await this.resumeAudioContext();
+        console.log('🔊 Attempting iOS audio unlock via:', event.type);
         
-        // Try to play background music if available
+        // 1. Resume AudioContext for Web Audio API sounds
+        const context = this.getAudioContext();
+        if (context && context.state === 'suspended') {
+          await context.resume();
+          console.log('✅ AudioContext resumed, state:', context.state);
+        }
+        
+        // 2. Play silent sound for iOS
+        if (this.isIOS) {
+          await this.playSilentSound();
+        }
+        
+        // 3. Try to play background music if available
         if (this.backgroundMusic && this.backgroundMusic.paused && this.musicEnabled) {
-          await this.backgroundMusic.play();
-          console.log('🎵 Mobile audio unlocked and playing');
+          try {
+            await this.backgroundMusic.play();
+            console.log('🎵 Background music started after unlock');
+          } catch (musicErr) {
+            console.log('Music will start on next interaction');
+          }
         }
         
         this.audioUnlocked = true;
+        console.log('✅ Mobile/iOS audio unlocked successfully');
         
         // Remove listeners after successful unlock
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('touchend', unlockAudio);
-        document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('keydown', unlockAudio);
+        this.removeUnlockListeners(unlockAudio);
       } catch (err) {
-        console.log('Still waiting for audio unlock:', err.message);
+        console.log('Audio unlock attempt:', err.message);
+        // Don't remove listeners - try again on next interaction
       }
     };
     
-    // Listen for any user interaction
-    document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
-    document.addEventListener('touchend', unlockAudio, { once: true, passive: true });
-    document.addEventListener('click', unlockAudio, { once: true });
-    document.addEventListener('keydown', unlockAudio, { once: true });
+    // Store reference for removal
+    this.unlockHandler = unlockAudio;
+    
+    // Listen for any user interaction - iOS requires touch events
+    document.addEventListener('touchstart', unlockAudio, { passive: true });
+    document.addEventListener('touchend', unlockAudio, { passive: true });
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
+    
+    // iOS Safari sometimes needs interaction on specific elements
+    if (this.isIOS) {
+      document.body.addEventListener('touchstart', unlockAudio, { passive: true });
+    }
+    
+    console.log('🔊 Mobile audio unlock listeners added');
+  }
+  
+  // Remove unlock listeners
+  removeUnlockListeners(handler) {
+    document.removeEventListener('touchstart', handler);
+    document.removeEventListener('touchend', handler);
+    document.removeEventListener('click', handler);
+    document.removeEventListener('keydown', handler);
+    if (this.isIOS) {
+      document.body.removeEventListener('touchstart', handler);
+    }
+    this.unlockListenersAdded = false;
   }
 
   // Get music volume based on intensity
@@ -1076,10 +1201,14 @@ class SoundManager {
 
   resumeMusic() {
     if (this.backgroundMusic && this.backgroundMusic.paused) {
-      this.backgroundMusic.play().catch(error => {
-        console.log('Error resuming music:', error);
-      });
-      console.log('🎵 Music resumed');
+      try {
+        this.backgroundMusic.play().catch(error => {
+          console.log('Error resuming music:', error);
+        });
+        console.log('🎵 Music resumed');
+      } catch (error) {
+        console.log('Error in resumeMusic:', error);
+      }
     }
   }
 
@@ -1144,18 +1273,22 @@ class SoundManager {
       await this.resumeAudioContext();
       
       if (this.musicEnabled && this.backgroundMusic && this.backgroundMusic.paused) {
-        const playPromise = this.backgroundMusic.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              console.log('🎵 Music resumed successfully');
-              this.audioUnlocked = true;
-            })
-            .catch(error => {
-              console.log('Could not start music yet:', error.message);
-              // Set up mobile audio unlock if not already done
-              this.setupMobileAudioUnlock();
-            });
+        try {
+          const playPromise = this.backgroundMusic.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('🎵 Music resumed successfully');
+                this.audioUnlocked = true;
+              })
+              .catch(error => {
+                console.log('Could not start music yet:', error.message);
+                // Set up mobile audio unlock if not already done
+                this.setupMobileAudioUnlock();
+              });
+          }
+        } catch (playError) {
+          console.log('Error playing music:', playError);
         }
       } else if (this.musicEnabled && !this.backgroundMusic) {
         // No music loaded yet, start it
@@ -1164,6 +1297,58 @@ class SoundManager {
     } catch (error) {
       console.error('Error trying to start music:', error);
     }
+  }
+
+  /**
+   * Manual audio unlock method - call this on first user tap
+   * iOS requires explicit user gesture to enable audio
+   */
+  async unlockAudio() {
+    console.log('🔓 Manual audio unlock requested');
+    
+    try {
+      // Resume AudioContext
+      await this.resumeAudioContext();
+      
+      // For iOS, play a silent audio element to unlock
+      if (this.isIOS || !this.audioUnlocked) {
+        const silentAudio = new Audio();
+        silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAFYANf9AAACJ8Ha/81oAAB4AAAANhIAAAAAxAwAgADA4AMAAAACD4AQfACAAAACB8EIPgAAAAAmGMYxjGH/KAqYQAZABcLggBABABQ4BABgAhxcEwTBME4KAoZQ//////////8HwfB8HwfggGAxQFEQAQAGaGBgYHCgoKCj//////////////////xQUFBQ';
+        silentAudio.volume = 0.001;
+        silentAudio.muted = false;
+        silentAudio.setAttribute('playsinline', 'true');
+        silentAudio.setAttribute('webkit-playsinline', 'true');
+        
+        await silentAudio.play().catch(() => {});
+        silentAudio.pause();
+        
+        this.audioUnlocked = true;
+        this.silentAudioUnlocked = true;
+        console.log('✅ Audio unlocked via manual trigger');
+      }
+      
+      // Also unlock via AudioContext silent buffer
+      if (this.audioContext && this.audioContext.state === 'running') {
+        const buffer = this.audioContext.createBuffer(1, 1, 22050);
+        const source = this.audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.audioContext.destination);
+        source.start(0);
+      }
+      
+      return true;
+    } catch (error) {
+      console.warn('Manual audio unlock failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if audio is unlocked and ready to play
+   */
+  isAudioReady() {
+    return this.audioUnlocked || this.silentAudioUnlocked || 
+           (this.audioContext && this.audioContext.state === 'running');
   }
 }
 

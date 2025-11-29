@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './MainMenu.css';
-import userPreferences from '../utils/userPreferences';
 
 const MainMenu = ({ 
   onPlayGame,
@@ -13,16 +12,20 @@ const MainMenu = ({
   onShowInventory,
   onShowSettings,
   onShowNews,
-  onQuit 
+  onQuit,
+  playerAvatar: propAvatar,
+  playerName: propName
 }) => {
   const menuMusicRef = useRef(null);
   const [expandedSection, setExpandedSection] = useState('gameplay');
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
-  const [playerAvatar, setPlayerAvatar] = useState(null);
-  const [playerName, setPlayerName] = useState('Player');
+  
+  // Use prop avatar if provided, otherwise fall back to default
+  const playerAvatar = propAvatar || { icon: '👤', name: 'Player', id: 'default' };
+  const playerName = propName || 'Player';
 
   const playSelectSound = () => {
-    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.mp3`);
     selectSound.volume = 0.5;    selectSound.setAttribute('playsinline', 'true');
     selectSound.setAttribute('webkit-playsinline', 'true');    selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
@@ -44,26 +47,6 @@ const MainMenu = ({
       }
     };
     checkUnreadNews();
-    
-    // Load player avatar and name from userPreferences
-    const loadPlayerInfo = () => {
-      const avatar = userPreferences.getAvatar();
-      const name = userPreferences.getPlayerName();
-      setPlayerAvatar(avatar);
-      setPlayerName(name);
-      console.log('🎭 [MAIN MENU] Loaded player info:', { avatar: avatar?.name, name });
-    };
-    loadPlayerInfo();
-    
-    // Listen for preference updates
-    const handlePreferencesUpdate = (event) => {
-      loadPlayerInfo();
-    };
-    window.addEventListener('userPreferencesUpdated', handlePreferencesUpdate);
-    
-    return () => {
-      window.removeEventListener('userPreferencesUpdated', handlePreferencesUpdate);
-    };
   }, []);
 
   useEffect(() => {

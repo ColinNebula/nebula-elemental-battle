@@ -109,6 +109,7 @@ export const saveUserPreferences = (preferences) => {
  * @returns {Boolean} Success status
  */
 export const updatePreferences = (updates) => {
+  console.log('🔄 [USER PREFS] updatePreferences called with:', updates);
   const current = getUserPreferences();
   return saveUserPreferences({ ...current, ...updates });
 };

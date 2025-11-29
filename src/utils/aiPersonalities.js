@@ -372,7 +372,7 @@ export const STORY_MODE_CAMPAIGN = [
     description: 'Battle the ruthless Blood Knight in his crimson domain',
     reward: 'Unlock: Blood Mastery Badge',
     isBoss: true,
-    levelImage: 'trial-of-rage.png'
+    levelImage: 'blood-arena-bg.png'
   },
   {
     stage: 10,

@@ -157,12 +157,13 @@ export const createVictoryCelebration = (winner, container) => {
       if (confetti.parentNode) {
         confetti.remove();
       }
-    }, 3500);
+    }, 2500);
   }
 
+  // Remove celebration faster to avoid overlap with game over screen
   setTimeout(() => {
     celebration.remove();
-  }, 4000);
+  }, 2000);
 
   return celebration;
 };

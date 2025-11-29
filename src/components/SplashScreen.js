@@ -1,30 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './SplashScreen.css';
 
 const SplashScreen = ({ onComplete, isReturning = false }) => {
   const [fadeOut, setFadeOut] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [musicStarted, setMusicStarted] = useState(false);
+  const spookyMusicRef = useRef(null);
 
+  // Initialize audio element
   useEffect(() => {
-    // Play Spooky Loop music
-    const spookyMusic = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
-    spookyMusic.volume = 0.3;
-    spookyMusic.loop = true;
-    spookyMusic.setAttribute('playsinline', 'true');
-    spookyMusic.setAttribute('webkit-playsinline', 'true');
-    spookyMusic.preload = 'auto';
-    
-    const playPromise = spookyMusic.play();
-    
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          console.log('✅ Spooky Loop music playing');
-        })
-        .catch(err => {
-          console.log('⏸️ Music autoplay prevented:', err);
-        });
-    }
+    spookyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
+    spookyMusicRef.current.volume = 0.3;
+    spookyMusicRef.current.loop = true;
+    spookyMusicRef.current.setAttribute('playsinline', 'true');
+    spookyMusicRef.current.setAttribute('webkit-playsinline', 'true');
+    spookyMusicRef.current.preload = 'auto';
 
     // Show "press any button" prompt immediately if returning from quit, otherwise after 2 seconds
     const promptTimer = setTimeout(() => {
@@ -34,17 +24,40 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
     return () => {
       clearTimeout(promptTimer);
       // Stop music when leaving splash screen
-      spookyMusic.pause();
-      spookyMusic.currentTime = 0;
+      if (spookyMusicRef.current) {
+        spookyMusicRef.current.pause();
+        spookyMusicRef.current.currentTime = 0;
+      }
     };
   }, [isReturning]);
+
+  // Function to start music on user interaction
+  const startMusic = () => {
+    if (!musicStarted && spookyMusicRef.current) {
+      spookyMusicRef.current.play()
+        .then(() => {
+          console.log('✅ Spooky Loop music playing');
+          setMusicStarted(true);
+        })
+        .catch(err => {
+          console.log('⏸️ Music play prevented:', err);
+        });
+    }
+  };
 
   const handleContinue = () => {
     if (!fadeOut) {
       // Play success sound
-      const successSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-game-success-alert-2039.wav`);
-      successSound.volume = 0.5;      successSound.setAttribute('playsinline', 'true');
-      successSound.setAttribute('webkit-playsinline', 'true');      successSound.play().catch(err => console.log('Sound play prevented:', err));
+      const successSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-game-success-alert-2039.mp3`);
+      successSound.volume = 0.5;
+      successSound.setAttribute('playsinline', 'true');
+      successSound.setAttribute('webkit-playsinline', 'true');
+      successSound.play().catch(err => console.log('Sound play prevented:', err));
+      
+      // Stop splash music
+      if (spookyMusicRef.current) {
+        spookyMusicRef.current.pause();
+      }
       
       setFadeOut(true);
       setTimeout(() => {
@@ -55,27 +68,40 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
 
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Only respond to user input if the prompt is showing
+      // Start music on any user interaction
+      startMusic();
+      
+      // Only proceed to next screen if the prompt is showing
       if (showPrompt) {
         handleContinue();
       }
     };
 
     const handleClick = () => {
-      // Only respond to user input if the prompt is showing
+      // Start music on any user interaction
+      startMusic();
+      
+      // Only proceed to next screen if the prompt is showing
       if (showPrompt) {
         handleContinue();
       }
     };
 
+    const handleTouch = () => {
+      // Start music on touch for mobile
+      startMusic();
+    };
+
     window.addEventListener('keydown', handleKeyPress);
     window.addEventListener('click', handleClick);
+    window.addEventListener('touchstart', handleTouch, { passive: true });
 
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
       window.removeEventListener('click', handleClick);
+      window.removeEventListener('touchstart', handleTouch);
     };
-  }, [fadeOut, showPrompt]);
+  }, [fadeOut, showPrompt, musicStarted]);
 
   return (
     <div className={`splash-screen ${fadeOut ? 'fade-out' : ''}`}>

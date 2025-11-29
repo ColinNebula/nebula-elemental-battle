@@ -15,6 +15,10 @@
   transform-style: preserve-3d;
   animation: cardEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   --element-color: #4ecdc4;
+  /* Performance optimizations */
+  contain: layout style paint;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Default background for cards without a background image */

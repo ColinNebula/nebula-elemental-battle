@@ -11,18 +11,29 @@ const AI_OPPONENTS = [
 ];
 
 const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
-  const [playerName, setPlayerName] = useState('');
+  // Load saved player name from localStorage
+  const [playerName, setPlayerName] = useState(() => {
+    return localStorage.getItem('playerName') || '';
+  });
   const [selectedAI, setSelectedAI] = useState('CHAOS');
   const [showAISelection, setShowAISelection] = useState(false);
   const [showStrategicSettings, setShowStrategicSettings] = useState(false);
 
   const handleSinglePlayer = () => {
     const name = playerName.trim() || 'Player';
+    // Save player name to localStorage
+    if (playerName.trim()) {
+      localStorage.setItem('playerName', playerName.trim());
+    }
     onSinglePlayer(name, selectedAI);
   };
 
   const handleMultiplayer = () => {
     const name = playerName.trim() || 'Player';
+    // Save player name to localStorage
+    if (playerName.trim()) {
+      localStorage.setItem('playerName', playerName.trim());
+    }
     onMultiplayer(name);
   };
 
@@ -32,6 +43,10 @@ const Lobby = ({ onSinglePlayer, onMultiplayer, onBack }) => {
 
   const handleStrategicStart = (settings) => {
     const name = playerName.trim() || 'Player';
+    // Save player name to localStorage
+    if (playerName.trim()) {
+      localStorage.setItem('playerName', playerName.trim());
+    }
     setShowStrategicSettings(false);
     onSinglePlayer(name, selectedAI, settings);
   };

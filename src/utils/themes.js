@@ -1,4 +1,18 @@
 // Theme system for premium users
+// Import gameProgress for coin synchronization (lazy to avoid circular dependency)
+let gameProgressModule = null;
+const getGameProgress = () => {
+  if (!gameProgressModule) {
+    try {
+      gameProgressModule = require('./gameProgress').default;
+    } catch (e) {
+      console.warn('[THEMES] gameProgress module not available');
+      return null;
+    }
+  }
+  return gameProgressModule;
+};
+
 const THEMES_KEY = 'playerThemes';
 
 // Available color themes
@@ -451,7 +465,7 @@ export const ARENA_THEMES = {
     name: 'Ocean Depths',
     cost: 85,
     background: 'radial-gradient(ellipse at center, rgba(10, 30, 50, 0.95) 0%, rgba(8, 23, 40, 0.97) 50%, rgba(5, 15, 30, 0.98) 100%)',
-    backgroundImage: `url(${process.env.PUBLIC_URL}/aqua-the-tidekeeper-level.png)`,
+    backgroundImage: `url(${process.env.PUBLIC_URL}/ocean-depth-bg.png)`,
     overlay: 'linear-gradient(180deg, rgba(0, 119, 190, 0.25) 0%, rgba(0, 140, 200, 0.1) 25%, transparent 50%, rgba(0, 150, 199, 0.1) 75%, rgba(0, 150, 199, 0.2) 100%)',
     borderGlow: '0 0 55px rgba(0, 119, 190, 0.9), 0 0 90px rgba(0, 191, 255, 0.5), inset 0 0 60px rgba(0, 191, 255, 0.5)',
     particles: 'rgba(64, 224, 208, 1)',
@@ -533,21 +547,52 @@ export const ARENA_THEMES = {
 // Get current themes
 export const getCurrentThemes = () => {
   const stored = localStorage.getItem(THEMES_KEY);
+  const defaults = {
+    colorTheme: 'classic',
+    handTheme: 'standard',
+    arenaTheme: 'cosmic',
+    ownedThemes: ['classic', 'standard', 'cosmic'],
+    coins: 0
+  };
+  
   if (!stored) {
-    return {
-      colorTheme: 'classic',
-      handTheme: 'standard',
-      arenaTheme: 'cosmic',
-      ownedThemes: ['classic', 'standard', 'cosmic'],
-      coins: 0
-    };
+    // Try to sync coins from gameProgress
+    const gp = getGameProgress();
+    if (gp) {
+      const progress = gp.getGameProgress();
+      defaults.coins = progress.coins || 0;
+    }
+    return defaults;
   }
-  return JSON.parse(stored);
+  
+  const themes = JSON.parse(stored);
+  
+  // Sync coins from gameProgress if available
+  const gp = getGameProgress();
+  if (gp) {
+    const progress = gp.getGameProgress();
+    if (progress.coins !== undefined && progress.coins !== themes.coins) {
+      // Use the higher value (in case of recovery from backup)
+      themes.coins = Math.max(themes.coins || 0, progress.coins || 0);
+      saveThemes(themes);
+    }
+  }
+  
+  return themes;
 };
 
 // Save themes
 export const saveThemes = (themes) => {
   localStorage.setItem(THEMES_KEY, JSON.stringify(themes));
+  
+  // Sync coins to gameProgress
+  const gp = getGameProgress();
+  if (gp && themes.coins !== undefined) {
+    const progress = gp.getGameProgress();
+    if (progress.coins !== themes.coins) {
+      gp.updateProgress({ coins: themes.coins });
+    }
+  }
 };
 
 // Purchase theme
@@ -573,6 +618,14 @@ export const purchaseTheme = (themeType, themeId, currentThemes) => {
   };
   
   saveThemes(updatedThemes);
+  
+  // Sync theme unlock to gameProgress
+  const gp = getGameProgress();
+  if (gp) {
+    gp.spendCoins(theme.cost, `purchase_theme_${themeId}`);
+    gp.unlockTheme(themeId);
+  }
+  
   return { success: true, message: `${theme.name} theme purchased!`, updatedThemes };
 };
 

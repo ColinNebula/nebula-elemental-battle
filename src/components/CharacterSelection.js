@@ -3,6 +3,7 @@ import './CharacterSelection.css';
 import { ARENA_THEMES } from '../utils/themes';
 import { AI_PERSONALITIES } from '../utils/aiPersonalities';
 import secureStorage from '../utils/secureStorage';
+import gameProgress from '../utils/gameProgress';
 
 const BASE_AVATARS = [
   {
@@ -190,7 +191,7 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
   const [availableAvatars, setAvailableAvatars] = useState(BASE_AVATARS);
 
   const playSelectSound = () => {
-    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.wav`);
+    const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.mp3`);
     selectSound.volume = 0.5;    selectSound.setAttribute('playsinline', 'true');
     selectSound.setAttribute('webkit-playsinline', 'true');    selectSound.play().catch(err => console.log('Sound play prevented:', err));
   };
@@ -209,9 +210,18 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
       }
     }
 
-    // Load story progress and determine which characters to show
-    const storyProgress = secureStorage.getItem('storyModeProgress');
-    const completedStages = storyProgress?.completedStages || [];
+    // Load story progress from unified gameProgress system first, fallback to legacy
+    const progress = gameProgress.getGameProgress();
+    let completedStages = progress.completedStoryStages || [];
+    
+    // Also check legacy storage for backwards compatibility
+    if (completedStages.length === 0) {
+      const storyProgress = secureStorage.getItem('storyModeProgress');
+      completedStages = storyProgress?.completedStages || storyProgress || [];
+    }
+    
+    // Get unlocked characters from gameProgress
+    const unlockedCharacterIds = progress.unlockedCharacters || ['EMBER'];
     
     // Start with base avatars
     const allAvatars = [...BASE_AVATARS];
@@ -234,12 +244,13 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
         return;
       }
       
-      // Check if this character's stage has been completed
-      const isUnlocked = completedStages.some(stage => {
-        // Match the opponent from STORY_MODE_CAMPAIGN with this character
-        const campaignStage = AI_PERSONALITIES[lockedChar.storyKey];
-        return campaignStage && completedStages.includes(lockedChar.storyKey);
-      });
+      // Check if this character is unlocked via gameProgress or stage completion
+      const isUnlocked = unlockedCharacterIds.includes(lockedChar.storyKey) ||
+        completedStages.some(stage => {
+          // Match the opponent from STORY_MODE_CAMPAIGN with this character
+          const campaignStage = AI_PERSONALITIES[lockedChar.storyKey];
+          return campaignStage && completedStages.includes(lockedChar.storyKey);
+        });
       
       if (isUnlocked) {
         // Add as unlocked character
@@ -266,7 +277,8 @@ const CharacterSelection = ({ onSelectCharacter, onCancel, isStoryMode = false }
     console.log('🎮 Characters loaded:', {
       total: allAvatars.length,
       unlocked: allAvatars.filter(a => !a.isLocked).length,
-      locked: allAvatars.filter(a => a.isLocked).length
+      locked: allAvatars.filter(a => a.isLocked).length,
+      unlockedCharacterIds: unlockedCharacterIds
     });
   }, []);
 
