@@ -249,6 +249,7 @@ export const AI_PERSONALITIES = {
     name: 'Nexus the Omnipotent',
     avatar: '⭐',
     avatarImage: 'power-nexus--avatar.png',
+    cardBackImage: 'nexus-card-back.png',
     difficulty: 'Master',
     element: 'POWER',
     description: 'The ultimate champion who masters all elements',
@@ -381,7 +382,7 @@ export const STORY_MODE_CAMPAIGN = [
     description: 'Face the ultimate champion in the Grand Arena',
     reward: 'Unlock: Master Champion Title',
     isBoss: true,
-    levelImage: 'mech3.png'
+    levelImage: 'nexus-level-bg.png'
   },
   {
     stage: 11,

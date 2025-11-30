@@ -5045,6 +5045,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: var(--arena-background, radial-gradient(ellipse at center, rgba(30, 30, 60, 0.95) 0%, rgba(10, 10, 30, 0.98) 100%));
+  background-image: var(--arena-background-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 15px 25px;
   border-radius: 25px;
   box-shadow: var(--arena-border-glow, 0 0 40px rgba(138, 43, 226, 0.6)), 

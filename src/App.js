@@ -11,7 +11,7 @@ import GameClient from './services/GameClient';
 import securityManager from './utils/security';
 import secureStorage from './utils/secureStorage';
 import { recordGameEnd, recordCardPlayed, recordMatchBonus, recordAbilityUsed, getProfile, updateProfile, recoverStoryProgress, recoverProfile } from './utils/statistics';
-import { awardCoins, initializeThemes, getStoryModeArenaTheme } from './utils/themes';
+import { awardCoins, initializeThemes, getStoryModeArenaTheme, applyArenaTheme } from './utils/themes';
 import { initializeAccessibility, applyColorblindMode, applyHighContrast, applyTextSize } from './utils/accessibility';
 import { createDefaultInventory, generateLoot, PlayerInventory } from './utils/powerUps';
 import mobileScreenManager from './utils/mobileScreenManager';
@@ -818,6 +818,12 @@ function App() {
     currentThemes.arenaTheme = storyArenaTheme;
     localStorage.setItem('playerThemes', JSON.stringify(currentThemes));
     
+    // Apply the arena theme immediately
+    applyArenaTheme(storyArenaTheme);
+    
+    // Dispatch event to notify GameBoard of theme change
+    window.dispatchEvent(new CustomEvent('themeUpdated', { detail: { themeType: 'arena', themeId: storyArenaTheme } }));
+    
     // Use player profile name for story mode
     const playerName = playerProfile.name || 'Player';
     
@@ -910,6 +916,19 @@ function App() {
     try {
       // Reset rewards flag for new game
       setRewardsAwarded(false);
+      
+      // Set arena theme based on opponent personality
+      const arenaTheme = getStoryModeArenaTheme(aiPersonality);
+      console.log('🎨 Setting arena theme for opponent:', aiPersonality, '->', arenaTheme);
+      const currentThemes = JSON.parse(localStorage.getItem('playerThemes')) || {};
+      currentThemes.arenaTheme = arenaTheme;
+      localStorage.setItem('playerThemes', JSON.stringify(currentThemes));
+      
+      // Apply the arena theme immediately
+      applyArenaTheme(arenaTheme);
+      
+      // Dispatch event to notify GameBoard of theme change
+      window.dispatchEvent(new CustomEvent('themeUpdated', { detail: { themeType: 'arena', themeId: arenaTheme } }));
       
       const result = await gameClient.createRoom(aiPersonality);
       console.log('🏠 Room created:', result);

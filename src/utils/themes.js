@@ -508,6 +508,18 @@ export const ARENA_THEMES = {
     animation: 'holyGlow 5s ease-in-out infinite',
     premium: true
   },
+  nexus: {
+    name: 'Power Nexus Arena',
+    cost: 150,
+    background: 'radial-gradient(ellipse at center, rgba(40, 30, 70, 0.95) 0%, rgba(30, 20, 60, 0.97) 50%, rgba(20, 15, 50, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/nexus-level-bg.png)`,
+    overlay: 'linear-gradient(180deg, rgba(255, 215, 0, 0.25) 0%, rgba(200, 150, 255, 0.15) 25%, transparent 50%, rgba(138, 43, 226, 0.15) 75%, rgba(255, 215, 0, 0.2) 100%)',
+    borderGlow: '0 0 70px rgba(255, 215, 0, 1), 0 0 110px rgba(138, 43, 226, 0.8), inset 0 0 80px rgba(255, 215, 0, 0.6)',
+    particles: 'rgba(255, 215, 0, 1)',
+    particleCount: 200,
+    animation: 'nexusPulse 4s ease-in-out infinite',
+    premium: true
+  },
   inferno: {
     name: 'Demonic Inferno',
     cost: 110,
@@ -696,6 +708,7 @@ export const applyArenaTheme = (themeId) => {
   
   const root = document.documentElement;
   root.style.setProperty('--arena-background', theme.background);
+  root.style.setProperty('--arena-background-image', theme.backgroundImage || 'none');
   root.style.setProperty('--arena-overlay', theme.overlay);
   root.style.setProperty('--arena-border-glow', theme.borderGlow);
   root.style.setProperty('--arena-particles', theme.particles);
@@ -711,7 +724,7 @@ export const getStoryModeArenaTheme = (opponentKey) => {
     'TERRA': 'forest',                // earthquake-arena1-level.png
     'LUMINA': 'celestial',            // (no custom bg, uses default)
     'SHADOW': 'shadow',               // void-demension.png
-    'NEXUS': 'celestial',             // (no custom bg, uses default)
+    'NEXUS': 'nexus',                 // nexus-level-bg.png
     'CHAOS': 'inferno'                // chaos-unleached-level.png
   };
   
