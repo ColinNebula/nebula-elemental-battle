@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/nebula-elemental-battle/static/css/main.64cbb047.css",
-    "main.js": "/nebula-elemental-battle/static/js/main.1a223d7b.js",
+    "main.css": "/nebula-elemental-battle/static/css/main.bcaa3500.css",
+    "main.js": "/nebula-elemental-battle/static/js/main.54df8601.js",
     "static/css/185.1189c2b8.chunk.css": "/nebula-elemental-battle/static/css/185.1189c2b8.chunk.css",
     "static/js/185.62145f07.chunk.js": "/nebula-elemental-battle/static/js/185.62145f07.chunk.js",
     "static/css/501.06cbd028.chunk.css": "/nebula-elemental-battle/static/css/501.06cbd028.chunk.css",
@@ -41,7 +41,7 @@
     "index.html": "/nebula-elemental-battle/index.html"
   },
   "entrypoints": [
-    "static/css/main.64cbb047.css",
-    "static/js/main.1a223d7b.js"
+    "static/css/main.bcaa3500.css",
+    "static/js/main.54df8601.js"
   ]
 }
