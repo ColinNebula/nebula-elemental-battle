@@ -712,7 +712,13 @@ function App() {
           setPlayerInventory(playerInventory);
         }
         
-        setPlayerProfile(updatedProfile);
+        // Preserve selectedAvatar from current state when updating profile
+        // (updateProfile loads from storage which may have stale/different avatar)
+        setPlayerProfile(prev => ({
+          ...updatedProfile,
+          selectedAvatar: prev.selectedAvatar || updatedProfile.selectedAvatar,
+          avatar: prev.avatar || updatedProfile.avatar
+        }));
         
         // Show victory rewards screen
         setVictoryRewardsData({

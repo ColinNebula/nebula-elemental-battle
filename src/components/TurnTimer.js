@@ -4,7 +4,8 @@ import './TurnTimer.css';
 const TurnTimer = ({ 
   timeRemaining, 
   maxTime = 20, 
-  isActive = true, 
+  isActive = true,
+  isVisible = true,
   onTimeWarning,
   onTimeCritical,
   onTimeNormal 
@@ -87,10 +88,11 @@ const TurnTimer = ({
     }
   }, [timeRemaining, isActive, warningTriggered, criticalTriggered, normalTriggered, onTimeWarning, onTimeCritical, onTimeNormal]);
 
-  if (!isActive) return null;
+  // Don't render if not visible
+  if (!isVisible) return null;
 
   return (
-    <div className={`turn-timer ${urgencyLevel}`}>
+    <div className={`turn-timer ${urgencyLevel} ${!isActive ? 'paused' : ''}`}>
       {/* Burning rope container */}
       <div className="rope-container">
         {/* Rope background (burned) */}

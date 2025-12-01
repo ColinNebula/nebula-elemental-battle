@@ -68,8 +68,15 @@ import soundManager from '../utils/sounds';
 import { getCurrentThemes, HAND_THEMES, ARENA_THEMES } from '../utils/themes';
 import advancedMechanics from '../utils/advancedCardMechanics';
 import powerUpSystem from '../utils/powerUpSystem';
+import { 
+  createFireBurst, 
+  createFireExplosion, 
+  createSmokePuff,
+  preloadVideoEffects 
+} from '../utils/videoEffects';
 import './GameBoard.css';
 import '../utils/visualEffects.css';
+import '../utils/videoEffects.css';
 import '../utils/advancedCardMechanics.css';
 import '../utils/powerUpSystem.css';
 
@@ -277,6 +284,9 @@ const GameBoard = ({
 
   // Initialize strategic systems from settings
   useEffect(() => {
+    // Preload video effects for fire/smoke animations
+    preloadVideoEffects();
+    
     console.log('🎮 GameBoard settings:', settings);
     console.log('⚙️ Strategic mode:', settings?.strategicMode);
     
@@ -1167,6 +1177,11 @@ const GameBoard = ({
                 if (winPower >= 8 && loserElement) {
                   setTimeout(() => {
                     handleCriticalHit(winningCard, loserElement, gameBoardRef.current);
+                    
+                    // Extra fire explosion for fire element critical hits
+                    if (winningElement === 'FIRE' || winningCard.element === 'FIRE') {
+                      createFireExplosion(loserElement, gameBoardRef.current);
+                    }
                   }, 300);
                 }
                 
@@ -1180,10 +1195,12 @@ const GameBoard = ({
                   createWinnerVictoryPose(winnerElement);
                 }, 800);
                 
-                // Defeat animation for loser
+                // Defeat animation for loser with smoke effect
                 if (loserElement) {
                   setTimeout(() => {
                     createDefeatAnimation(loserElement);
+                    // Add smoke puff on defeat
+                    createSmokePuff(loserElement, gameBoardRef.current);
                   }, 1000);
                 }
               }
@@ -1760,6 +1777,14 @@ const GameBoard = ({
         if (card && card.element && cardElement && typeof cardElement.getBoundingClientRect === 'function') {
           try {
             createElementPlayAnimation(card.element, cardElement, gameBoardRef.current);
+            
+            // Enhanced fire video effect for FIRE element cards
+            if (card.element === 'FIRE') {
+              // Use video fire burst for fire cards
+              setTimeout(() => {
+                createFireBurst(cardElement, gameBoardRef.current);
+              }, 200);
+            }
           } catch (error) {
             console.warn('Error creating element animation:', error);
           }
@@ -2307,11 +2332,12 @@ const GameBoard = ({
       )}
       
       {/* Turn Timer - Enhanced Burning Rope Style */}
-      {gameState.gameStarted && !gameState.gameOver && !gameState.battlePhase && isMyTurn && settings?.timerEnabled && (
+      {gameState.gameStarted && !gameState.gameOver && settings?.timerEnabled && (
         <TurnTimer 
           timeRemaining={turnTimer}
           maxTime={20}
-          isActive={isMyTurn && !isPaused && !showRoundAnnouncement && !showTurnAnnouncement}
+          isVisible={isMyTurn && !gameState.battlePhase}
+          isActive={isMyTurn && !isPaused && !showRoundAnnouncement && !showTurnAnnouncement && !gameState.battlePhase}
           onTimeWarning={() => {
             // Set warning urgency state for screen effects
             setTimerUrgency('warning');

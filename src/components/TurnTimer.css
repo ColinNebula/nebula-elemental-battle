@@ -17,6 +17,22 @@
   transition: all 0.3s ease;
 }
 
+/* Paused state - still visible but dimmed */
+.turn-timer.paused {
+  opacity: 0.6;
+  border-color: rgba(150, 150, 150, 0.5);
+}
+
+.turn-timer.paused .rope-fire,
+.turn-timer.paused .rope-sparks {
+  animation-play-state: paused;
+  opacity: 0.5;
+}
+
+.turn-timer.paused .timer-value {
+  color: #999;
+}
+
 .turn-timer.warning {
   border-color: #ff9800;
   box-shadow: 0 0 30px rgba(255, 152, 0, 0.4);

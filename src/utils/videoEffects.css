@@ -1,0 +1,251 @@
+/* Video Effects CSS */
+
+/* ===== VIDEO EFFECT CONTAINERS ===== */
+.video-effect-container {
+  position: absolute;
+  pointer-events: none;
+  z-index: 500;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.video-effect {
+  display: block;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+/* Fire effect specific styling */
+.video-effect-fire {
+  filter: brightness(1.2) contrast(1.1);
+}
+
+.video-effect-fire .video-effect {
+  /* Transparent background with screen blend works best for fire */
+  background: transparent;
+}
+
+/* Smoke effect specific styling */
+.video-effect-smoke {
+  filter: brightness(0.9) contrast(1.2);
+  opacity: 0.8;
+}
+
+/* ===== ENTRANCE/EXIT ANIMATIONS ===== */
+.video-effect-enter {
+  animation: videoEffectEnter 0.3s ease-out forwards;
+}
+
+.video-effect-exit {
+  animation: videoEffectExit 0.3s ease-in forwards;
+}
+
+@keyframes videoEffectEnter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes videoEffectExit {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+}
+
+/* ===== FALLBACK ANIMATIONS (Mobile/Errors) ===== */
+.video-effect-fallback {
+  pointer-events: none;
+  z-index: 500;
+}
+
+.video-fallback-fire {
+  text-shadow: 
+    0 0 20px rgba(255, 100, 0, 0.8),
+    0 0 40px rgba(255, 50, 0, 0.6),
+    0 0 60px rgba(255, 0, 0, 0.4);
+}
+
+.video-fallback-smoke {
+  text-shadow: 
+    0 0 20px rgba(100, 100, 100, 0.8),
+    0 0 40px rgba(50, 50, 50, 0.6);
+  filter: grayscale(0.5);
+}
+
+@keyframes videoEffectFallback {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(1);
+  }
+}
+
+/* ===== FIRE BURST EFFECT ===== */
+.video-effect-fire.fire-burst {
+  animation: fireBurstPulse 0.5s ease-out;
+}
+
+@keyframes fireBurstPulse {
+  0% {
+    filter: brightness(1.2) contrast(1.1);
+  }
+  50% {
+    filter: brightness(1.8) contrast(1.3);
+  }
+  100% {
+    filter: brightness(1.2) contrast(1.1);
+  }
+}
+
+/* ===== FIRE AURA EFFECT (Looping) ===== */
+.video-effect-fire.fire-aura {
+  animation: fireAuraPulse 2s ease-in-out infinite;
+}
+
+@keyframes fireAuraPulse {
+  0%, 100% {
+    filter: brightness(1) contrast(1);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    filter: brightness(1.3) contrast(1.2);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* ===== RESPONSIVE SIZING ===== */
+@media (max-width: 768px) {
+  .video-effect {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-effect {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .video-effect-fallback {
+    font-size: 60px !important;
+  }
+}
+
+/* ===== VICTORY FIRE EFFECTS ===== */
+.victory-fire-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* ===== EMBER BATTLE EFFECT ===== */
+.ember-battle-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(255, 100, 0, 0.1) 70%,
+    rgba(255, 50, 0, 0.2) 100%
+  );
+  animation: emberGlow 3s ease-in-out infinite;
+}
+
+@keyframes emberGlow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* ===== SCREEN BURN EFFECT ===== */
+.screen-burn-effect {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(255, 100, 0, 0.3) 50%,
+    rgba(255, 50, 0, 0.5) 100%
+  );
+  animation: screenBurn 0.5s ease-out forwards;
+}
+
+@keyframes screenBurn {
+  0% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+/* ===== CRITICAL HIT FIRE ENHANCEMENT ===== */
+.critical-fire-overlay {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 450;
+  mix-blend-mode: screen;
+}
+
+.critical-fire-overlay .video-effect {
+  width: 140%;
+  height: 140%;
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+.video-effect-container {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .video-effect-container,
+  .video-effect-fallback,
+  .ember-battle-overlay,
+  .screen-burn-effect {
+    animation: none !important;
+    transition: opacity 0.3s ease !important;
+  }
+  
+  .video-effect {
+    display: none;
+  }
+  
+  .video-effect-fallback {
+    display: block;
+  }
+}

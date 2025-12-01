@@ -82,6 +82,18 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
     if (prefsAvatar && prefsAvatar.icon) {
       return prefsAvatar.icon;
     }
+    // Fallback to localStorage directly
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed && parsed.icon) {
+          return parsed.icon;
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
     return stats?.avatar || player?.avatar || '👤';
   };
 
@@ -171,9 +183,33 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   };
   
   const handleAvatarChange = (newAvatar) => {
-    if (onUpdateProfile && !isAI) {
-      onUpdateProfile({ avatar: newAvatar });
+    if (!isAI) {
+      // Create proper avatar object
+      const avatarData = {
+        id: 'custom',
+        name: 'Custom Avatar',
+        icon: newAvatar,
+        element: 'NEUTRAL'
+      };
+      
+      // Save to userPreferences immediately
+      userPreferences.updateAvatar(avatarData);
+      
+      // Also save directly to localStorage for redundancy
+      localStorage.setItem('savedAvatar', JSON.stringify(avatarData));
+      
+      console.log('🎭 [PROFILE] Avatar saved:', avatarData);
+      
+      // Update parent component
+      if (onUpdateProfile) {
+        onUpdateProfile({ avatar: newAvatar, selectedAvatar: avatarData });
+      }
+      
       setShowAvatarSelector(false);
+      
+      // Show confirmation
+      setSaveMessage('✅ Avatar saved!');
+      setTimeout(() => setSaveMessage(null), 2000);
     }
   };
 

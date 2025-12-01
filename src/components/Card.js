@@ -264,7 +264,8 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
       'TECHNOLOGY': `${basePath}/tech-card.png`,
       'METEOR': `${basePath}/meteor.png`,
       'NATURE': `${basePath}/nature-card.png`,
-      'POWER': `${basePath}/power-card.png`
+      'POWER': `${basePath}/power-card.png`,
+      'NEUTRAL': `${basePath}/shifter-card.png`
     };
     
     const element = card?.element || null;
