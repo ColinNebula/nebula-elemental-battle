@@ -1931,13 +1931,13 @@
   filter: brightness(0.9);
 }
 
-/* Peek animation when it's player's turn */
+/* Peek animation when it's player's turn - very subtle */
 @keyframes handPeek {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-15px);
+    transform: translateY(-2px);
   }
 }
 
@@ -1949,7 +1949,7 @@
 }
 
 .hand.your-turn .card {
-  animation: handPeek 2s ease-in-out infinite;
+  animation: handPeek 4s ease-in-out infinite;
 }
 
 .hand.your-turn .card:nth-child(1) { animation-delay: 0s; }
@@ -5745,11 +5745,18 @@
 
 @keyframes emberFloat {
   0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.8;
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-40vh) translateX(15px) scale(1.2);
+    opacity: 0.9;
   }
   100% {
-    transform: translateY(-100vh) translateX(-30px);
+    transform: translateY(-80vh) translateX(-20px) scale(0.5);
     opacity: 0;
   }
 }
@@ -5797,13 +5804,14 @@
 
 .floating-ember {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, rgba(255, 152, 0, 1) 0%, rgba(255, 87, 34, 0.5) 50%, transparent 100%);
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255, 200, 50, 1) 0%, rgba(255, 100, 0, 0.8) 40%, rgba(255, 50, 0, 0.4) 70%, transparent 100%);
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(255, 152, 0, 0.8);
-  animation: emberFloat linear forwards;
+  box-shadow: 0 0 8px rgba(255, 150, 0, 0.9), 0 0 16px rgba(255, 100, 0, 0.5);
+  animation: emberFloat 3s ease-out infinite;
   pointer-events: none;
+  filter: blur(0.5px);
 }
 
 .lightning-flash {
@@ -7713,3 +7721,533 @@
     color: #ff2222;
   }
 }
+
+/* Ultimate ability floating damage on cards */
+@keyframes ultimateCardDamage {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -80%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(0.8);
+  }
+}
+
+.ultimate-card-damage {
+  font-family: 'Arial Black', sans-serif;
+  letter-spacing: -2px;
+}
+
+/* Hit flash effect when ultimate damages a card */
+.played-card-wrapper.ultimate-hit {
+  animation: ultimateHitFlash 0.5s ease-out;
+}
+
+@keyframes ultimateHitFlash {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  20% {
+    filter: brightness(2) saturate(0) drop-shadow(0 0 20px #ff0000);
+    transform: scale(1.1);
+  }
+  40% {
+    filter: brightness(1.5) saturate(0.5) drop-shadow(0 0 15px #ff4444);
+    transform: scale(0.95);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+/* ======================================
+   WINNING CARD PLACEMENT PHASE
+   ====================================== */
+
+.winning-card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayFadeIn 0.5s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.winning-card-arena {
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+
+.winning-phase-header {
+  text-align: center;
+  animation: headerSlideIn 0.8s ease-out;
+}
+
+@keyframes headerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.winning-phase-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 40px rgba(255, 215, 0, 0.4),
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 0 0 10px 0;
+  letter-spacing: 2px;
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.winning-phase-subtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* Arena target zone */
+.winning-arena-center {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-target-zone {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border: 4px dashed rgba(255, 215, 0, 0.6);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 215, 0, 0.1);
+  animation: targetGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes targetGlow {
+  from {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(255, 215, 0, 0.1);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.6), inset 0 0 30px rgba(255, 215, 0, 0.2);
+  }
+}
+
+.target-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  border-radius: 20px;
+  animation: targetPulseRing 2s ease-out infinite;
+}
+
+@keyframes targetPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.target-text {
+  font-size: 14px;
+  font-weight: bold;
+  color: rgba(255, 215, 0, 0.7);
+  letter-spacing: 3px;
+}
+
+/* Card selection grid */
+.winning-cards-selection {
+  text-align: center;
+  animation: cardsSlideUp 0.8s ease-out 0.3s both;
+}
+
+@keyframes cardsSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.winning-cards-selection h3 {
+  color: white;
+  font-size: 20px;
+  margin: 0 0 20px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.winning-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 10px;
+}
+
+.winning-card-option {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: cardAppear 0.5s ease-out backwards;
+}
+
+.winning-card-option:nth-child(1) { animation-delay: 0.1s; }
+.winning-card-option:nth-child(2) { animation-delay: 0.2s; }
+.winning-card-option:nth-child(3) { animation-delay: 0.3s; }
+.winning-card-option:nth-child(4) { animation-delay: 0.4s; }
+.winning-card-option:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotateY(180deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateY(0);
+  }
+}
+
+.winning-card-option:hover {
+  transform: scale(1.1) translateY(-10px);
+  z-index: 10;
+}
+
+.winning-card-option:hover::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+  border-radius: 15px;
+  z-index: -1;
+  animation: hoverGlow 0.5s ease-out;
+}
+
+@keyframes hoverGlow {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.card-strength-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+
+/* ======================================
+   EXPLOSION EFFECT
+   ====================================== */
+
+.explosion-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.explosion-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 4px solid;
+  animation: explosionRing 1.5s ease-out forwards;
+}
+
+.explosion-ring.ring-1 {
+  width: 100px;
+  height: 100px;
+  border-color: #ff6b6b;
+  animation-delay: 0s;
+}
+
+.explosion-ring.ring-2 {
+  width: 100px;
+  height: 100px;
+  border-color: #ffd700;
+  animation-delay: 0.2s;
+}
+
+.explosion-ring.ring-3 {
+  width: 100px;
+  height: 100px;
+  border-color: #ff8c00;
+  animation-delay: 0.4s;
+}
+
+@keyframes explosionRing {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(6);
+    opacity: 0;
+  }
+}
+
+.explosion-flash {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 215, 0, 0.8) 30%, transparent 70%);
+  border-radius: 50%;
+  animation: explosionFlash 0.5s ease-out forwards;
+}
+
+@keyframes explosionFlash {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.explosion-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.explosion-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  background: linear-gradient(135deg, #ffd700, #ff6b6b);
+  border-radius: 50%;
+  animation: explosionParticle 1.5s ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes explosionParticle {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: 
+      translate(-50%, -50%) 
+      rotate(var(--angle)) 
+      translateY(calc(var(--distance) * -1));
+    opacity: 0;
+  }
+}
+
+/* Winning card display during explosion */
+.winning-card-display {
+  position: absolute;
+  z-index: 10;
+  animation: winningCardReveal 1s ease-out 0.5s both;
+}
+
+@keyframes winningCardReveal {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.3) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.winning-card-glow {
+  position: absolute;
+  top: -30px;
+  left: -30px;
+  right: -30px;
+  bottom: -30px;
+  background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+  border-radius: 20px;
+  animation: winningGlow 1s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+@keyframes winningGlow {
+  from {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.3);
+  }
+  to {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.8), 0 0 100px rgba(255, 215, 0, 0.5);
+  }
+}
+
+/* Explosion text */
+.explosion-text {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 48px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 
+    0 0 30px rgba(255, 215, 0, 1),
+    0 0 60px rgba(255, 107, 107, 0.8),
+    3px 3px 6px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  animation: explosionTextReveal 0.8s ease-out 1s both;
+  letter-spacing: 4px;
+}
+
+@keyframes explosionTextReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(3);
+    filter: blur(20px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Screen shake for explosion */
+.winning-card-arena.explosion-active {
+  animation: screenShake 0.5s ease-out;
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-10px, -5px); }
+  20% { transform: translate(10px, 5px); }
+  30% { transform: translate(-8px, 8px); }
+  40% { transform: translate(8px, -8px); }
+  50% { transform: translate(-5px, 5px); }
+  60% { transform: translate(5px, -5px); }
+  70% { transform: translate(-3px, 3px); }
+  80% { transform: translate(3px, -3px); }
+  90% { transform: translate(-1px, 1px); }
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .winning-phase-title {
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  
+  .winning-phase-subtitle {
+    font-size: 14px;
+  }
+  
+  .winning-cards-grid {
+    gap: 10px;
+  }
+  
+  .winning-card-option {
+    transform: scale(0.85);
+  }
+  
+  .winning-card-option:hover {
+    transform: scale(0.95) translateY(-5px);
+  }
+  
+  .explosion-text {
+    font-size: 28px;
+    letter-spacing: 2px;
+  }
+  
+  .arena-target-zone {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .card-strength-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+

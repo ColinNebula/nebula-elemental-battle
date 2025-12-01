@@ -280,11 +280,13 @@ export const createEnvironmentalEffect = (type, container) => {
       for (let i = 0; i < emberCount; i++) {
         const ember = document.createElement('div');
         ember.className = 'floating-ember';
-        ember.textContent = '🔥';
         ember.style.left = `${Math.random() * 100}%`;
+        ember.style.bottom = '0';
         ember.style.animationDelay = `${Math.random() * 3}s`;
         ember.style.animationDuration = `${2 + Math.random() * 2}s`;
-        ember.style.fontSize = `${8 + Math.random() * 6}px`;
+        const size = 6 + Math.random() * 8;
+        ember.style.width = `${size}px`;
+        ember.style.height = `${size}px`;
         effect.appendChild(ember);
       }
       break;

@@ -145,6 +145,16 @@ const GameBoard = ({
   // Use enhanced victory screen
   const [useEnhancedVictory, setUseEnhancedVictory] = useState(true);
   
+  // Winning card placement phase - winner places their final card with explosion
+  const [winningCardPhase, setWinningCardPhase] = useState({
+    active: false,
+    winner: null,
+    winnerCards: [],
+    selectedCard: null,
+    explosionTriggered: false,
+    showVictory: false
+  });
+  
   // Timer urgency state (warning/critical)
   const [timerUrgency, setTimerUrgency] = useState(null); // null, 'warning', 'critical'
   
@@ -635,8 +645,133 @@ const GameBoard = ({
   useEffect(() => {
     if (gameState?.gameStarted && !gameState?.gameOver) {
       gameOverSoundsPlayedRef.current = false;
+      // Reset winning card phase when new game starts
+      setWinningCardPhase({
+        active: false,
+        winner: null,
+        winnerCards: [],
+        selectedCard: null,
+        explosionTriggered: false,
+        showVictory: false
+      });
     }
   }, [gameState?.gameStarted, gameState?.gameOver]);
+
+  // Track if we've initiated winning card phase for this game
+  const winningCardPhaseInitiatedRef = useRef(false);
+
+  // Reset the ref when game starts
+  useEffect(() => {
+    if (gameState?.gameStarted && !gameState?.gameOver) {
+      winningCardPhaseInitiatedRef.current = false;
+    }
+  }, [gameState?.gameStarted, gameState?.gameOver]);
+
+  // Trigger winning card placement phase when game ends
+  useEffect(() => {
+    // Only trigger once per game end
+    if (gameState?.gameOver && !winningCardPhaseInitiatedRef.current) {
+      winningCardPhaseInitiatedRef.current = true;
+      
+      const winner = gameState.winner;
+      const isPlayerWinner = winner === humanPlayer?.name;
+      const isTie = winner === 'Tie';
+      
+      // Get winner's played cards to choose from
+      const winnerCards = isPlayerWinner 
+        ? (humanPlayer?.playedCards || [])
+        : (aiPlayer?.playedCards || []);
+      
+      // For ties or if no cards available, skip directly to victory
+      if (isTie || winnerCards.length === 0) {
+        setWinningCardPhase(prev => ({
+          ...prev,
+          showVictory: true
+        }));
+        return;
+      }
+      
+      // Activate winning card placement phase
+      setWinningCardPhase({
+        active: true,
+        winner: winner,
+        winnerCards: winnerCards,
+        selectedCard: null,
+        explosionTriggered: false,
+        showVictory: false,
+        isPlayerWinner: isPlayerWinner
+      });
+      
+      // If AI won, auto-select the strongest card after a delay
+      if (!isPlayerWinner) {
+        setTimeout(() => {
+          const strongestCard = winnerCards.reduce((best, card, index) => {
+            const str = card.modifiedStrength || card.strength || 0;
+            const bestStr = best.card?.modifiedStrength || best.card?.strength || 0;
+            return str > bestStr ? { card, index } : best;
+          }, { card: winnerCards[0], index: 0 });
+          
+          // Directly set state for AI auto-select
+          setWinningCardPhase(prev => {
+            // Skip if already triggered or not active
+            if (!prev.active || prev.explosionTriggered || prev.showVictory) return prev;
+            
+            console.log('💥 AI winning card auto-selected:', strongestCard.card?.name || strongestCard.card?.element);
+            
+            // Play explosion sound
+            if (soundManager) {
+              soundManager.playSound('explosion');
+            }
+            
+            return {
+              ...prev,
+              selectedCard: strongestCard.card,
+              explosionTriggered: true
+            };
+          });
+          
+          // After explosion animation completes, show victory screen
+          setTimeout(() => {
+            setWinningCardPhase(prev => ({
+              ...prev,
+              active: false,
+              showVictory: true
+            }));
+          }, 3000);
+        }, 2000); // Give more time to show the "choosing" message
+      }
+    }
+  }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, humanPlayer?.playedCards, aiPlayer?.playedCards]);
+
+  // Handle winning card selection
+  const handleWinningCardSelect = useCallback((cardIndex) => {
+    if (!winningCardPhase.active || winningCardPhase.explosionTriggered) return;
+    
+    const selectedCard = winningCardPhase.winnerCards[cardIndex];
+    if (!selectedCard) return;
+    
+    console.log('💥 Winning card selected:', selectedCard.name || selectedCard.element);
+    
+    setWinningCardPhase(prev => ({
+      ...prev,
+      selectedCard: selectedCard,
+      explosionTriggered: true
+    }));
+    
+    // Play explosion sound
+    if (soundManager) {
+      soundManager.playSound('explosion');
+    }
+    
+    // After explosion animation completes, show victory screen
+    setTimeout(() => {
+      setWinningCardPhase(prev => ({
+        ...prev,
+        active: false,
+        showVictory: true
+      }));
+    }, 3000);
+  }, [winningCardPhase.active, winningCardPhase.explosionTriggered, winningCardPhase.winnerCards]);
 
   // Victory celebration
   useEffect(() => {
@@ -2091,8 +2226,97 @@ const GameBoard = ({
         </div>
       )}
 
+      {/* Winning Card Placement Phase - Place winning card with explosion */}
+      {winningCardPhase.active && !winningCardPhase.showVictory && (
+        <div className="winning-card-overlay">
+          <div className={`winning-card-arena ${winningCardPhase.explosionTriggered ? 'explosion-active' : ''}`}>
+            {/* Explosion effect container */}
+            {winningCardPhase.explosionTriggered && (
+              <div className="explosion-container">
+                <div className="explosion-ring ring-1"></div>
+                <div className="explosion-ring ring-2"></div>
+                <div className="explosion-ring ring-3"></div>
+                <div className="explosion-flash"></div>
+                <div className="explosion-particles">
+                  {[...Array(30)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="explosion-particle"
+                      style={{
+                        '--angle': `${(i / 30) * 360}deg`,
+                        '--delay': `${Math.random() * 0.3}s`,
+                        '--distance': `${150 + Math.random() * 100}px`
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Selected winning card with glow */}
+                {winningCardPhase.selectedCard && (
+                  <div className="winning-card-display">
+                    <Card card={winningCardPhase.selectedCard} isPlayable={false} />
+                    <div className="winning-card-glow"></div>
+                  </div>
+                )}
+                <div className="explosion-text">
+                  💥 {winningCardPhase.winner} WINS! 💥
+                </div>
+              </div>
+            )}
+            
+            {/* Card selection phase - before explosion */}
+            {!winningCardPhase.explosionTriggered && (
+              <>
+                <div className="winning-phase-header">
+                  <h2 className="winning-phase-title">
+                    {winningCardPhase.isPlayerWinner 
+                      ? '🏆 VICTORY! Select Your Winning Card! 🏆'
+                      : `⚔️ ${winningCardPhase.winner} is choosing their victory card...`
+                    }
+                  </h2>
+                  <p className="winning-phase-subtitle">
+                    {winningCardPhase.isPlayerWinner 
+                      ? 'Choose a card to place on the arena for a spectacular victory!'
+                      : 'Prepare for the final blow...'
+                    }
+                  </p>
+                </div>
+                
+                {/* Arena center where card will be placed */}
+                <div className="winning-arena-center">
+                  <div className="arena-target-zone">
+                    <div className="target-pulse"></div>
+                    <span className="target-text">DROP ZONE</span>
+                  </div>
+                </div>
+                
+                {/* Winner's cards to choose from (only for player winner) */}
+                {winningCardPhase.isPlayerWinner && (
+                  <div className="winning-cards-selection">
+                    <h3>Select Your Champion Card:</h3>
+                    <div className="winning-cards-grid">
+                      {winningCardPhase.winnerCards.map((card, index) => (
+                        <div 
+                          key={index}
+                          className="winning-card-option"
+                          onClick={() => handleWinningCardSelect(index)}
+                        >
+                          <Card card={card} isPlayable={true} />
+                          <div className="card-strength-badge">
+                            ⚔️ {card.modifiedStrength || card.strength}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Game Over - Enhanced Victory/Defeat Screen */}
-      {gameState.gameOver && defeatCountdown === null && !hasQuit && useEnhancedVictory && (
+      {gameState.gameOver && defeatCountdown === null && !hasQuit && useEnhancedVictory && winningCardPhase.showVictory && (
         <VictoryScreen
           winner={gameState.winner}
           playerName={humanPlayer?.name}
@@ -2111,7 +2335,7 @@ const GameBoard = ({
       )}
 
       {/* Game Over Overlay - Fallback/Classic Version */}
-      {gameState.gameOver && defeatCountdown === null && !hasQuit && !useEnhancedVictory && (
+      {gameState.gameOver && defeatCountdown === null && !hasQuit && !useEnhancedVictory && winningCardPhase.showVictory && (
         <div className="game-over-overlay">
           {/* Victory Particles */}
           <div className="victory-particles">
@@ -2847,20 +3071,59 @@ const GameBoard = ({
                       if (gameBoardRef.current) {
                         createUltimateActivation(ultimateId, gameBoardRef.current);
                         
-                        // Show damage numbers on opponent's cards
+                        // Show floating damage numbers on each opponent's arena card
+                        const damageAmount = ultimate.effect.damage || 15;
+                        const aiCardElements = gameBoardRef.current.querySelectorAll('.ai-row .played-card-wrapper');
+                        aiCardElements.forEach((cardEl, index) => {
+                          setTimeout(() => {
+                            const rect = cardEl.getBoundingClientRect();
+                            const containerRect = gameBoardRef.current.getBoundingClientRect();
+                            const centerX = rect.left - containerRect.left + rect.width / 2;
+                            const centerY = rect.top - containerRect.top + rect.height / 2;
+                            
+                            // Create floating damage number
+                            const damageNum = document.createElement('div');
+                            damageNum.className = 'ultimate-card-damage';
+                            damageNum.textContent = `-${damageAmount}`;
+                            damageNum.style.cssText = `
+                              position: absolute;
+                              left: ${centerX}px;
+                              top: ${centerY}px;
+                              transform: translate(-50%, -50%);
+                              font-size: 36px;
+                              font-weight: 900;
+                              color: #ff4444;
+                              text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 2px 2px 4px rgba(0,0,0,0.8);
+                              z-index: 10003;
+                              pointer-events: none;
+                              animation: ultimateCardDamage 1.5s ease-out forwards;
+                            `;
+                            gameBoardRef.current.appendChild(damageNum);
+                            
+                            // Add hit flash effect on the card
+                            cardEl.classList.add('ultimate-hit');
+                            setTimeout(() => cardEl.classList.remove('ultimate-hit'), 500);
+                            
+                            setTimeout(() => damageNum.remove(), 1500);
+                          }, index * 150); // Stagger the damage numbers
+                        });
+                        
+                        // Show overall damage summary after individual hits
                         if (totalDamageDealt > 0) {
-                          const damageDiv = document.createElement('div');
-                          damageDiv.className = 'ultimate-damage-display';
-                          damageDiv.innerHTML = `<span class="damage-number">-${ultimate.effect.damage || 15}</span><span class="damage-text">to all enemy cards!</span>`;
-                          damageDiv.style.cssText = `
-                            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                            font-size: 48px; font-weight: bold; color: #ff4444;
-                            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
-                            z-index: 10002; animation: ultimateDamagePopup 2s ease-out forwards;
-                            display: flex; flex-direction: column; align-items: center; gap: 10px;
-                          `;
-                          gameBoardRef.current.appendChild(damageDiv);
-                          setTimeout(() => damageDiv.remove(), 2000);
+                          setTimeout(() => {
+                            const damageDiv = document.createElement('div');
+                            damageDiv.className = 'ultimate-damage-display';
+                            damageDiv.innerHTML = `<span class="damage-number">-${damageAmount}</span><span class="damage-text">to all enemy cards!</span>`;
+                            damageDiv.style.cssText = `
+                              position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                              font-size: 48px; font-weight: bold; color: #ff4444;
+                              text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+                              z-index: 10002; animation: ultimateDamagePopup 2s ease-out forwards;
+                              display: flex; flex-direction: column; align-items: center; gap: 10px;
+                            `;
+                            gameBoardRef.current.appendChild(damageDiv);
+                            setTimeout(() => damageDiv.remove(), 2000);
+                          }, aiCardElements.length * 150 + 300);
                         }
                       }
                       

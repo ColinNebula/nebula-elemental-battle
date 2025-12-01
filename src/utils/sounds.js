@@ -96,7 +96,8 @@ class SoundManager {
       crowdCheer: this.createCrowdCheerSound,
       crowdGasp: this.createCrowdGaspSound,
       technology: this.createTechnologySound,
-      meteor: this.createMeteorSound
+      meteor: this.createMeteorSound,
+      explosion: this.createExplosionSound
     };
     
     // Initialize AudioContext for iOS compatibility
@@ -603,6 +604,61 @@ class SoundManager {
     
     oscillator1.start();
     oscillator2.start();
+    oscillator1.stop(audioContext.currentTime + duration);
+    oscillator2.stop(audioContext.currentTime + duration);
+  }
+
+  createExplosionSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const duration = 1.2;
+    
+    // Main explosion - white noise burst
+    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseData.length; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioContext.sampleRate * 0.3));
+    }
+    
+    const noiseSource = audioContext.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    
+    // Low frequency boom
+    const oscillator1 = audioContext.createOscillator();
+    oscillator1.type = 'sine';
+    oscillator1.frequency.setValueAtTime(150, audioContext.currentTime);
+    oscillator1.frequency.exponentialRampToValueAtTime(30, audioContext.currentTime + duration);
+    
+    // Mid frequency rumble
+    const oscillator2 = audioContext.createOscillator();
+    oscillator2.type = 'sawtooth';
+    oscillator2.frequency.setValueAtTime(300, audioContext.currentTime);
+    oscillator2.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + duration * 0.5);
+    
+    // Gain envelope for explosion
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.7 * this.volume, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.5 * this.volume, audioContext.currentTime + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    // Filter for more realistic explosion
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + duration);
+    
+    // Connect noise
+    noiseSource.connect(filter);
+    oscillator1.connect(filter);
+    oscillator2.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    noiseSource.start();
+    oscillator1.start();
+    oscillator2.start();
+    noiseSource.stop(audioContext.currentTime + duration);
     oscillator1.stop(audioContext.currentTime + duration);
     oscillator2.stop(audioContext.currentTime + duration);
   }

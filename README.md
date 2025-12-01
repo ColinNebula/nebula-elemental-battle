@@ -1,50 +1,67 @@
 # 🎮 Nebula Elemental Battle
 
-> **An immersive strategic card battle game featuring elemental powers, AI opponents, story mode, and advanced gameplay mechanics**
+<div align="center">
 
-**Play Now**: [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/)
+![Nebula Elemental Battle](https://img.shields.io/badge/Nebula-Elemental%20Battle-667eea?style=for-the-badge&logo=gamepad&logoColor=white)
 
-*Created by **Colin Nebula** for **[Nebula 3D Development](https://www.nebula3ddev.com)***
+**An immersive strategic card battle game featuring elemental powers, AI opponents, story mode, and advanced gameplay mechanics**
+
+[![Play Now](https://img.shields.io/badge/🎮%20PLAY%20NOW-Live%20Game-4caf50?style=for-the-badge)](https://colinnebula.github.io/nebula-elemental-battle/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
-[![Security](https://img.shields.io/badge/Security-Hardened-brightgreen.svg)](#security)
 [![PWA](https://img.shields.io/badge/PWA-Ready-blue.svg)](#progressive-web-app)
+[![Security](https://img.shields.io/badge/Security-Hardened-brightgreen.svg)](#security)
+
+*Created by **Colin Nebula** for **[Nebula 3D Development](https://www.nebula3ddev.com)***
+
+</div>
+
+---
+
+## 💖 Support This Project
+
+If you enjoy **Nebula Elemental Battle**, please consider supporting its development! Your donations help cover hosting costs, enable new features, and keep the game free for everyone.
+
+<div align="center">
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=YOUR_BUTTON_ID)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/colinnebula)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/ColinNebula)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/colinnebula)
+
+**Every contribution, no matter how small, makes a difference! ❤️**
+
+</div>
 
 ---
 
 ## 📖 Table of Contents
 
-- [Overview](#overview)
-- [Play Online](#play-online)
-- [Features](#features)
-- [Game Mechanics](#game-mechanics)
-- [Getting Started](#getting-started)
-- [Controls](#controls)
-- [Advanced Features](#advanced-features)
-- [Accessibility](#accessibility)
-- [Technical Details](#technical-details)
-- [Development](#development)
-- [Documentation](#documentation)
-- [Credits](#credits)
-
----
-
-## 🌟 Overview
-
-**Nebula Elemental Battle** is a sophisticated turn-based card game where players harness the power of 10 unique elements to battle opponents. Featuring deep strategic gameplay, multiple game modes, AI opponents with distinct personalities, comprehensive status effects, power-ups, customizable themes, and extensive accessibility features.
+- [Play Online](#-play-online)
+- [Features](#-features)
+- [Game Mechanics](#-game-mechanics)
+- [Getting Started](#-getting-started)
+- [Controls](#-controls)
+- [Advanced Systems](#-advanced-systems)
+- [Accessibility](#-accessibility)
+- [Technical Details](#-technical-details)
+- [Development](#-development)
+- [Security](#-security)
+- [Contributing](#-contributing)
+- [Credits](#-credits)
+- [License](#-license)
 
 ---
 
 ## 🎯 Play Online
 
-**Live Game**: [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/)
+**🌐 Live Game**: [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/)
 
-- ✅ No installation required
-- ✅ Play instantly in your browser
-- ✅ Works on desktop and mobile
-- ✅ Installable as a Progressive Web App (PWA)
+- ✅ **No installation required** - Play instantly in your browser
+- ✅ **Cross-platform** - Works on desktop, tablet, and mobile
+- ✅ **Offline capable** - Install as a Progressive Web App
+- ✅ **Free forever** - No ads, no paywalls
 
 ---
 
@@ -52,23 +69,33 @@
 
 ### 🎮 Game Modes
 
-- **Story Mode** - Battle through 20 progressive stages with unique opponents and challenges
-- **VS AI Mode** - Face off against AI opponents with 10 distinct personalities
-- **Strategic Mode** ⚡ **NEW** - Advanced tactical gameplay with mana, weather, and terrain systems
-- **Quick Match** - Jump straight into battle with random AI opponent
-- **Training Mode** - Practice against beginner-level AI
+| Mode | Description |
+|------|-------------|
+| **Story Mode** | Battle through 20 progressive stages with unique opponents and challenges |
+| **VS AI** | Face off against AI opponents with 10 distinct personalities |
+| **Strategic Mode** | Advanced tactical gameplay with mana, weather, and terrain systems |
+| **Quick Match** | Jump straight into battle with a random AI opponent |
 
-### ⚔️ Core Gameplay
+### ⚔️ Elements & Combat
 
-- **10 Elemental Types** - Fire 🔥, Ice ❄️, Water 💧, Earth 🌍, Electricity ⚡, Nature 🌿, Light ✨, Dark 🌑, Technology 🔧, Power 💪
-- **Element Interaction System** - Rock-paper-scissors style strengths and weaknesses
-- **Special Abilities** - Unique powers for each element (healing, barriers, DoT, etc.)
-- **Card Draw System** - Strategic hand management with customizable starting decks
-- **Match Bonuses** - Extra points for playing matching elements consecutively
+**10 Elemental Types** with unique abilities and interactions:
 
-### 🧠 AI System
+| Element | Icon | Special Ability |
+|---------|------|-----------------|
+| Fire | 🔥 | Apply burn (3 damage/turn for 4 turns) |
+| Ice | ❄️ | Freeze opponent (skip 1 turn) |
+| Water | 💧 | Grant 5 HP shield |
+| Earth | 🌍 | Gain barrier (immune to debuffs for 2 turns) |
+| Electricity | ⚡ | Deal 3 bonus damage |
+| Nature | 🌿 | Heal 3 HP |
+| Light | ✨ | Cleanse all debuffs |
+| Dark | 🌑 | Apply weakness (-2 strength for 3 turns) |
+| Technology | 🔧 | Grant 3 shield |
+| Power | 💪 | Gain +3 strength for 2 turns |
 
-**10 Distinct AI Personalities**:
+### 🧠 AI Opponents
+
+**10 Unique AI Personalities**:
 - **Aggressive** - High-risk offensive play
 - **Defensive** - Shield-focused protection
 - **Balanced** - Adaptable strategy
@@ -80,91 +107,37 @@
 - **Adaptive** - Learning opponent patterns
 - **Elemental Master** - Single-element mastery
 
-### 💥 Advanced Combat
+### 💥 Status Effects System
 
-- **Status Effects System** - 20+ buffs and debuffs
-  - **Buffs**: Strength boost, shields, regeneration, barriers, piercing, critical strike, reflect
-  - **Debuffs**: Weakness, burn, freeze, stun, poison, bleed, curse, confusion, silence, vulnerability, slow
-- **Damage Over Time (DoT)** - Burn, poison, and bleed mechanics
-- **Shield Mechanics** - Damage absorption with stacking
-- **Cleanse & Barrier** - Debuff removal and immunity
-- **Turn Timer** - 30-second countdown with visual indicators
+**20+ Buffs & Debuffs**:
+- **Buffs**: Strength boost, shields, regeneration, barriers, piercing, critical strike, reflect
+- **Debuffs**: Weakness, burn, freeze, stun, poison, bleed, curse, confusion, silence, vulnerability
 
 ### 🎴 Power-Ups & Items
 
-- **Rare Collectible Cards** - Legendary, Epic, and Rare cards with unique abilities
-- **Consumable Items** - Potions, boosters, and tactical items
-- **Wild Cards** - Flexible cards that adapt their element
-- **Equipment System** - Persistent upgrades (weapons, armor, accessories, special items)
-- **Loot Drops** - Random rewards based on performance and difficulty
-- **Currency System** - Earn gold to purchase items in the shop
-
-### 📊 Player Progression
-
-- **Statistics Tracking** - Games played, win rate, streaks, element performance
-- **Achievements** - Track total cards played, bonuses, abilities used
-- **Player Profile** - Level system, avatar customization, title unlocking
-- **Inventory Management** - Store and organize rare cards, items, and equipment
-- **Theme Shop** - Unlock 20+ visual themes with earned coins
+- **Rare Cards** - Phoenix Rebirth, Earthquake, Time Warp, and more
+- **Consumables** - Potions, boosters, and tactical items
+- **Equipment** - Persistent upgrades (weapons, armor, accessories)
+- **Currency System** - Earn gold from victories to purchase items
 
 ### 🎨 Customization
 
-**20+ Visual Themes**:
-- Classic, Cyberpunk, Forest, Ocean, Desert, Volcano
-- Ice Kingdom, Neon City, Space, Steampunk, Gothic
-- Candy Land, Autumn, Winter Wonderland, Spring Garden
-- Tropical Paradise, Mountain Peak, Mystic Forest
-- Deep Sea, Ancient Ruins, Crystal Cavern
+**20+ Visual Themes**: Classic, Cyberpunk, Forest, Ocean, Desert, Volcano, Ice Kingdom, Neon City, Space, Steampunk, Gothic, Candy Land, and more!
 
-**Theme Features**:
-- Unique backgrounds and color schemes
-- Animated environments
-- Dynamic card styling
-- Atmospheric effects
+**Player Profile**: Level system, avatar customization, title unlocking, and comprehensive statistics tracking.
 
-### ♿ Accessibility
+### 📱 Progressive Web App
 
-- **5 Colorblind Modes** - Protanopia, Deuteranopia, Tritanopia, Achromatopsia, None
-- **High Contrast Mode** - Maximum visibility for low vision
-- **Adjustable Text Size** - 4 size options (Small to Extra Large)
-- **Element Icon Toggle** - Switch between icons and text labels
-- **Keyboard Navigation** - Full keyboard control with shortcuts
-- **Screen Reader Support** - ARIA labels and descriptive text
-- **WCAG 2.1 Level AA Compliant** - Meets accessibility standards
-
-### 🎬 Animations & Effects
-
-- **Card Draw Animations** - Smooth dealing effects
-- **Victory Poses** - Celebratory effects for winning cards
-- **Environmental Effects** - Rain, snow, leaves, embers, lightning
-- **Phase Transitions** - Round announcements and battle start
-- **Shuffle Animations** - Dynamic deck shuffling
-- **Card Flip Effects** - 3D rotation when playing cards
-- **Combo Multipliers** - Floating text for bonuses
-- **Particle Effects** - Sparkles, glows, and visual feedback
-
-### 🎵 Audio System (Ready)
-
-- **Sound Effects** - Card play, victories, abilities
-- **Background Music** - Atmospheric tracks
-- **Volume Controls** - Separate toggles for SFX and music
-- **Audio Settings** - Customizable in settings menu
-
-### 📱 Progressive Web App (PWA)
-
-- **Installable** - Add to home screen on mobile/desktop
-- **Offline Play** - Full gameplay without internet
-- **Service Worker** - Fast loading and caching
-- **Responsive Design** - Optimized for all screen sizes
-- **Touch Optimized** - Mobile-friendly controls
+- **Installable** on mobile and desktop
+- **Offline play** with full functionality
+- **Fast loading** with service worker caching
+- **Responsive design** for all screen sizes
 
 ---
 
 ## 🎲 Game Mechanics
 
-### Element Strengths
-
-Each element has strengths against other elements:
+### Element Strengths & Weaknesses
 
 | Element | Strong Against | Weak Against |
 |---------|---------------|--------------|
@@ -179,41 +152,22 @@ Each element has strengths against other elements:
 | 🔧 Technology | ✨ Light, 🌑 Dark | ⚡ Electricity, 💪 Power |
 | 💪 Power | 🔧 Technology, 🌍 Earth | ✨ Light, 🌑 Dark |
 
-### Special Abilities
-
-- **Fire** 🔥: Apply burn (3 damage/turn for 4 turns)
-- **Ice** ❄️: Freeze opponent (skip 1 turn)
-- **Water** 💧: Grant 5 HP shield
-- **Earth** 🌍: Gain barrier (immune to debuffs for 2 turns)
-- **Electricity** ⚡: Deal 3 bonus damage
-- **Nature** 🌿: Heal 3 HP
-- **Light** ✨: Cleanse all debuffs
-- **Dark** 🌑: Apply weakness (-2 strength for 3 turns)
-- **Technology** 🔧: Grant 3 shield
-- **Power** 💪: Gain +3 strength for 2 turns
-
 ### Scoring System
 
-- **Base Score**: Card strength value
+- **Base Score**: Card strength value (1-10)
 - **Element Advantage**: +2 bonus when strong against opponent
-- **Match Bonus**: +1 bonus for consecutive matching elements
+- **Match Bonus**: +1 for consecutive matching elements
 - **Special Abilities**: Additional effects and damage
-- **Status Effects**: Ongoing modifications to strength and damage
-
-### Victory Conditions
-
-- **Story Mode**: Defeat opponent before HP reaches 0
-- **VS AI**: Highest score after all rounds or HP victory
-- **Best of 3**: Win 2 out of 3 matches
+- **Status Effects**: Ongoing modifiers
 
 ---
 
 ## 🚀 Getting Started
 
-### Quick Start (Play Online)
+### Play Online (Recommended)
 
 1. Visit [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/)
-2. Click "VS AI" or "Story Mode"
+2. Click **"VS AI"** or **"Story Mode"**
 3. Select your starting cards
 4. Battle!
 
@@ -222,14 +176,12 @@ Each element has strengths against other elements:
 ```bash
 # Clone the repository
 git clone https://github.com/ColinNebula/nebula-elemental-battle.git
-
-# Navigate to directory
 cd nebula-elemental-battle
 
 # Install dependencies
 npm install
 
-# Run development server
+# Start development server
 npm start
 ```
 
@@ -238,11 +190,8 @@ The app will open at [http://localhost:3000](http://localhost:3000)
 ### Build for Production
 
 ```bash
-# Create optimized production build
-npm run build
-
-# Deploy to GitHub Pages
-npm run deploy
+npm run build    # Create optimized build
+npm run deploy   # Deploy to GitHub Pages
 ```
 
 ---
@@ -251,109 +200,62 @@ npm run deploy
 
 ### Keyboard Shortcuts
 
-- **1-5**: Play cards from hand (positions 1-5)
-- **S**: Open Settings
-- **T**: Open Tutorial
-- **P**: Open Statistics
-- **I**: Open Inventory (from Main Menu)
-- **ESC**: Close overlays / Pause game
+| Key | Action |
+|-----|--------|
+| `1-5` | Play cards from hand (positions 1-5) |
+| `S` | Open Settings |
+| `T` | Open Tutorial |
+| `P` | Open Statistics |
+| `I` | Open Inventory |
+| `ESC` | Close overlays / Pause game |
 
-### Mouse/Touch Controls
+### Mouse/Touch
 
 - **Click/Tap Card**: Play card during your turn
-- **Hover Card**: View card details and keyboard shortcut
-- **Click Menu Buttons**: Access features and settings
+- **Hover Card**: View details and keyboard shortcut
 
 ---
 
-## 🎯 Advanced Features
+## 🎯 Advanced Systems
 
-### Strategic Depth Systems ⚡ **NEW**
+### Strategic Mode
 
-**Strategic Mode** adds advanced tactical gameplay with three core systems:
+**Strategic Mode** adds tactical depth with three core systems:
 
-**💎 Mana/Energy System**:
-- Cards cost 1-6 mana based on power level
-- Mana regenerates each turn (+1 per turn, max 10)
+**💎 Mana System**
+- Cards cost 1-6 mana based on power
+- Mana regenerates +1 per turn (max 10)
 - Strategic resource management required
-- Visual mana bar with real-time tracking
 
-**🌦️ Weather Effects System**:
-- 8 dynamic weather types (Clear, Rain, Storm, Drought, Blizzard, Windstorm, Fog, Eclipse)
-- Weather changes every 2-4 rounds
+**🌦️ Weather Effects**
+- 8 weather types: Clear, Rain, Storm, Drought, Blizzard, Windstorm, Fog, Eclipse
+- Changes every 2-4 rounds
 - Element-specific modifiers (±1 to ±3 strength)
-- Tactical adaptation required
 
-**🏔️ Terrain Advantages System**:
-- 9 terrain types (Volcano, Ocean, Forest, Mountain, Glacier, Thunder Plains, Shadow Realm, Sanctuary, Neutral)
-- Pre-selected terrain persists entire match
-- +2 strength bonus to matching elements
+**🏔️ Terrain Advantages**
+- 9 terrain types with element bonuses
+- +2 strength to matching elements
 - Strategic terrain-deck synergy
-
-See [STRATEGIC_SYSTEMS_GUIDE.md](STRATEGIC_SYSTEMS_GUIDE.md) for complete documentation.
-
-### Status Effects
-
-The game features a comprehensive status effects system with 20+ different effects:
-
-**Offensive Buffs**: Strength boost, Critical strike, Piercing, Double strike
-**Defensive Buffs**: Shield, Barrier, Regeneration, Reflect
-**Debuffs**: Weakness, Freeze, Stun, Confusion, Silence, Curse, Vulnerability, Slow
-**Damage Over Time**: Burn, Poison, Bleed, Fatigue
-
-See [STATUS_EFFECTS.md](STATUS_EFFECTS.md) for complete documentation.
-
-### Power-Ups System
-
-**Rare Cards**: Phoenix Rebirth, Earthquake, Elemental Master, Time Warp, Tidal Wave, Thunderlord, Frost Titan, Card Thief, Nature's Guardian, Mirror Image
-
-**Consumables**: Shield Potions, Damage Boosters, Health Potions, Card Draw, Element Boost, Cleanse Potions, Reflect Shield, Double Strike, Time Stop
-
-**Equipment**: Fire Sword, Ice Staff, Thunder Hammer, Dragon Scale Armor, Crystal Shield, Lucky Charm, Ring of Power, Amulet of Elements, Deck of Fate, Hourglass of Time
-
-See [POWERUPS.md](POWERUPS.md) for complete documentation.
-
-### Animation System
-
-Dynamic visual effects enhance gameplay:
-
-- Card draw and shuffle animations
-- Victory celebrations with sparkles
-- Environmental effects (rain, snow, leaves, embers, lightning)
-- Phase transitions and round announcements
-- 3D card flip effects
-- Combo multiplier displays
-
-See [ANIMATIONS.md](ANIMATIONS.md) for complete documentation.
 
 ---
 
 ## ♿ Accessibility
 
 ### Colorblind Support
-
-Five colorblind modes with scientifically-tested color palettes:
 - **Protanopia** (Red-blind)
 - **Deuteranopia** (Green-blind)
 - **Tritanopia** (Blue-blind)
 - **Achromatopsia** (Total colorblind)
-- **None** (Standard colors)
 
 ### Visual Adjustments
+- High contrast mode (WCAG AAA compliant)
+- Adjustable text size (4 options)
+- Element icon/text labels toggle
 
-- **High Contrast Mode**: Enhanced contrast ratios (WCAG AAA)
-- **Text Sizing**: 4 size options (87.5% to 125% scale)
-- **Element Labels**: 3-letter abbreviations on all cards
-- **Pattern Overlays**: Visual distinction for elements
-
-### Keyboard & Screen Reader
-
-- **Full keyboard navigation** with tab support
-- **ARIA labels** for all interactive elements
-- **Screen reader compatibility** (NVDA, JAWS, VoiceOver, TalkBack)
-- **Focus indicators** with high-contrast outlines
-
-See [ACCESSIBILITY.md](ACCESSIBILITY.md) for complete documentation.
+### Input Support
+- Full keyboard navigation
+- ARIA labels for screen readers
+- Compatible with NVDA, JAWS, VoiceOver, TalkBack
 
 ---
 
@@ -363,145 +265,86 @@ See [ACCESSIBILITY.md](ACCESSIBILITY.md) for complete documentation.
 
 - **Frontend**: React 19.2.0
 - **Styling**: CSS3 with animations
-- **State Management**: React Hooks
-- **Storage**: LocalStorage for persistence
-- **PWA**: Service Workers for offline support
-- **Build Tool**: Create React App
+- **State**: React Hooks
+- **Storage**: LocalStorage
+- **PWA**: Service Workers
+- **Build**: Create React App
 - **Deployment**: GitHub Pages
 
-### Architecture
+### Project Structure
 
 ```
 nebula-elemental-battle/
-├── public/                  # Static assets
+├── public/              # Static assets & PWA files
 ├── src/
-│   ├── components/          # React components
-│   │   ├── GameBoard.js     # Main game interface
-│   │   ├── Card.js          # Card display
-│   │   ├── MainMenu.js      # Menu system
-│   │   ├── StoryMode.js     # Story mode interface
-│   │   ├── Settings.js      # Settings menu
-│   │   ├── Tutorial.js      # Tutorial overlay
-│   │   ├── Statistics.js    # Stats tracking
-│   │   ├── Inventory.js     # Item management
-│   │   ├── ThemeShop.js     # Theme selection
-│   │   └── [18 more components]
-│   ├── services/
-│   │   └── GameClient.js    # Game logic engine
-│   ├── utils/
-│   │   ├── aiPersonalities.js    # AI behavior
-│   │   ├── animations.js         # Animation system
-│   │   ├── statistics.js         # Stats tracking
-│   │   ├── powerUps.js           # Items & equipment
-│   │   ├── themes.js             # Visual themes
-│   │   ├── accessibility.js      # Accessibility features
-│   │   ├── sounds.js             # Audio system
-│   │   └── security.js           # Security manager
-│   ├── App.js               # Main application
-│   └── index.js             # Entry point
-└── server/                  # C++ backend (optional)
+│   ├── components/      # React components (25+)
+│   ├── services/        # Game logic engine
+│   └── utils/           # AI, animations, themes, etc.
+├── server/              # Optional C++ backend
+└── build/               # Production build
 ```
 
 ### Data Persistence
 
-All game data is stored locally using `localStorage`:
-
-- **Game Settings**: Preferences, accessibility options
-- **Player Profile**: Level, avatar, statistics
-- **Inventory**: Rare cards, items, equipment, currency
-- **Story Progress**: Completed stages
-- **Theme Unlocks**: Purchased themes
-- **Statistics**: Game history, win rates, achievements
-
-### Performance
-
-- **Optimized rendering** with React memoization
-- **Lazy loading** for heavy components
-- **Animation throttling** for smooth performance
-- **Efficient state management** with hooks
-- **Service Worker caching** for fast loading
-
-### Security
-
-- **Input validation** with express-validator and Joi
-- **Rate limiting** on API endpoints
-- **Security headers** with Helmet.js
-- **XSS protection** with sanitization
-- **CSRF prevention** measures
-- **Security logging** and monitoring
-
-See [SECURITY.md](SECURITY.md) for complete documentation.
+All data stored locally via `localStorage`:
+- Game settings & preferences
+- Player profile & statistics
+- Inventory (cards, items, equipment)
+- Story progress & theme unlocks
 
 ---
 
-## 💻 Development
+## 🔒 Security
 
-### Prerequisites
+### Security Features
+- Input validation with sanitization
+- Rate limiting on API endpoints
+- Security headers with Helmet.js
+- XSS and CSRF protection
+- Debug protection in production
 
-- Node.js 18+
-- npm or yarn
-- Modern web browser
+### Reporting Vulnerabilities
 
-### Scripts
+**Do NOT create public issues for security vulnerabilities.**
 
-```bash
-# Development
-npm start              # Run development server
-npm test               # Run tests
-npm run build          # Build for production
+Email: security@nebula3ddev.com
 
-# Deployment
-npm run predeploy      # Build before deploy
-npm run deploy         # Deploy to GitHub Pages
+Include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
 
-# Maintenance
-npm run lint           # Run ESLint
-npm run lint:fix       # Fix linting issues
-npm run security:audit # Check for vulnerabilities
-```
-
-### C++ Backend (Optional)
-
-For the optional C++ multiplayer backend:
-
-**Windows**:
-```powershell
-cd server
-mkdir build
-cd build
-cmake ..
-cmake --build .
-.\Debug\card_game_server.exe
-```
-
-**Linux/Mac**:
-```bash
-cd server
-mkdir build
-cd build
-cmake ..
-make
-./card_game_server
-```
-
-### Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Response time: Within 24 hours
 
 ---
 
-## 📚 Documentation
+## 🤝 Contributing
 
-Comprehensive documentation is available:
+Contributions are welcome! Please follow these guidelines:
 
-- **[FEATURES.md](FEATURES.md)** - Complete feature overview
-- **[POWERUPS.md](POWERUPS.md)** - Power-ups and items system
-- **[STATUS_EFFECTS.md](STATUS_EFFECTS.md)** - Status effects mechanics
-- **[ANIMATIONS.md](ANIMATIONS.md)** - Animation system details
-- **[ACCESSIBILITY.md](ACCESSIBILITY.md)** - Accessibility features
-- **[SECURITY.md](SECURITY.md)** - Security implementation
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+### Quick Start
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `npm test`
+5. Commit: `git commit -m 'feat: add amazing feature'`
+6. Push: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+### Code Standards
+
+- Use functional React components with hooks
+- Follow existing code style
+- Add comments for complex logic
+- Ensure responsive design
+- Test accessibility features
+
+### Security Requirements
+
+- Never commit sensitive data (API keys, credentials)
+- Validate all user inputs
+- Run `npm run security:audit` before submitting
 
 ---
 
@@ -509,31 +352,18 @@ Comprehensive documentation is available:
 
 ### Created By
 
-**Colin Nebula**
-- [Nebula 3D Development](https://www.nebula3ddev.com)
+**Colin Nebula** - [Nebula 3D Development](https://www.nebula3ddev.com)
 - Full-stack game development
 - UI/UX design
 - Systems architecture
 
-### Technologies Used
+### Technologies
 
-- React
-- Node.js
-- Express
-- C++ (optional backend)
-- CSS3 Animations
-- Progressive Web App APIs
-- LocalStorage API
+React • Node.js • Express • CSS3 Animations • PWA APIs • LocalStorage
 
 ### Open Source Libraries
 
-- React 19.2.0
-- React Scripts 5.0.1
-- Express 4.21.2
-- Helmet 7.1.0
-- Express Rate Limit 7.1.5
-- Express Validator 7.0.1
-- Joi 17.11.0
+React 19.2.0 • Express 4.21.2 • Helmet 7.1.0 • Express Rate Limit 7.1.5
 
 ---
 
@@ -543,19 +373,33 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🌐 Links
+## 🔗 Links
 
-- **Play Online**: [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/)
-- **GitHub Repository**: [https://github.com/ColinNebula/nebula-elemental-battle](https://github.com/ColinNebula/nebula-elemental-battle)
-- **Nebula 3D Development**: [https://www.nebula3ddev.com](https://www.nebula3ddev.com)
-- **Report Issues**: [GitHub Issues](https://github.com/ColinNebula/nebula-elemental-battle/issues)
+| Resource | Link |
+|----------|------|
+| 🎮 **Play Game** | [colinnebula.github.io/nebula-elemental-battle](https://colinnebula.github.io/nebula-elemental-battle/) |
+| 📂 **GitHub** | [github.com/ColinNebula/nebula-elemental-battle](https://github.com/ColinNebula/nebula-elemental-battle) |
+| 🌐 **Website** | [nebula3ddev.com](https://www.nebula3ddev.com) |
+| 🐛 **Report Issues** | [GitHub Issues](https://github.com/ColinNebula/nebula-elemental-battle/issues) |
 
 ---
 
-## 🎮 Start Playing!
+<div align="center">
 
-Ready to master the elements? Visit [https://colinnebula.github.io/nebula-elemental-battle/](https://colinnebula.github.io/nebula-elemental-battle/) and begin your journey!
+## 💖 Support Development
+
+**If you enjoy this game, please consider supporting its continued development!**
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=YOUR_BUTTON_ID)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/colinnebula)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/ColinNebula)
+
+**Your support helps keep this game free and enables new features! ⭐**
 
 ---
 
 **Developed with ❤️ by Colin Nebula for Nebula 3D Development**
+
+*Thank you for playing! 🎮*
+
+</div>
