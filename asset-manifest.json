@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/nebula-elemental-battle/static/css/main.bcaa3500.css",
-    "main.js": "/nebula-elemental-battle/static/js/main.54df8601.js",
+    "main.css": "/nebula-elemental-battle/static/css/main.68cad8dd.css",
+    "main.js": "/nebula-elemental-battle/static/js/main.899c542a.js",
     "static/css/185.1189c2b8.chunk.css": "/nebula-elemental-battle/static/css/185.1189c2b8.chunk.css",
     "static/js/185.62145f07.chunk.js": "/nebula-elemental-battle/static/js/185.62145f07.chunk.js",
     "static/css/501.06cbd028.chunk.css": "/nebula-elemental-battle/static/css/501.06cbd028.chunk.css",
@@ -11,11 +11,11 @@
     "static/css/972.49f82d87.chunk.css": "/nebula-elemental-battle/static/css/972.49f82d87.chunk.css",
     "static/js/972.5d9a2afe.chunk.js": "/nebula-elemental-battle/static/js/972.5d9a2afe.chunk.js",
     "static/css/525.2e54d02c.chunk.css": "/nebula-elemental-battle/static/css/525.2e54d02c.chunk.css",
-    "static/js/525.f9a43700.chunk.js": "/nebula-elemental-battle/static/js/525.f9a43700.chunk.js",
+    "static/js/525.2bc77603.chunk.js": "/nebula-elemental-battle/static/js/525.2bc77603.chunk.js",
     "static/css/0.fc914b6c.chunk.css": "/nebula-elemental-battle/static/css/0.fc914b6c.chunk.css",
     "static/js/0.c9e91885.chunk.js": "/nebula-elemental-battle/static/js/0.c9e91885.chunk.js",
     "static/css/475.242d1f11.chunk.css": "/nebula-elemental-battle/static/css/475.242d1f11.chunk.css",
-    "static/js/475.64a394ab.chunk.js": "/nebula-elemental-battle/static/js/475.64a394ab.chunk.js",
+    "static/js/475.b03eee1e.chunk.js": "/nebula-elemental-battle/static/js/475.b03eee1e.chunk.js",
     "static/css/728.4442ff84.chunk.css": "/nebula-elemental-battle/static/css/728.4442ff84.chunk.css",
     "static/js/728.5745d0f1.chunk.js": "/nebula-elemental-battle/static/js/728.5745d0f1.chunk.js",
     "static/css/224.e38d07db.chunk.css": "/nebula-elemental-battle/static/css/224.e38d07db.chunk.css",
@@ -41,7 +41,7 @@
     "index.html": "/nebula-elemental-battle/index.html"
   },
   "entrypoints": [
-    "static/css/main.bcaa3500.css",
-    "static/js/main.54df8601.js"
+    "static/css/main.68cad8dd.css",
+    "static/js/main.899c542a.js"
   ]
 }
