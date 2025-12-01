@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import './PlayerProfile.css';
 import userPreferences from '../utils/userPreferences';
 
@@ -314,7 +315,7 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
           >
             {getAvatar()}
           </div>
-          {showAvatarSelector && !isAI && (
+          {showAvatarSelector && !isAI && ReactDOM.createPortal(
             <>
               <div className="avatar-selector-backdrop" onClick={() => setShowAvatarSelector(false)} />
               <div className="avatar-selector-enhanced">
@@ -348,7 +349,8 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
                 ))}
               </div>
               </div>
-            </>
+            </>,
+            document.body
           )}
           <div className="profile-level-badge">
             <span className="level-icon">⚡</span>

@@ -31,6 +31,7 @@ const Statistics = lazy(() => import('./components/Statistics'));
 const PlayerProfile = lazy(() => import('./components/PlayerProfile'));
 const NewsModal = lazy(() => import('./components/NewsModal'));
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
+const UpdatePrompt = lazy(() => import('./components/UpdatePrompt'));
 const Credits = lazy(() => import('./components/Credits'));
 const CoinToss = lazy(() => import('./components/CoinToss'));
 const ThemeShop = lazy(() => import('./components/ThemeShop'));
@@ -219,6 +220,7 @@ function App() {
   const [showStats, setShowStats] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showNews, setShowNews] = useState(false);
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
   const [showThemeShop, setShowThemeShop] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
@@ -1399,6 +1401,17 @@ function App() {
               <InstallPrompt />
             </Suspense>
           )}
+          
+          {/* Update Prompt - Show when update is available */}
+          <Suspense fallback={null}>
+            <UpdatePrompt 
+              onUpdate={() => {
+                console.log('🔄 User initiated update');
+                setShowUpdatePrompt(false);
+              }}
+              onDismiss={() => setShowUpdatePrompt(false)}
+            />
+          </Suspense>
       
       {/* Tutorial Mode */}
       {showTutorialMode && (

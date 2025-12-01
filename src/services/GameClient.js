@@ -188,6 +188,53 @@ class GameClient {
   static BASE_NEXT_ROUND_DELAY = 3000;  // Reduced from 5000
   static BASE_GAME_OVER_DELAY = 2000;
   
+  // Reliable timeout that works even when tab is inactive
+  // Uses document.visibilityState to detect throttled tabs
+  static reliableTimeout(callback, delay, label = '') {
+    const startTime = Date.now();
+    let timeoutId = null;
+    let rafId = null;
+    let completed = false;
+    
+    const execute = () => {
+      if (completed) return;
+      completed = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (rafId) cancelAnimationFrame(rafId);
+      try {
+        callback();
+      } catch (error) {
+        console.error(`❌ Timeout callback error (${label}):`, error);
+      }
+    };
+    
+    // Primary: standard setTimeout
+    timeoutId = setTimeout(execute, delay);
+    
+    // Fallback: RAF-based check for when tab becomes active again
+    // This catches cases where setTimeout was throttled
+    const checkElapsed = () => {
+      if (completed) return;
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= delay) {
+        console.log(`⚡ RAF fallback triggered for: ${label} (elapsed: ${elapsed}ms)`);
+        execute();
+      } else {
+        rafId = requestAnimationFrame(checkElapsed);
+      }
+    };
+    
+    // Start RAF fallback check
+    rafId = requestAnimationFrame(checkElapsed);
+    
+    // Return cancel function
+    return () => {
+      completed = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }
+  
   // Get scaled delays
   static getAiActivationDelay(isTutorial = false) {
     const base = isTutorial ? 1500 : GameClient.BASE_AI_ACTIVATION_DELAY;
@@ -647,8 +694,9 @@ class GameClient {
             // AI plays after delay (give player time to see their card)
             // Tutorial mode uses faster timing: 1.5s instead of 3s
             // Respects animation speed setting
+            // Uses reliable timeout to prevent stuck state on inactive tabs
             const aiActivationDelay = GameClient.getAiActivationDelay(chooseRoom.isTutorial);
-            const aiActivationTimeout = setTimeout(() => {
+            GameClient.reliableTimeout(() => {
               console.log(`⏰ AI activation timeout triggered (${aiActivationDelay}ms after player card)`);
               console.log('🔍 Checking AI availability:', {
                 aiExists: !!ai,
@@ -720,7 +768,7 @@ class GameClient {
                 const aiCardDelay = chooseRoom.isTutorial ? 800 : 1500;
                 console.log(`⏱️ About to create AI card selection timeout (${aiCardDelay}ms)...`);
                 
-                const aiCardSelectionTimeout = setTimeout(() => {
+                GameClient.reliableTimeout(() => {
                   console.log(`⏰ AI card selection timeout fired (${aiCardDelay}ms)`);
                   try {
                     // Check if game is already over before processing AI turn
@@ -1101,10 +1149,10 @@ class GameClient {
                   const battleDelay = baseBattleDelay + (powerCardDelay > 0 ? 1500 + legendaryBonusDelay : 0);
                   const nextRoundDelay = chooseRoom.isTutorial ? 3000 : 5000; // Reduced: 3s tutorial, 5s normal after battle for next round
                   console.log(`✅ Listeners notified, starting battle resolution timer (${battleDelay}ms), next round in (${nextRoundDelay}ms)...`);
-                  console.log('⏱️ About to create setTimeout for battle resolution...');
+                  console.log('⏱️ About to create reliable timeout for battle resolution...');
                   
-                  // Resolve battle with advanced mechanics (tutorial: 3s, normal: 6s delay to view AI card)
-                  const battleTimeout = setTimeout(() => {
+                  // Resolve battle with advanced mechanics - uses reliable timeout to prevent stuck state
+                  GameClient.reliableTimeout(() => {
                     console.log(`⏰ Battle timeout triggered after ${battleDelay / 1000} seconds`);
                     
                     // Check if game is already over before processing battle
@@ -1366,10 +1414,10 @@ class GameClient {
                         maxRounds: chooseRoom.maxRounds,
                         deferredAbility: chooseRoom.deferredAbility
                       });
-                      console.log('⏱️ About to create next round timeout (6000ms)...');
+                      console.log('⏱️ About to create next round reliable timeout...');
                       
-                      // Next round timeout (6 seconds for round announcement)
-                      const nextRoundTimeout = setTimeout(() => {
+                      // Next round timeout - uses reliable timeout to prevent stuck state on inactive tabs
+                      GameClient.reliableTimeout(() => {
                         console.log('🔄 Next round timeout triggered - clearing cards and resetting turn');
                         
                         // Check if game is already over before starting next round

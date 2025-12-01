@@ -142,6 +142,13 @@ export const setPreference = (key, value) => {
  */
 export const updateAvatar = (avatar) => {
   console.log('🎭 [USER PREFS] Updating avatar:', avatar?.name || avatar);
+  
+  // ALWAYS save to localStorage first (most reliable, survives storage clearing)
+  if (avatar && (avatar.id || avatar.icon)) {
+    localStorage.setItem('savedAvatar', JSON.stringify(avatar));
+    console.log('🎭 [USER PREFS] Avatar saved to localStorage');
+  }
+  
   const success = updatePreferences({ selectedAvatar: avatar });
   
   if (success) {
@@ -176,6 +183,20 @@ export const updateAvatar = (avatar) => {
  * @returns {Object|null} Avatar object or null
  */
 export const getAvatar = () => {
+  // Try localStorage first (most reliable, survives storage clearing)
+  try {
+    const savedAvatar = localStorage.getItem('savedAvatar');
+    if (savedAvatar) {
+      const parsed = JSON.parse(savedAvatar);
+      if (parsed && (parsed.id || parsed.icon)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    // Ignore parse errors
+  }
+  
+  // Fall back to preferences storage
   return getPreference('selectedAvatar', null);
 };
 

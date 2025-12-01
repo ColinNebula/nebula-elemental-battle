@@ -8,11 +8,22 @@ export const getProfile = () => {
   const stored = secureStorage.getItem(PROFILE_KEY);
   const stats = getStats(); // Get detailed stats
   
+  // Always try to load saved avatar from localStorage first (most reliable)
+  let savedAvatar = null;
+  try {
+    const avatarStr = localStorage.getItem('savedAvatar');
+    if (avatarStr) {
+      savedAvatar = JSON.parse(avatarStr);
+    }
+  } catch (e) {
+    // Ignore parse errors
+  }
+  
   if (!stored) {
     return {
-      avatar: '👤',
-      name: 'Player',
-      selectedAvatar: null,
+      avatar: savedAvatar?.icon || '👤',
+      name: localStorage.getItem('playerName') || 'Player',
+      selectedAvatar: savedAvatar,
       totalGames: stats.gamesPlayed || 0,
       wins: stats.gamesWon || 0,
       losses: stats.gamesLost || 0,
@@ -34,9 +45,12 @@ export const getProfile = () => {
   // secureStorage already returns parsed object
   const profile = stored;
   // Ensure all properties exist and merge with stats
+  // IMPORTANT: Never overwrite a saved avatar with null
+  const finalAvatar = savedAvatar || profile.selectedAvatar || null;
   return {
     ...profile,
-    selectedAvatar: profile.selectedAvatar || null,
+    selectedAvatar: finalAvatar,
+    avatar: finalAvatar?.icon || profile.avatar || '👤',
     coins: profile.coins !== undefined ? profile.coins : 0,
     totalGames: stats.gamesPlayed || profile.totalGames || 0,
     wins: stats.gamesWon || profile.wins || 0,
@@ -55,6 +69,14 @@ export const getProfile = () => {
 
 export const saveProfile = (profile) => {
   secureStorage.setItem(PROFILE_KEY, profile);
+  
+  // Also save avatar to localStorage for redundancy (survives storage clearing)
+  if (profile.selectedAvatar) {
+    localStorage.setItem('savedAvatar', JSON.stringify(profile.selectedAvatar));
+  }
+  if (profile.name && profile.name !== 'Player') {
+    localStorage.setItem('playerName', profile.name);
+  }
 };
 
 // Recovery function to restore from backup if main save is corrupted

@@ -1,0 +1,257 @@
+/* Update Prompt Styles */
+
+.update-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.update-prompt {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  border: 2px solid #4ecdc4;
+  box-shadow: 
+    0 0 40px rgba(78, 205, 196, 0.3),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.update-header {
+  margin-bottom: 20px;
+}
+
+.update-icon {
+  font-size: 60px;
+  margin-bottom: 10px;
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.update-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+}
+
+.update-content {
+  margin-bottom: 25px;
+}
+
+.update-version {
+  font-size: 16px;
+  color: #a0a0a0;
+  margin-bottom: 10px;
+}
+
+.version-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.update-description {
+  font-size: 14px;
+  color: #ccc;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.update-features {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.feature-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.update-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.update-button {
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+
+.update-button.primary {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+}
+
+.update-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(78, 205, 196, 0.6);
+}
+
+.update-button.primary:active {
+  transform: translateY(0);
+}
+
+.update-button.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.update-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+.update-dismiss {
+  position: absolute;
+  top: -45px;
+  right: -10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #888;
+  font-size: 18px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.update-dismiss:hover {
+  background: rgba(255, 100, 100, 0.3);
+  color: #ff6b6b;
+}
+
+.update-note {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #6a6a8a;
+}
+
+/* Pulse animation for the update button */
+.update-button.primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  animation: pulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .update-prompt {
+    padding: 25px 20px;
+    margin: 15px;
+  }
+  
+  .update-icon {
+    font-size: 50px;
+  }
+  
+  .update-title {
+    font-size: 20px;
+  }
+  
+  .update-features {
+    gap: 8px;
+  }
+  
+  .feature-item {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  
+  .update-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .update-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .update-dismiss {
+    top: -40px;
+    right: 0;
+  }
+}

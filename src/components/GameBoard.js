@@ -74,6 +74,7 @@ import {
   createSmokePuff,
   preloadVideoEffects 
 } from '../utils/videoEffects';
+import gameRecovery from '../utils/gameRecovery';
 import './GameBoard.css';
 import '../utils/visualEffects.css';
 import '../utils/videoEffects.css';
@@ -1299,179 +1300,66 @@ const GameBoard = ({
     }
   }, [aiPlayer?.playedCards?.length]);
 
-  // AI Watchdog: Check if AI is stuck and needs to play
+  // Centralized Game Recovery System - replaces multiple scattered watchdog timers
   useEffect(() => {
-    if (!gameState?.gameStarted || gameState?.gameOver || !aiPlayer) {
-      return;
-    }
+    if (!gameState?.gameStarted) return;
 
-    // If AI is active, has cards, hasn't chosen a card, and battle phase is false
-    // This means AI should be playing but might be stuck
-    if (aiPlayer.active && 
-        aiPlayer.hand?.length > 0 && 
-        !aiPlayer.chosenCard && 
-        !gameState.battlePhase &&
-        !showRoundAnnouncement &&
-        !showTurnAnnouncement) {
-      
-      console.log('⚠️ AI WATCHDOG: AI should be playing but appears stuck', {
-        aiActive: aiPlayer.active,
-        aiHandSize: aiPlayer.hand.length,
-        aiChosen: aiPlayer.chosenCard,
-        battlePhase: gameState.battlePhase,
-        hasDeckCards: aiPlayer.deck?.length || 0
-      });
-      
-      // Use shorter delay (1.5s) if turn announcement is not showing (forfeit scenario)
-      // Use longer delay (5s) if announcements might be showing
-      const delay = showTurnAnnouncement || showRoundAnnouncement || showInitialArena ? 5000 : 1500;
-      
-      const watchdogTimer = setTimeout(() => {
-        // Don't force AI to play during initial arena display
-        if (showInitialArena) {
-          console.log('⏸️ AI watchdog blocked - arena display in progress');
-          return;
-        }
-        
-        // Don't force AI to play during round announcement
-        if (showRoundAnnouncement) {
-          console.log('⏸️ AI watchdog blocked - round announcement in progress');
-          return;
-        }
-        
-        // Only force AI to play if it actually has cards
-        if (aiPlayer.active && aiPlayer.hand?.length > 0 && !aiPlayer.chosenCard) {
-          console.log('🚨 AI WATCHDOG: Forcing AI to play');
-          const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
-          onPlayCard(randomIndex, aiPlayer.id);
-        } else if (aiPlayer.active && aiPlayer.hand?.length === 0) {
-          console.log('⏭️ AI WATCHDOG: AI has no cards, waiting for server to skip turn');
-        }
-      }, delay);
-      
-      return () => clearTimeout(watchdogTimer);
-    }
-  }, [aiPlayer, gameState?.battlePhase, gameState?.gameStarted, gameState?.gameOver, 
-      showRoundAnnouncement, showTurnAnnouncement, onPlayCard, showInitialArena]);
+    // Initialize recovery system with callbacks
+    gameRecovery.init({
+      onPlayCard: (cardIndex, playerId) => {
+        if (onPlayCard) onPlayCard(cardIndex, playerId);
+      },
+      onDrawFromReserve: () => {
+        if (onDrawFromReserve) onDrawFromReserve();
+      },
+      onSkipAbility: () => {
+        if (onSkipAbility) onSkipAbility();
+      },
+      onForceStateUpdate: (params) => {
+        console.log('🔧 Force state update requested:', params);
+        // Request game state refresh from server
+      }
+    });
 
-  // General game stuck detector - detects if game is in an invalid state
+    // Start the centralized watchdog
+    const getGameState = () => gameState;
+    const getUIState = () => ({
+      showRoundAnnouncement,
+      showTurnAnnouncement,
+      showInitialArena
+    });
+
+    gameRecovery.startWatchdog(getGameState, getUIState);
+
+    return () => {
+      gameRecovery.stopWatchdog();
+    };
+  }, [gameState?.gameStarted, onPlayCard, onDrawFromReserve, onSkipAbility]);
+
+  // Record state changes to recovery system
   useEffect(() => {
-    if (!gameState?.gameStarted || gameState?.gameOver) {
-      return;
+    if (gameState) {
+      gameRecovery.recordStateChange(gameState);
     }
+  }, [
+    gameState?.currentRound, 
+    gameState?.battlePhase, 
+    gameState?.pendingAbility,
+    gameState?.gameOver,
+    humanPlayer?.active,
+    aiPlayer?.active,
+    humanPlayer?.chosenCard,
+    aiPlayer?.chosenCard,
+    humanPlayer?.hand?.length,
+    aiPlayer?.hand?.length
+  ]);
 
-    // Detect stuck states - including pending ability timeout
-    const isStuck = 
-      // Both players inactive (not during battle or pending ability)
-      (humanPlayer && aiPlayer && !humanPlayer.active && !aiPlayer.active && !gameState.battlePhase && !gameState.pendingAbility) ||
-      // Battle phase but cards missing
-      (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard));
-    
-    // Pending ability timeout - auto-skip after 15 seconds
-    const hasPendingAbility = gameState.pendingAbility && !humanPlayer?.active && !aiPlayer?.active;
-    
-    // AI turn stuck - AI is active but not playing for too long
-    const aiTurnStuck = aiPlayer?.active && !humanPlayer?.active && !gameState.battlePhase && aiPlayer?.hand?.length > 0;
-
-    // Handle pending ability timeout
-    if (hasPendingAbility) {
-      console.log('⏱️ Pending ability detected, will auto-skip in 15 seconds if not resolved');
-      const abilityTimeout = setTimeout(() => {
-        console.log('🔧 Auto-skipping pending ability due to timeout');
-        if (onSkipAbility) {
-          onSkipAbility();
-        }
-      }, 15000);
-      
-      return () => clearTimeout(abilityTimeout);
-    }
-    
-    // Handle AI turn stuck - force AI to play after 10 seconds
-    if (aiTurnStuck && !showRoundAnnouncement && !showTurnAnnouncement && !showInitialArena) {
-      console.log('⏱️ AI turn detected, setting 10 second watchdog');
-      const aiStuckTimer = setTimeout(() => {
-        console.log('🔧 AI STUCK: Forcing AI to play a card');
-        if (aiPlayer?.hand?.length > 0 && onPlayCard) {
-          const randomIndex = Math.floor(Math.random() * aiPlayer.hand.length);
-          onPlayCard(randomIndex, aiPlayer.id);
-        }
-      }, 10000);
-      
-      return () => clearTimeout(aiStuckTimer);
-    }
-
-    if (isStuck) {
-      console.warn('⚠️ STUCK DETECTOR: Game appears stuck!', {
-        battlePhase: gameState.battlePhase,
-        playerActive: humanPlayer?.active,
-        aiActive: aiPlayer?.active,
-        playerChosen: !!humanPlayer?.chosenCard,
-        aiChosen: !!aiPlayer?.chosenCard,
-        pendingAbility: !!gameState.pendingAbility,
-        currentRound: gameState.currentRound
-      });
-
-      // Wait 2 seconds before attempting recovery
-      const recoveryTimer = setTimeout(() => {
-        console.log('🔧 Attempting to recover stuck game...');
-        
-        // If battle phase but missing cards, reset to player turn
-        if (gameState.battlePhase && (!humanPlayer?.chosenCard || !aiPlayer?.chosenCard)) {
-          console.log('🔧 Battle phase stuck - resetting to player turn');
-          // Force a card play to reset state
-          if (humanPlayer?.hand?.length > 0) {
-            const randomIndex = Math.floor(Math.random() * humanPlayer.hand.length);
-            onPlayCard(randomIndex, humanPlayer.id);
-          }
-        }
-        // If both players inactive, activate player
-        else if (!humanPlayer?.active && !aiPlayer?.active && !gameState.battlePhase && !gameState.pendingAbility) {
-          console.log('🔧 Both players inactive - forcing player active');
-          // Trigger a draw action to reset state
-          if (humanPlayer?.deck?.length > 0 && onDrawFromReserve) {
-            onDrawFromReserve();
-          } else if (humanPlayer?.hand?.length > 0) {
-            // Force player to play a card
-            const randomIndex = Math.floor(Math.random() * humanPlayer.hand.length);
-            onPlayCard(randomIndex, humanPlayer.id);
-          }
-        }
-      }, 2000);
-      
-      return () => clearTimeout(recoveryTimer);
-    }
-  }, [humanPlayer, aiPlayer, gameState, onPlayCard, onDrawFromReserve, onSkipAbility, showRoundAnnouncement, showTurnAnnouncement, showInitialArena]);
-
-  // Master activity watchdog - if player should be playing but nothing is happening, force reset
+  // Reset recovery system when game ends or restarts
   useEffect(() => {
-    if (!gameState?.gameStarted || gameState?.gameOver) return;
-    
-    // Player's turn but waiting message shown means something is wrong
-    const playerShouldBePlaying = humanPlayer?.active && !gameState.battlePhase && !gameState.pendingAbility;
-    
-    if (playerShouldBePlaying && humanPlayer?.hand?.length > 0) {
-      // Player can play - set a 30 second master timeout to catch any stuck state
-      const masterTimeout = setTimeout(() => {
-        console.log('🚨 MASTER WATCHDOG: Player turn has been stuck for 30 seconds, checking state...');
-        console.log('State:', {
-          playerActive: humanPlayer?.active,
-          aiActive: aiPlayer?.active,
-          battlePhase: gameState.battlePhase,
-          pendingAbility: gameState.pendingAbility,
-          playerHand: humanPlayer?.hand?.length,
-          aiHand: aiPlayer?.hand?.length
-        });
-        
-        // If still stuck after 30s, game client might have a bug - request state refresh
-        if (humanPlayer?.active && !gameState.battlePhase) {
-          console.log('🔧 Requesting game state refresh...');
-          // The game should recover on its own if state is actually correct
-        }
-      }, 30000);
-      
-      return () => clearTimeout(masterTimeout);
+    if (gameState?.gameOver) {
+      gameRecovery.reset();
     }
-  }, [humanPlayer?.active, gameState?.battlePhase, gameState?.pendingAbility, gameState?.gameStarted, gameState?.gameOver, humanPlayer?.hand?.length, aiPlayer?.active, aiPlayer?.hand?.length]);
+  }, [gameState?.gameOver]);
 
   // Check if both players have 0 cards - end the game
   useEffect(() => {
