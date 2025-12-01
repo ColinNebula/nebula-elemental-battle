@@ -194,7 +194,7 @@ const NewsModal = ({ onClose }) => {
         </div>
 
         <div className="news-footer">
-          <p className="version-info">Nebula Elemental Battle v1.5.0</p>
+          <p className="version-info">Nebula Elemental Battle v2.1.0</p>
         </div>
       </div>
     </div>

@@ -246,7 +246,7 @@ const MainMenu = ({
             <span className="footer-icon neutral">🔮</span>
             <span className="footer-icon meteor">☄️</span>
           </div>
-          <p className="version-text">v1.0.0 • © 2025</p>
+          <p className="version-text">v2.1.0 • © 2025</p>
         </div>
       </div>
     </div>

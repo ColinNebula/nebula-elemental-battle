@@ -468,7 +468,7 @@ function App() {
 
   useEffect(() => {
     // Clear old cached data on version change (but preserve user data)
-    const APP_VERSION = '2.0.0';
+    const APP_VERSION = '2.1.0';
     const cachedVersion = localStorage.getItem('appVersion');
     if (cachedVersion !== APP_VERSION) {
       console.log('Version changed, updating app version...');
@@ -510,6 +510,14 @@ function App() {
       
       localStorage.setItem('appVersion', APP_VERSION);
       console.log('✅ User data preserved during version update');
+      
+      // Show news/updates modal automatically on version change
+      // Use a small delay to let the app initialize first
+      setTimeout(() => {
+        setShowNews(true);
+        console.log('📰 Showing news modal for new version:', APP_VERSION);
+      }, 1500);
+      
       return;
     }
 
