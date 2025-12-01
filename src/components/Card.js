@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 import CardTooltip from './CardTooltip';
 import './Card.css';
 import '../utils/visualEffects.css';
@@ -6,7 +6,7 @@ import '../utils/advancedCardMechanics.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 import advancedMechanics from '../utils/advancedCardMechanics';
 
-const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false }) => {
+const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false, onLongPress, isRecommended = false }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isPlaying, setIsPlaying] = useState(false);
@@ -15,6 +15,34 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
     showElementIcons: true,
     highContrast: false
   });
+  
+  // Long press detection for card zoom
+  const longPressTimer = useRef(null);
+  const isLongPress = useRef(false);
+
+  const handleTouchStart = (e) => {
+    isLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      // Trigger long press callback for card zoom
+      if (onLongPress && card) {
+        onLongPress(card);
+      }
+    }, 500); // 500ms hold = long press
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleTouchMove = () => {
+    // Cancel long press if user moves finger
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
 
   const handleMouseEnter = (e) => {
     if (card) {
@@ -255,6 +283,11 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
   };
 
   const handleClick = () => {
+    // Don't trigger click if this was a long press
+    if (isLongPress.current) {
+      isLongPress.current = false;
+      return;
+    }
     if (onClick && isPlayable) {
       setIsPlaying(true);
       setTimeout(() => {
@@ -276,13 +309,19 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
     return rarity.toLowerCase();
   };
 
+  // Determine if card is high power (for enhanced glow)
+  const isHighPower = (card.modifiedStrength || card.strength) >= 7;
+
   return (
     <>
       <div 
-        className={`card ${isPlayable ? 'playable' : ''} ${getRarityClass()} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''} ${manaCost !== undefined && !canAfford ? (canOverdraft ? 'overdraft-available' : 'unaffordable-card') : ''} ${card.evolved ? 'evolved' : ''} ${card.counter ? 'counter' : ''} ${card.trap ? 'trap-card' : ''} ${card.isTrapSelected ? 'trap-selected' : ''}`}
+        className={`card ${isPlayable ? 'playable' : ''} ${isPlayable && isHighPower ? 'high-power' : ''} ${isPlayable && isRecommended ? 'recommended' : ''} ${getRarityClass()} ${card.isLegendary ? 'legendary' : ''} ${isPlaying ? 'playing' : ''} ${backgroundImage ? 'has-background-image' : ''} ${manaCost !== undefined && !canAfford ? (canOverdraft ? 'overdraft-available' : 'unaffordable-card') : ''} ${card.evolved ? 'evolved' : ''} ${card.counter ? 'counter' : ''} ${card.trap ? 'trap-card' : ''} ${card.isTrapSelected ? 'trap-selected' : ''}`}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
         style={{ 
           borderColor: getElementColorLocal(card.element),
           borderWidth: getRarityBorder(),
@@ -297,6 +336,8 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
         tabIndex={isPlayable ? 0 : -1}
         aria-label={`${card.element} card with strength ${card.modifiedStrength || card.strength}`}
       >
+      {/* Playable card glow ring */}
+      {isPlayable && <div className="playable-ring"></div>}
       {card.isLegendary && <div className="legendary-glow"></div>}
       {accessibilitySettings.colorblindMode !== 'none' && (
         <div className="element-label-overlay">

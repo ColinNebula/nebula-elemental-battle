@@ -426,6 +426,18 @@ export const ARENA_THEMES = {
     animation: 'lavaFlow 5s ease-in-out infinite',
     premium: true
   },
+  ember: {
+    name: "Ember's Inferno",
+    cost: 0,
+    background: 'radial-gradient(ellipse at center, rgba(60, 25, 10, 0.95) 0%, rgba(45, 18, 8, 0.97) 50%, rgba(25, 12, 5, 0.98) 100%)',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/ember-the-Firestarter-bg.png)`,
+    overlay: 'linear-gradient(180deg, rgba(255, 100, 0, 0.2) 0%, rgba(255, 60, 0, 0.1) 25%, transparent 50%, rgba(255, 80, 0, 0.1) 75%, rgba(255, 120, 0, 0.15) 100%)',
+    borderGlow: '0 0 50px rgba(255, 80, 0, 0.85), 0 0 80px rgba(255, 160, 0, 0.45), inset 0 0 55px rgba(255, 100, 0, 0.4)',
+    particles: 'rgba(255, 120, 0, 1)',
+    particleCount: 90,
+    animation: 'lavaFlow 5s ease-in-out infinite',
+    premium: false
+  },
   ice: {
     name: 'Frozen Tundra',
     cost: 75,
@@ -717,6 +729,7 @@ export const applyArenaTheme = (themeId) => {
 // Map story mode opponents to arena themes with custom backgrounds
 export const getStoryModeArenaTheme = (opponentKey) => {
   const storyThemeMap = {
+    'EMBER': 'ember',                 // ember-the-Firestarter-bg.png
     'DONOVAN_RAGE': 'volcano',        // trial-of-rage.png
     'FROST': 'ice',                   // frozen-fortress.png
     'AQUA': 'ocean',                  // (no custom bg, uses default)

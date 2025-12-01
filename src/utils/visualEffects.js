@@ -1204,3 +1204,229 @@ export const createRoundClash = (playerCard, aiCard, container, result) => {
     }
   }
 };
+
+// Legendary Card Entrance Animation - dramatic entrance for powerful cards
+export const createLegendaryEntrance = (cardElement, card, container) => {
+  if (!cardElement || !card) return;
+  
+  const power = card.modifiedStrength || card.strength || 0;
+  const isLegendary = power >= 9 || card.isLegendary || card.tier === 'LEGENDARY';
+  const isEpic = power >= 7 && power < 9;
+  
+  if (!isLegendary && !isEpic) return;
+  
+  // Get element color for theming
+  const elementColors = {
+    FIRE: '#ff4500',
+    ICE: '#00bfff',
+    WATER: '#1e90ff',
+    ELECTRICITY: '#ffd700',
+    EARTH: '#8b4513',
+    LIGHT: '#ffffe0',
+    DARK: '#4b0082',
+    POWER: '#ff00ff',
+    METEOR: '#ff6347',
+    TECHNOLOGY: '#00ced1',
+    NEUTRAL: '#808080'
+  };
+  
+  const color = elementColors[card.element] || elementColors.NEUTRAL;
+  
+  // Add entrance class for CSS animation
+  cardElement.classList.add(isLegendary ? 'legendary-entrance' : 'epic-entrance');
+  
+  // Screen flash effect
+  const flash = document.createElement('div');
+  flash.className = 'legendary-flash';
+  flash.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, ${color}80 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    animation: legendaryFlash 0.6s ease-out forwards;
+  `;
+  
+  document.body.appendChild(flash);
+  
+  // Create shockwave ring
+  if (container) {
+    const rect = cardElement.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    const shockwave = document.createElement('div');
+    shockwave.className = 'legendary-shockwave';
+    shockwave.style.cssText = `
+      position: absolute;
+      left: ${rect.left - containerRect.left + rect.width / 2}px;
+      top: ${rect.top - containerRect.top + rect.height / 2}px;
+      width: 10px;
+      height: 10px;
+      border: 3px solid ${color};
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 100;
+      animation: legendaryShockwave 0.8s ease-out forwards;
+    `;
+    
+    container.appendChild(shockwave);
+    
+    // Multiple shockwaves for legendary
+    if (isLegendary) {
+      setTimeout(() => {
+        const shockwave2 = shockwave.cloneNode(true);
+        shockwave2.style.animationDelay = '0.1s';
+        container.appendChild(shockwave2);
+        setTimeout(() => shockwave2.remove(), 900);
+      }, 100);
+    }
+    
+    setTimeout(() => shockwave.remove(), 800);
+  }
+  
+  // Create particle burst
+  createLegendaryParticleBurst(cardElement, card.element, container, isLegendary ? 30 : 15);
+  
+  // Screen shake for legendary
+  if (isLegendary) {
+    createScreenShake('heavy', 500);
+    // Play epic sound
+    if (soundManager) {
+      soundManager.playSound('powerPlay');
+    }
+  } else if (isEpic) {
+    createScreenShake('medium', 300);
+  }
+  
+  // Cleanup
+  setTimeout(() => flash.remove(), 600);
+  setTimeout(() => {
+    cardElement.classList.remove('legendary-entrance', 'epic-entrance');
+  }, 1000);
+};
+
+// Particle burst for legendary entrances
+const createLegendaryParticleBurst = (cardElement, element, container, count = 20) => {
+  if (!cardElement || !container) return;
+  
+  const rect = cardElement.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const centerX = rect.left - containerRect.left + rect.width / 2;
+  const centerY = rect.top - containerRect.top + rect.height / 2;
+  
+  const elementColors = {
+    FIRE: ['#ff4500', '#ff6347', '#ffd700'],
+    ICE: ['#00bfff', '#87ceeb', '#ffffff'],
+    WATER: ['#1e90ff', '#4169e1', '#00bfff'],
+    ELECTRICITY: ['#ffd700', '#ffff00', '#ffffff'],
+    EARTH: ['#8b4513', '#a0522d', '#daa520'],
+    LIGHT: ['#ffffe0', '#fffacd', '#ffffff'],
+    DARK: ['#4b0082', '#800080', '#9400d3'],
+    POWER: ['#ff00ff', '#ff1493', '#da70d6'],
+    METEOR: ['#ff6347', '#ff4500', '#ffd700'],
+    TECHNOLOGY: ['#00ced1', '#20b2aa', '#48d1cc'],
+    NEUTRAL: ['#808080', '#a9a9a9', '#c0c0c0']
+  };
+  
+  const colors = elementColors[element] || elementColors.NEUTRAL;
+  
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('div');
+    const angle = (Math.PI * 2 * i) / count;
+    const velocity = 100 + Math.random() * 150;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 4 + Math.random() * 6;
+    
+    particle.style.cssText = `
+      position: absolute;
+      left: ${centerX}px;
+      top: ${centerY}px;
+      width: ${size}px;
+      height: ${size}px;
+      background: ${color};
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 101;
+      box-shadow: 0 0 ${size}px ${color};
+    `;
+    
+    container.appendChild(particle);
+    
+    // Animate outward
+    const targetX = centerX + Math.cos(angle) * velocity;
+    const targetY = centerY + Math.sin(angle) * velocity;
+    const duration = 500 + Math.random() * 300;
+    
+    particle.animate([
+      { 
+        transform: 'translate(-50%, -50%) scale(1)',
+        opacity: 1
+      },
+      { 
+        transform: `translate(${targetX - centerX - size/2}px, ${targetY - centerY - size/2}px) scale(0)`,
+        opacity: 0
+      }
+    ], {
+      duration,
+      easing: 'ease-out',
+      fill: 'forwards'
+    });
+    
+    setTimeout(() => particle.remove(), duration);
+  }
+};
+
+// High-power play screen shake with element-specific effects
+export const createPowerPlayShake = (power, element) => {
+  if (power < 6) return;
+  
+  let intensity = 'light';
+  let duration = 200;
+  
+  if (power >= 10) {
+    intensity = 'heavy';
+    duration = 500;
+  } else if (power >= 8) {
+    intensity = 'medium';
+    duration = 350;
+  } else if (power >= 6) {
+    intensity = 'light';
+    duration = 200;
+  }
+  
+  createScreenShake(intensity, duration);
+  
+  // Element-specific screen tint
+  const elementTints = {
+    FIRE: 'rgba(255, 69, 0, 0.15)',
+    ICE: 'rgba(0, 191, 255, 0.15)',
+    ELECTRICITY: 'rgba(255, 215, 0, 0.2)',
+    DARK: 'rgba(75, 0, 130, 0.2)',
+    LIGHT: 'rgba(255, 255, 224, 0.2)',
+    POWER: 'rgba(255, 0, 255, 0.15)',
+    METEOR: 'rgba(255, 99, 71, 0.2)'
+  };
+  
+  const tint = elementTints[element];
+  if (tint && power >= 8) {
+    const tintOverlay = document.createElement('div');
+    tintOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: ${tint};
+      pointer-events: none;
+      z-index: 9998;
+      animation: screenTintFade 0.4s ease-out forwards;
+    `;
+    
+    document.body.appendChild(tintOverlay);
+    setTimeout(() => tintOverlay.remove(), 400);
+  }
+};

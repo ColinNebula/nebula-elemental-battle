@@ -294,6 +294,106 @@
   filter: brightness(1.1);
   position: relative;
   z-index: 1;
+  /* Animated playable glow */
+  animation: playableCardPulse 2s ease-in-out infinite;
+}
+
+/* Playable card pulsing glow */
+@keyframes playableCardPulse {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 0 15px var(--element-color),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    filter: brightness(1.1);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 0 25px var(--element-color),
+                0 0 10px var(--element-color),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    filter: brightness(1.2);
+  }
+}
+
+/* Recommended/optimal play indicator */
+.card.playable.recommended {
+  animation: recommendedPulse 1.5s ease-in-out infinite;
+}
+
+.card.playable.recommended::after {
+  content: '⭐ BEST PLAY';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  animation: recommendBadgePulse 1s ease-in-out infinite;
+  z-index: 20;
+}
+
+@keyframes recommendedPulse {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(255, 215, 0, 0.8),
+                0 0 60px rgba(255, 215, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6),
+                0 0 50px rgba(255, 215, 0, 1),
+                0 0 100px rgba(255, 215, 0, 0.6);
+  }
+}
+
+@keyframes recommendBadgePulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+}
+
+/* High power playable cards have stronger glow */
+.card.playable.high-power {
+  animation: highPowerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes highPowerPulse {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5),
+                0 0 20px var(--element-color),
+                0 0 40px rgba(255, 100, 100, 0.3);
+    filter: brightness(1.15);
+  }
+  50% {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6),
+                0 0 35px var(--element-color),
+                0 0 70px rgba(255, 100, 100, 0.5);
+    filter: brightness(1.3);
+  }
+}
+
+/* Playable card edge glow ring */
+.card.playable .playable-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  pointer-events: none;
+  animation: playableRingRotate 3s linear infinite;
+  background: linear-gradient(var(--element-color), var(--element-color)) padding-box,
+              linear-gradient(90deg, var(--element-color), transparent, var(--element-color)) border-box;
+  opacity: 0.6;
+}
+
+@keyframes playableRingRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
 }
 
 .card.playable:hover {

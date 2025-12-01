@@ -5,7 +5,7 @@ export const AI_PERSONALITIES = {
     name: 'Donovan Rage',
     avatar: '😡',
     avatarImage: 'rage-avatar.png',
-    cardImage: 'rage-cards.png',
+    cardBackImage: 'rage-cards.png',
     difficulty: 'Easy',
     element: 'FIRE',
     description: 'A furious warrior consumed by uncontrollable rage',
@@ -21,13 +21,15 @@ export const AI_PERSONALITIES = {
       win: "CRUSHED BY RAGE!",
       lose: "My fury... fading...",
       taunt: "YOU WILL SUFFER!"
-    }
+    },
+    voicePitch: 0.6
   },
   
   EMBER: {
     name: 'Ember the Firestarter',
     avatar: '🔥',
     avatarImage: 'ember-the-firestarter-avatar.png',
+    cardBackImage: 'ember-the-Firestarter-card-back.png',
     difficulty: 'Easy',
     element: 'FIRE',
     description: 'A hot-headed warrior who loves aggressive plays',
@@ -50,7 +52,7 @@ export const AI_PERSONALITIES = {
     name: 'Frost the Frozen',
     avatar: '❄️',
     avatarImage: 'frost-the-frozen-avatar.png',
-    cardImage: 'frost-the-frozen-card-back.png',
+    cardBackImage: 'frost-the-frozen-card-back.png',
     difficulty: 'Medium',
     element: 'ICE',
     description: 'A calculated strategist who freezes opponents in their tracks',
@@ -66,14 +68,15 @@ export const AI_PERSONALITIES = {
       win: "Frozen solid!",
       lose: "The ice... melts...",
       taunt: "Chill out!"
-    }
+    },
+    voicePitch: 1.4
   },
   
   AQUA: {
     name: 'Aqua the Tidekeeper',
     avatar: '💧',
     avatarImage: 'water-avatar.png',
-    cardImage: 'aqua-th-tidekeeper-card-back.png',
+    cardBackImage: 'aqua-th-tidekeeper-card-back.png',
     difficulty: 'Medium',
     element: 'WATER',
     description: 'A flowing fighter who adapts to any situation',
@@ -270,6 +273,7 @@ export const AI_PERSONALITIES = {
       lose: "Impossible... defeated...",
       taunt: "Is that all you've got?"
     },
+    voicePitch: 0.7,
     isBoss: true
   },
   

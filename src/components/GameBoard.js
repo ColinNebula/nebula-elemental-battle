@@ -4,6 +4,9 @@ import Card from './Card';
 import PauseMenu from './PauseMenu';
 import RoundAnnouncement from './RoundAnnouncement';
 import StatusEffects from './StatusEffects';
+import CardZoom from './CardZoom';
+import TurnTimer from './TurnTimer';
+import VictoryScreen from './VictoryScreen';
 import { 
   createParticles, 
   createDamageNumber, 
@@ -36,7 +39,10 @@ import {
   createPowerChargeAura,
   createRoundClash,
   add3DCardTilt,
-  createWinStreakFire
+  createWinStreakFire,
+  createLegendaryEntrance,
+  createPowerPlayShake,
+  createScreenShake
 } from '../utils/visualEffects';
 import {
   initializeMana,
@@ -124,6 +130,15 @@ const GameBoard = ({
   const [lastPlayedCards, setLastPlayedCards] = useState([]);
   const [hasAutoSkipped, setHasAutoSkipped] = useState(false);
   const timerIntervalRef = useRef(null);
+  
+  // Card zoom state (long-press preview)
+  const [zoomedCard, setZoomedCard] = useState(null);
+  
+  // Use enhanced victory screen
+  const [useEnhancedVictory, setUseEnhancedVictory] = useState(true);
+  
+  // Timer urgency state (warning/critical)
+  const [timerUrgency, setTimerUrgency] = useState(null); // null, 'warning', 'critical'
   
   // Mobile detection and speed optimization
   const isMobile = useMemo(() => {
@@ -428,9 +443,13 @@ const GameBoard = ({
             soundManager.playElementSound(cardPlay.card.element);
             soundManager.playSound('cardFlip');
             
-            // Play voice line for card play (only for player cards)
+            // Play voice line for card play
             if (cardPlay.playerId === humanPlayer?.id) {
+              // Player voice line
               soundManager.playVoiceLine(avatarPersonality, 'cardPlay');
+            } else if (aiPlayer && cardStrength >= 7) {
+              // AI taunt on strong card play
+              soundManager.playAIVoiceLine(aiPlayer, 'taunt');
             }
           }
           
@@ -444,6 +463,11 @@ const GameBoard = ({
             const power = cardPlay.card.modifiedStrength || cardPlay.card.strength;
             applyCardRarityGlow(cardEl, power);
             
+            // NEW: Legendary/Epic entrance animation for powerful cards
+            if (power >= 7 || cardPlay.card.isLegendary || cardPlay.card.tier === 'LEGENDARY') {
+              createLegendaryEntrance(cardEl, cardPlay.card, gameBoardRef.current);
+            }
+            
             // NEW: Card trail effect when played
             createCardTrail(cardEl, gameBoardRef.current, cardPlay.card.element);
             
@@ -456,6 +480,11 @@ const GameBoard = ({
             
             // NEW: Add 3D tilt effect for desktop
             add3DCardTilt(cardEl);
+            
+            // NEW: Power play shake with element-specific tint
+            if (power >= 6) {
+              createPowerPlayShake(power, cardPlay.card.element);
+            }
           }
           
           // Particle effects (only if animations enabled)
@@ -475,11 +504,6 @@ const GameBoard = ({
                 false,
                 false
               );
-            }
-            
-            // Screen shake for powerful plays
-            if (settings?.screenShake !== false) {
-              triggerScreenShake(gameBoardRef.current);
             }
           }
         }, idx * 200);
@@ -681,20 +705,25 @@ const GameBoard = ({
               // Just play victory music for ties, no voice line
               soundManager.playSound('victory');
             } else if (winner === humanPlayer?.name) {
-              // Player won - play victory music and ONE player voice line
+              // Player won - play victory music and voice lines
               soundManager.playSound('victory');
               
               // Play winner's voice line after a short delay
               setTimeout(() => {
                 if (soundManager) soundManager.playVoiceLine(avatarPersonality, 'victory');
               }, 1500);
+              
+              // Play AI's "lose" quote
+              setTimeout(() => {
+                if (soundManager && aiPlayer) soundManager.playAIVoiceLine(aiPlayer, 'lose');
+              }, 3000);
             } else {
-              // AI won - play defeat sound and ONE AI voice (taunt)
+              // AI won - play defeat sound and AI voice lines
               soundManager.playSound('defeat');
               
-              // Play AI's victory taunt after a short delay
+              // Play AI's victory quote
               setTimeout(() => {
-                if (soundManager) soundManager.playVoiceLine(aiVoice, 'victory');
+                if (soundManager && aiPlayer) soundManager.playAIVoiceLine(aiPlayer, 'win');
               }, 1500);
             }
           }, 300);
@@ -729,6 +758,7 @@ const GameBoard = ({
       if (playerChanged || roundChanged) {
         setLastTurnInfo({ playerId: activePlayerId, round: currentRound });
         setTurnTimer(20); // Always reset timer on turn change
+        setTimerUrgency(null); // Reset urgency on turn change
         
         // Don't show turn announcement if round announcement is showing
         // The round announcement completion handler will trigger turn announcement
@@ -782,6 +812,11 @@ const GameBoard = ({
           const battleTransition = createPhaseTransition('⚔️ BATTLE BEGIN! ⚔️', gameBoardRef.current);
           if (battleTransition) {
             battleTransition.classList.add('battle-start-epic');
+          }
+          
+          // Play AI opponent's start quote
+          if (aiPlayer && soundManager) {
+            soundManager.playAIVoiceLine(aiPlayer, 'start');
           }
         }
       }, getDelay(6000));
@@ -2059,8 +2094,16 @@ const GameBoard = ({
     return <div className="game-board">Loading...</div>;
   }
 
+  // Build urgency class for timer effects
+  const urgencyClass = timerUrgency ? `timer-${timerUrgency}-active` : '';
+
   return (
-    <div className="game-board" ref={gameBoardRef}>
+    <div className={`game-board ${urgencyClass}`} ref={gameBoardRef}>
+      {/* Timer Urgency Overlay */}
+      {timerUrgency && (
+        <div className={`timer-urgency-overlay ${timerUrgency}`}></div>
+      )}
+      
       {/* Round Announcement */}
       {showRoundAnnouncement && (
         <RoundAnnouncement
@@ -2092,6 +2135,14 @@ const GameBoard = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Card Zoom Overlay - Long Press Preview */}
+      {zoomedCard && (
+        <CardZoom 
+          card={zoomedCard}
+          onClose={() => setZoomedCard(null)}
+        />
       )}
 
       {/* Pause Menu */}
@@ -2127,8 +2178,27 @@ const GameBoard = ({
         </div>
       )}
 
-      {/* Game Over Overlay */}
-      {gameState.gameOver && defeatCountdown === null && !hasQuit && (
+      {/* Game Over - Enhanced Victory/Defeat Screen */}
+      {gameState.gameOver && defeatCountdown === null && !hasQuit && useEnhancedVictory && (
+        <VictoryScreen
+          winner={gameState.winner}
+          playerName={humanPlayer?.name}
+          playerScore={humanPlayer?.score}
+          opponentName={aiPlayer?.name}
+          opponentScore={aiPlayer?.score}
+          playerCards={humanPlayer?.playedCards || []}
+          opponentCards={aiPlayer?.playedCards || []}
+          playerAvatar={selectedCharacter}
+          opponentAvatar={{ icon: aiPlayer?.avatar, image: aiPlayer?.avatarImage }}
+          roundsPlayed={gameState.currentRound}
+          onPlayAgain={onPlayAgain}
+          onQuit={() => { setHasQuit(true); onQuit(); }}
+          isStoryMode={isStoryMode}
+        />
+      )}
+
+      {/* Game Over Overlay - Fallback/Classic Version */}
+      {gameState.gameOver && defeatCountdown === null && !hasQuit && !useEnhancedVictory && (
         <div className="game-over-overlay">
           {/* Victory Particles */}
           <div className="victory-particles">
@@ -2236,13 +2306,25 @@ const GameBoard = ({
         </div>
       )}
       
-      {/* Turn Timer */}
-      {gameState.gameStarted && !gameState.gameOver && !gameState.battlePhase && (
-        <div className="floating-timer">
-          <div className={`timer-display-small ${turnTimer <= 10 ? 'low-time' : ''}`}>
-            {turnTimer}s
-          </div>
-        </div>
+      {/* Turn Timer - Enhanced Burning Rope Style */}
+      {gameState.gameStarted && !gameState.gameOver && !gameState.battlePhase && isMyTurn && settings?.timerEnabled && (
+        <TurnTimer 
+          timeRemaining={turnTimer}
+          maxTime={20}
+          isActive={isMyTurn && !isPaused && !showRoundAnnouncement && !showTurnAnnouncement}
+          onTimeWarning={() => {
+            // Set warning urgency state for screen effects
+            setTimerUrgency('warning');
+          }}
+          onTimeCritical={() => {
+            // Set critical urgency state for intense screen effects
+            setTimerUrgency('critical');
+          }}
+          onTimeNormal={() => {
+            // Reset urgency state when timer is normal
+            setTimerUrgency(null);
+          }}
+        />
       )}
       
       {/* Equipment Stats Display */}
@@ -3166,44 +3248,65 @@ const GameBoard = ({
             borderImage: `url(${process.env.PUBLIC_URL}/hand-frame1.png) 50 stretch`,
             animation: HAND_THEMES[handTheme]?.animation || 'none'
           }}>
-            {sortedHumanHand.map((item, displayIndex) => {
-              const manaSystemActive = strategicSettings?.manaEnabled === true;
-              const cost = manaSystemActive ? calculateCardManaCost(item.card) : undefined;
-              const affordable = manaSystemActive ? canAffordCard(manaState, item.card) : true;
-              const overdraftable = manaSystemActive && !affordable ? canOverdraftCard(manaState, item.card) : false;
-              const playable = isMyTurn && !gameState?.pendingAbility && (affordable || overdraftable);
+            {(() => {
+              // Calculate recommended card (highest strength playable card)
+              const playableCards = sortedHumanHand.filter(item => {
+                const manaSystemActive = strategicSettings?.manaEnabled === true;
+                const affordable = manaSystemActive ? canAffordCard(manaState, item.card) : true;
+                const overdraftable = manaSystemActive && !affordable ? canOverdraftCard(manaState, item.card) : false;
+                return isMyTurn && !gameState?.pendingAbility && (affordable || overdraftable);
+              });
               
-              if (displayIndex === 0) {
-                console.log('🎴 First card render:', { 
-                  element: item.card.element, 
-                  strength: item.card.strength,
-                  manaSystemActive,
-                  cost, 
-                  currentMana: manaSystemActive ? manaState.current : 'N/A',
-                  affordable,
-                  overdraftable, 
-                  isMyTurn,
-                  playable,
-                  strategicSettings: strategicSettings
-                });
-              }
+              const bestCard = playableCards.length > 0 ? playableCards.reduce((best, item) => {
+                const itemStrength = item.card.modifiedStrength || item.card.strength;
+                const bestStrength = best.card.modifiedStrength || best.card.strength;
+                return itemStrength > bestStrength ? item : best;
+              }, playableCards[0]) : null;
               
-              return (
-                <Card
-                  key={`${item.card.element}-${item.card.strength}-${item.originalIndex}`}
-                  card={{
-                    ...item.card,
-                    isTrapSelected: selectedTrapCard === item.originalIndex
-                  }}
-                  onClick={() => handleCardClick(item.originalIndex)}
-                  isPlayable={playable}
-                  keyboardKey={settings?.keyboardEnabled ? String(displayIndex + 1) : null}
-                  manaCost={cost}
-                  canAfford={affordable}
-                  canOverdraft={overdraftable}
-                />
-              );
-            })}
+              const bestCardIndex = bestCard?.originalIndex;
+              
+              return sortedHumanHand.map((item, displayIndex) => {
+                const manaSystemActive = strategicSettings?.manaEnabled === true;
+                const cost = manaSystemActive ? calculateCardManaCost(item.card) : undefined;
+                const affordable = manaSystemActive ? canAffordCard(manaState, item.card) : true;
+                const overdraftable = manaSystemActive && !affordable ? canOverdraftCard(manaState, item.card) : false;
+                const playable = isMyTurn && !gameState?.pendingAbility && (affordable || overdraftable);
+                const isRecommended = item.originalIndex === bestCardIndex && playable;
+                
+                if (displayIndex === 0) {
+                  console.log('🎴 First card render:', { 
+                    element: item.card.element, 
+                    strength: item.card.strength,
+                    manaSystemActive,
+                    cost, 
+                    currentMana: manaSystemActive ? manaState.current : 'N/A',
+                    affordable,
+                    overdraftable, 
+                    isMyTurn,
+                    playable,
+                    strategicSettings: strategicSettings
+                  });
+                }
+                
+                return (
+                  <Card
+                    key={`${item.card.element}-${item.card.strength}-${item.originalIndex}`}
+                    card={{
+                      ...item.card,
+                      isTrapSelected: selectedTrapCard === item.originalIndex
+                    }}
+                    onClick={() => handleCardClick(item.originalIndex)}
+                    isPlayable={playable}
+                    isRecommended={isRecommended}
+                    keyboardKey={settings?.keyboardEnabled ? String(displayIndex + 1) : null}
+                    manaCost={cost}
+                    canAfford={affordable}
+                    canOverdraft={overdraftable}
+                    onLongPress={(card) => setZoomedCard(card)}
+                  />
+                );
+              });
+            })()}
           </div>
         </div>
       )}

@@ -178,6 +178,47 @@ const selectAICard = (hand, strategy, opponentLastCard, gameState) => {
 };
 
 class GameClient {
+  // Animation speed: 1.0 = normal, 0.5 = fast, 0.25 = instant
+  static animationSpeed = parseFloat(localStorage.getItem('animationSpeed') || '1.0');
+  
+  // Base timing values (ms)
+  static BASE_AI_ACTIVATION_DELAY = 3000;
+  static BASE_AI_CARD_DELAY = 1500;
+  static BASE_BATTLE_DELAY = 3000;
+  static BASE_NEXT_ROUND_DELAY = 3000;  // Reduced from 5000
+  static BASE_GAME_OVER_DELAY = 2000;
+  
+  // Get scaled delays
+  static getAiActivationDelay(isTutorial = false) {
+    const base = isTutorial ? 1500 : GameClient.BASE_AI_ACTIVATION_DELAY;
+    return Math.max(300, base * GameClient.animationSpeed);
+  }
+  
+  static getAiCardDelay() {
+    return Math.max(200, GameClient.BASE_AI_CARD_DELAY * GameClient.animationSpeed);
+  }
+  
+  static getBattleDelay() {
+    return Math.max(300, GameClient.BASE_BATTLE_DELAY * GameClient.animationSpeed);
+  }
+  
+  static getNextRoundDelay() {
+    return Math.max(300, GameClient.BASE_NEXT_ROUND_DELAY * GameClient.animationSpeed);
+  }
+  
+  static getGameOverDelay() {
+    return Math.max(300, GameClient.BASE_GAME_OVER_DELAY * GameClient.animationSpeed);
+  }
+  
+  // Set animation speed (persists to localStorage)
+  static setAnimationSpeed(speed) {
+    GameClient.animationSpeed = Math.max(0.25, Math.min(1.0, speed));
+    localStorage.setItem('animationSpeed', GameClient.animationSpeed.toString());
+    console.log('🎬 Animation speed set to:', GameClient.animationSpeed);
+    window.dispatchEvent(new CustomEvent('animationSpeedChanged', { detail: { speed: GameClient.animationSpeed }}));
+    return GameClient.animationSpeed;
+  }
+  
   constructor() {
     this.baseUrl = window.location.origin + '/api';
     this.listeners = {};
@@ -288,7 +329,10 @@ class GameClient {
               avatar: personality.avatar || '🤖',
               avatarImage: personality.avatarImage,
               cardBackImage: personality.cardBackImage,
-              difficulty: personality.difficulty || 'Medium'
+              difficulty: personality.difficulty || 'Medium',
+              quotes: personality.quotes || { start: 'Let the battle begin!', win: 'Victory is mine!', lose: 'Well played...', taunt: 'Is that all?' },
+              voicePitch: personality.voicePitch || 1.0,
+              element: personality.element || 'NEUTRAL'
             });
             
             console.log('🤖 Created AI player:', {
@@ -602,7 +646,8 @@ class GameClient {
             
             // AI plays after delay (give player time to see their card)
             // Tutorial mode uses faster timing: 1.5s instead of 3s
-            const aiActivationDelay = chooseRoom.isTutorial ? 1500 : 3000;
+            // Respects animation speed setting
+            const aiActivationDelay = GameClient.getAiActivationDelay(chooseRoom.isTutorial);
             const aiActivationTimeout = setTimeout(() => {
               console.log(`⏰ AI activation timeout triggered (${aiActivationDelay}ms after player card)`);
               console.log('🔍 Checking AI availability:', {
@@ -1683,6 +1728,73 @@ class GameClient {
                   this.notifyListeners('GAME_UPDATE', forfeitRoom);
                 }
               }, 500);
+            } else if (opponent && opponent.isAI && (!opponent.hand || opponent.hand.length === 0)) {
+              // AI has no cards - check if they can draw from reserve deck
+              if (opponent.deck && opponent.deck.length > 0) {
+                console.log('🎴 AI has no hand cards but has reserve deck - drawing...');
+                const drawnCard = opponent.deck.shift();
+                opponent.hand = opponent.hand || [];
+                opponent.hand.push(drawnCard);
+                opponent.cardCount = opponent.hand.length + (opponent.deck?.length || 0);
+                
+                // Now AI can play
+                setTimeout(() => {
+                  if (opponent.active && opponent.hand.length > 0) {
+                    const aiCardIndex = 0;
+                    opponent.chosenCard = opponent.hand[aiCardIndex];
+                    opponent.hand.splice(aiCardIndex, 1);
+                    opponent.playedCards.push(opponent.chosenCard);
+                    opponent.cardCount = opponent.hand.length + (opponent.deck?.length || 0);
+                    
+                    forfeitRoom.playedCards.push({
+                      playerId: opponent.id,
+                      playerName: opponent.name,
+                      card: opponent.chosenCard,
+                      round: forfeitRoom.currentRound + 1
+                    });
+                    
+                    opponent.active = false;
+                    forfeitPlayer.active = true;
+                    forfeitRoom.currentRound++;
+                    
+                    console.log('✅ AI drew and played - switching back to player');
+                    this.notifyListeners('GAME_UPDATE', forfeitRoom);
+                  }
+                }, 500);
+              } else {
+                // AI has no cards at all - skip AI turn and go back to player
+                console.log('⏭️ AI has no cards - skipping AI turn');
+                opponent.active = false;
+                forfeitPlayer.active = true;
+                forfeitRoom.currentRound++;
+                
+                // Check if both players are out of cards
+                const playerOutOfCards = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
+                                        (!forfeitPlayer.deck || forfeitPlayer.deck.length === 0);
+                const aiOutOfCards = (!opponent.hand || opponent.hand.length === 0) && 
+                                    (!opponent.deck || opponent.deck.length === 0);
+                
+                if (playerOutOfCards && aiOutOfCards) {
+                  // Both players out of cards - end game
+                  console.log('🏁 Both players out of cards - ending game');
+                  forfeitRoom.gameOver = true;
+                  
+                  const playerScore = forfeitPlayer.score + 
+                    (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                  const aiScore = opponent.score + 
+                    (opponent.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                  
+                  if (playerScore > aiScore) {
+                    forfeitRoom.winner = forfeitPlayer.name;
+                  } else if (aiScore > playerScore) {
+                    forfeitRoom.winner = opponent.name;
+                  } else {
+                    forfeitRoom.winner = 'Tie';
+                  }
+                }
+                
+                this.notifyListeners('GAME_UPDATE', forfeitRoom);
+              }
             } else {
               console.log('✅ Forfeit complete - opponent is now active');
             }

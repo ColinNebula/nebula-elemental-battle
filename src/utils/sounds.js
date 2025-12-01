@@ -877,6 +877,256 @@ class SoundManager {
     }
   }
 
+  // Play AI opponent voice line with TTS
+  playAIVoiceLine(aiPlayer, action = 'start') {
+    if (!this.enabled || !aiPlayer) return;
+    
+    // Get quotes from AI player data
+    const quotes = aiPlayer.quotes;
+    if (!quotes) {
+      console.log('⚠️ No quotes found for AI player:', aiPlayer.name);
+      return;
+    }
+    
+    // Map action to quote type
+    const quoteMap = {
+      start: quotes.start,
+      win: quotes.win,
+      lose: quotes.lose,
+      taunt: quotes.taunt,
+      cardPlay: quotes.taunt // Use taunt for card plays
+    };
+    
+    const line = quoteMap[action];
+    if (!line) return;
+    
+    // Use speech synthesis
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(line);
+      
+      // Customize voice based on AI element/personality
+      const element = aiPlayer.element || 'NEUTRAL';
+      const voiceSettings = this.getAIVoiceSettings(element, aiPlayer.voicePitch);
+      
+      utterance.rate = voiceSettings.rate;
+      utterance.pitch = voiceSettings.pitch;
+      utterance.volume = this.volume * 0.7;
+      
+      // Try to get a specific voice for more variety
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        // Pick a voice based on element type
+        const voiceIndex = this.getVoiceIndexForElement(element, voices);
+        if (voiceIndex >= 0 && voiceIndex < voices.length) {
+          utterance.voice = voices[voiceIndex];
+        }
+      }
+      
+      window.speechSynthesis.speak(utterance);
+      console.log(`🤖 ${aiPlayer.name}: "${line}"`);
+    }
+  }
+  
+  // Get voice settings based on AI element
+  getAIVoiceSettings(element, customPitch = null) {
+    const settingsMap = {
+      FIRE: { rate: 1.2, pitch: 0.7 },      // Fast, deep, aggressive
+      ICE: { rate: 0.9, pitch: 1.3 },        // Slow, high, cold
+      WATER: { rate: 1.0, pitch: 1.1 },      // Flowing, medium-high
+      ELECTRICITY: { rate: 1.3, pitch: 1.2 }, // Very fast, energetic
+      EARTH: { rate: 0.8, pitch: 0.6 },      // Slow, very deep
+      LIGHT: { rate: 1.0, pitch: 1.4 },      // Serene, high
+      DARK: { rate: 0.85, pitch: 0.5 },      // Slow, very deep, menacing
+      POWER: { rate: 1.1, pitch: 0.8 },      // Strong, commanding
+      NEUTRAL: { rate: 1.0, pitch: 1.0 },    // Normal
+      TECHNOLOGY: { rate: 1.15, pitch: 1.0 }, // Slightly robotic
+      METEOR: { rate: 1.0, pitch: 0.7 }      // Deep, impactful
+    };
+    
+    const settings = settingsMap[element] || settingsMap.NEUTRAL;
+    
+    // Apply custom pitch if provided
+    if (customPitch) {
+      settings.pitch = customPitch;
+    }
+    
+    return settings;
+  }
+  
+  // Get voice index for element (picks different TTS voices)
+  getVoiceIndexForElement(element, voices) {
+    // Try to find appropriate voice types
+    const elementVoicePreference = {
+      FIRE: ['male', 'en-us'],
+      ICE: ['female', 'en-gb'],
+      WATER: ['female', 'en'],
+      ELECTRICITY: ['male', 'en-us'],
+      EARTH: ['male', 'en'],
+      LIGHT: ['female', 'en'],
+      DARK: ['male', 'en-gb'],
+      POWER: ['male', 'en-us'],
+      NEUTRAL: ['en'],
+      TECHNOLOGY: ['en'],
+      METEOR: ['male', 'en']
+    };
+    
+    const prefs = elementVoicePreference[element] || ['en'];
+    
+    // Find a matching voice
+    for (const pref of prefs) {
+      const idx = voices.findIndex(v => 
+        v.name.toLowerCase().includes(pref) || 
+        v.lang.toLowerCase().includes(pref)
+      );
+      if (idx >= 0) return idx;
+    }
+    
+    return 0; // Default to first voice
+  }
+
+  // UI Feedback Sounds
+  playUISound(type = 'hover') {
+    if (!this.enabled) return;
+    
+    const audioContext = this.getAudioContext();
+    if (!audioContext || audioContext.state !== 'running') return;
+    
+    try {
+      switch (type) {
+        case 'hover':
+          this.createUIHoverSound();
+          break;
+        case 'select':
+          this.createUISelectSound();
+          break;
+        case 'error':
+          this.createUIErrorSound();
+          break;
+        case 'success':
+          this.createUISuccessSound();
+          break;
+        case 'click':
+          this.createUIClickSound();
+          break;
+        default:
+          this.createUIClickSound();
+      }
+    } catch (e) {
+      // Silent fail for UI sounds
+    }
+  }
+  
+  createUIHoverSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.05);
+    
+    gainNode.gain.setValueAtTime(0.05 * this.volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.05);
+  }
+  
+  createUISelectSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.1 * this.volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
+  }
+  
+  createUIErrorSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.08 * this.volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.2);
+  }
+  
+  createUISuccessSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const duration = 0.15;
+    
+    // Two-tone success chime
+    [600, 800].forEach((freq, i) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.08);
+      
+      gainNode.gain.setValueAtTime(0.08 * this.volume, audioContext.currentTime + i * 0.08);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.08 + duration);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.start(audioContext.currentTime + i * 0.08);
+      oscillator.stop(audioContext.currentTime + i * 0.08 + duration);
+    });
+  }
+  
+  createUIClickSound() {
+    const audioContext = this.getAudioContext();
+    if (!audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.06 * this.volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.03);
+  }
+
   // Get voice pitch based on avatar type
   getVoicePitch(avatarType) {
     const pitchMap = {
@@ -1349,6 +1599,105 @@ class SoundManager {
   isAudioReady() {
     return this.audioUnlocked || this.silentAudioUnlocked || 
            (this.audioContext && this.audioContext.state === 'running');
+  }
+  
+  // Element-specific ambient sound loops
+  ambientOscillator = null;
+  ambientGainNode = null;
+  currentAmbientElement = null;
+  
+  startAmbientSound(element) {
+    if (!this.enabled || !this.musicEnabled) return;
+    
+    // Stop existing ambient if different element
+    if (this.currentAmbientElement === element) return;
+    this.stopAmbientSound();
+    
+    const audioContext = this.getAudioContext();
+    if (!audioContext || audioContext.state !== 'running') return;
+    
+    try {
+      this.currentAmbientElement = element;
+      
+      // Create ambient sound based on element
+      const ambientSettings = this.getAmbientSettings(element);
+      
+      this.ambientOscillator = audioContext.createOscillator();
+      this.ambientGainNode = audioContext.createGain();
+      
+      // Create filter for more interesting sound
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(ambientSettings.filterFreq, audioContext.currentTime);
+      
+      this.ambientOscillator.type = ambientSettings.waveType;
+      this.ambientOscillator.frequency.setValueAtTime(ambientSettings.baseFreq, audioContext.currentTime);
+      
+      // Subtle frequency modulation
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      lfo.frequency.setValueAtTime(ambientSettings.lfoSpeed, audioContext.currentTime);
+      lfoGain.gain.setValueAtTime(ambientSettings.lfoDepth, audioContext.currentTime);
+      lfo.connect(lfoGain);
+      lfoGain.connect(this.ambientOscillator.frequency);
+      
+      // Very quiet - ambient should be subtle
+      this.ambientGainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      this.ambientGainNode.gain.linearRampToValueAtTime(
+        0.02 * this.musicVolume, 
+        audioContext.currentTime + 2
+      );
+      
+      this.ambientOscillator.connect(filter);
+      filter.connect(this.ambientGainNode);
+      this.ambientGainNode.connect(audioContext.destination);
+      
+      this.ambientOscillator.start();
+      lfo.start();
+      
+      console.log('🎵 Started ambient sound for:', element);
+    } catch (e) {
+      console.log('Ambient sound creation failed:', e.message);
+    }
+  }
+  
+  stopAmbientSound() {
+    if (this.ambientOscillator) {
+      try {
+        const audioContext = this.getAudioContext();
+        if (audioContext && this.ambientGainNode) {
+          // Fade out
+          this.ambientGainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+        }
+        setTimeout(() => {
+          if (this.ambientOscillator) {
+            this.ambientOscillator.stop();
+            this.ambientOscillator = null;
+          }
+        }, 600);
+      } catch (e) {
+        // Silent fail
+      }
+    }
+    this.currentAmbientElement = null;
+  }
+  
+  getAmbientSettings(element) {
+    const settings = {
+      FIRE: { waveType: 'sawtooth', baseFreq: 80, filterFreq: 200, lfoSpeed: 0.3, lfoDepth: 5 },
+      ICE: { waveType: 'sine', baseFreq: 400, filterFreq: 800, lfoSpeed: 0.1, lfoDepth: 20 },
+      WATER: { waveType: 'sine', baseFreq: 150, filterFreq: 400, lfoSpeed: 0.2, lfoDepth: 30 },
+      ELECTRICITY: { waveType: 'square', baseFreq: 100, filterFreq: 300, lfoSpeed: 8, lfoDepth: 50 },
+      EARTH: { waveType: 'triangle', baseFreq: 60, filterFreq: 150, lfoSpeed: 0.1, lfoDepth: 3 },
+      LIGHT: { waveType: 'sine', baseFreq: 600, filterFreq: 1200, lfoSpeed: 0.5, lfoDepth: 40 },
+      DARK: { waveType: 'sawtooth', baseFreq: 50, filterFreq: 100, lfoSpeed: 0.05, lfoDepth: 2 },
+      POWER: { waveType: 'sine', baseFreq: 200, filterFreq: 600, lfoSpeed: 1, lfoDepth: 100 },
+      METEOR: { waveType: 'sawtooth', baseFreq: 70, filterFreq: 180, lfoSpeed: 0.2, lfoDepth: 10 },
+      TECHNOLOGY: { waveType: 'square', baseFreq: 220, filterFreq: 500, lfoSpeed: 4, lfoDepth: 20 },
+      NEUTRAL: { waveType: 'sine', baseFreq: 150, filterFreq: 300, lfoSpeed: 0.3, lfoDepth: 15 }
+    };
+    
+    return settings[element] || settings.NEUTRAL;
   }
 }
 

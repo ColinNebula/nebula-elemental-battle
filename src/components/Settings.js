@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
 import soundManager from '../utils/sounds';
+import GameClient from '../services/GameClient';
 
 const Settings = ({ isOpen, onClose, settings, onSettingsChange }) => {
   const [soundVolume, setSoundVolume] = useState(() => {
@@ -14,6 +15,9 @@ const Settings = ({ isOpen, onClose, settings, onSettingsChange }) => {
       return Math.round(soundManager.musicVolume * 100);
     }
     return 30;
+  });
+  const [animationSpeed, setAnimationSpeed] = useState(() => {
+    return GameClient.animationSpeed || 1.0;
   });
   const [currentTrack, setCurrentTrack] = useState('None');
 
@@ -233,6 +237,30 @@ const Settings = ({ isOpen, onClose, settings, onSettingsChange }) => {
                   onChange={() => handleToggle('animationsEnabled')}
                 />
                 <span className="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="setting-label">🎬 Animation Speed</span>
+              <div className="speed-control">
+                <input
+                  type="range"
+                  min="25"
+                  max="100"
+                  value={animationSpeed * 100}
+                  onChange={(e) => {
+                    const speed = parseInt(e.target.value) / 100;
+                    setAnimationSpeed(speed);
+                    GameClient.setAnimationSpeed(speed);
+                  }}
+                  className="volume-slider speed-slider"
+                />
+                <span className="volume-display">
+                  {animationSpeed >= 0.9 ? '1x' : 
+                   animationSpeed >= 0.5 ? '2x' : '4x'}
+                </span>
               </div>
             </label>
           </div>

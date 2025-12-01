@@ -347,6 +347,80 @@
   }
 }
 
+/* ============================================
+   TIMER URGENCY SCREEN EFFECTS
+   ============================================ */
+
+/* Warning state - subtle yellow vignette */
+.game-board.timer-warning-active {
+  animation: warningVignette 1s ease-in-out infinite;
+}
+
+@keyframes warningVignette {
+  0%, 100% {
+    box-shadow: inset 0 0 100px rgba(255, 215, 0, 0);
+  }
+  50% {
+    box-shadow: inset 0 0 100px rgba(255, 215, 0, 0.15);
+  }
+}
+
+/* Critical state - intense red vignette + screen shake */
+.game-board.timer-critical-active {
+  animation: criticalVignette 0.5s ease-in-out infinite, criticalShake 0.15s ease-in-out infinite;
+}
+
+@keyframes criticalVignette {
+  0%, 100% {
+    box-shadow: inset 0 0 150px rgba(255, 50, 50, 0.2);
+  }
+  50% {
+    box-shadow: inset 0 0 150px rgba(255, 50, 50, 0.4);
+  }
+}
+
+@keyframes criticalShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+/* Timer urgency overlay - for extra dramatic effect */
+.timer-urgency-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 999;
+  transition: background-color 0.3s ease;
+}
+
+.timer-urgency-overlay.warning {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(255, 215, 0, 0.2) 100%);
+}
+
+.timer-urgency-overlay.critical {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(255, 50, 50, 0.35) 100%);
+  animation: pulseOverlay 0.5s ease-in-out infinite;
+}
+
+@keyframes pulseOverlay {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 @keyframes turnBounce {
   0% {
     transform: translate3d(-50%, 0, 0) scale(0.5);

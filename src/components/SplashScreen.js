@@ -1,20 +1,43 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './SplashScreen.css';
+import soundManager from '../utils/sounds';
 
 const SplashScreen = ({ onComplete, isReturning = false }) => {
   const [fadeOut, setFadeOut] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [musicStarted, setMusicStarted] = useState(false);
   const spookyMusicRef = useRef(null);
+  const autoPlayAttemptedRef = useRef(false);
 
   // Initialize audio element
   useEffect(() => {
+    // Get saved music volume from soundManager
+    const musicVolume = soundManager?.musicVolume || 0.3;
+    
     spookyMusicRef.current = new Audio(`${process.env.PUBLIC_URL}/Spooky_Loop.mp3`);
-    spookyMusicRef.current.volume = 0.3;
+    spookyMusicRef.current.volume = musicVolume;
     spookyMusicRef.current.loop = true;
     spookyMusicRef.current.setAttribute('playsinline', 'true');
     spookyMusicRef.current.setAttribute('webkit-playsinline', 'true');
     spookyMusicRef.current.preload = 'auto';
+
+    // Try to auto-play music immediately (works if user has previously interacted)
+    const attemptAutoPlay = () => {
+      if (!autoPlayAttemptedRef.current && spookyMusicRef.current) {
+        autoPlayAttemptedRef.current = true;
+        spookyMusicRef.current.play()
+          .then(() => {
+            console.log('✅ Splash music auto-playing');
+            setMusicStarted(true);
+          })
+          .catch(err => {
+            console.log('⏸️ Auto-play prevented (will play on interaction):', err.message);
+          });
+      }
+    };
+
+    // Attempt auto-play after a short delay to let audio load
+    const autoPlayTimer = setTimeout(attemptAutoPlay, 100);
 
     // Show "press any button" prompt immediately if returning from quit, otherwise after 2 seconds
     const promptTimer = setTimeout(() => {
@@ -23,6 +46,7 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
 
     return () => {
       clearTimeout(promptTimer);
+      clearTimeout(autoPlayTimer);
       // Stop music when leaving splash screen
       if (spookyMusicRef.current) {
         spookyMusicRef.current.pause();
@@ -135,6 +159,15 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
         {/* Subtitle */}
         <p className="splash-subtitle">Master the Elements • Conquer the Arena</p>
 
+        {/* Music indicator */}
+        <div className={`music-indicator ${musicStarted ? 'playing' : 'waiting'}`}>
+          {musicStarted ? (
+            <span className="music-icon">🎵</span>
+          ) : (
+            <span className="music-icon muted">🔇 Click to enable music</span>
+          )}
+        </div>
+
         {/* Loading Animation */}
         <div className="loading-container">
           <div className="loading-bar">
@@ -164,7 +197,7 @@ const SplashScreen = ({ onComplete, isReturning = false }) => {
         {/* Press Any Button Prompt */}
         {showPrompt && (
           <div className="press-button-prompt">
-            <p className="prompt-text">PRESS ANY BUTTON TO CONTINUE</p>
+            <p className="prompt-text">{musicStarted ? 'PRESS ANY BUTTON TO CONTINUE' : 'TAP OR CLICK TO START'}</p>
             <div className="prompt-indicator">▼</div>
           </div>
         )}

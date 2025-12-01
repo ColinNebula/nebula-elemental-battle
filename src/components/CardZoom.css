@@ -1,0 +1,443 @@
+/* Card Zoom Overlay - Full screen card preview */
+.card-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.card-zoom-overlay.visible {
+  opacity: 1;
+}
+
+.card-zoom-overlay.exit {
+  opacity: 0;
+}
+
+.card-zoom-container {
+  position: relative;
+  animation: zoomCardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-zoom-overlay.exit .card-zoom-container {
+  animation: zoomCardExit 0.3s ease-out forwards;
+}
+
+@keyframes zoomCardEnter {
+  0% {
+    transform: scale(0.3) rotateY(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) rotateY(20deg);
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes zoomCardExit {
+  0% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5) rotateY(90deg);
+    opacity: 0;
+  }
+}
+
+/* Background effects */
+.zoom-bg-effects {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 500px;
+  pointer-events: none;
+}
+
+.zoom-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  animation: zoomGlowPulse 2s ease-in-out infinite;
+}
+
+@keyframes zoomGlowPulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.zoom-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.zoom-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  animation: zoomParticleFloat 3s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes zoomParticleFloat {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(var(--x), var(--y));
+    opacity: 1;
+  }
+}
+
+/* Zoomed card style */
+.zoomed-card {
+  width: 280px;
+  min-height: 420px;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+  border: 4px solid #ffd700;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 
+    0 0 40px rgba(255, 215, 0, 0.4),
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.zoomed-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 60%
+  );
+  animation: cardShine 3s linear infinite;
+}
+
+@keyframes cardShine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* Rarity styles */
+.zoomed-card.legendary {
+  border-color: #ffd700;
+  box-shadow: 
+    0 0 60px rgba(255, 215, 0, 0.6),
+    0 0 100px rgba(255, 215, 0, 0.3),
+    0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.zoomed-card.epic {
+  border-color: #a855f7;
+  box-shadow: 
+    0 0 40px rgba(168, 85, 247, 0.5),
+    0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.zoomed-card.rare {
+  border-color: #3b82f6;
+  box-shadow: 
+    0 0 30px rgba(59, 130, 246, 0.4),
+    0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.zoomed-card.common {
+  border-color: #6b7280;
+}
+
+/* Rarity badge */
+.rarity-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 10;
+}
+
+.rarity-badge.legendary {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #000;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+  animation: legendaryBadgePulse 2s ease-in-out infinite;
+}
+
+.rarity-badge.epic {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+}
+
+.rarity-badge.rare {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+}
+
+.rarity-badge.common {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: #fff;
+}
+
+@keyframes legendaryBadgePulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
+}
+
+/* Card header */
+.zoom-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.zoom-element-icon {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 8px currentColor);
+}
+
+.zoom-card-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Card art area */
+.zoom-card-art {
+  width: 100%;
+  height: 150px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.zoom-element-large {
+  font-size: 80px;
+  filter: drop-shadow(0 4px 20px currentColor);
+  animation: elementFloat 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes elementFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.05); }
+}
+
+.legendary-aura {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  animation: auraRotate 5s linear infinite;
+}
+
+.fusion-aura {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 152, 0, 0.3) 0%, transparent 70%);
+  animation: auraRotate 4s linear infinite reverse;
+}
+
+@keyframes auraRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Card stats */
+.zoom-card-stats {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.zoom-strength {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 30px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.strength-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.strength-value {
+  font-size: 48px;
+  font-weight: 900;
+  text-shadow: 
+    0 0 20px currentColor,
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Card description */
+.zoom-card-description {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.zoom-card-description p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Card footer - tags */
+.zoom-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.card-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-tag.evolved {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.card-tag.counter {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: #f44336;
+  color: #f44336;
+}
+
+.card-tag.trap {
+  background: rgba(156, 39, 176, 0.3);
+  border-color: #9c27b0;
+  color: #9c27b0;
+}
+
+.card-tag.fusion {
+  background: rgba(255, 152, 0, 0.3);
+  border-color: #ff9800;
+  color: #ff9800;
+}
+
+.card-tag.legendary {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+/* Close hint */
+.zoom-close-hint {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .zoomed-card {
+    width: 250px;
+    min-height: 380px;
+    padding: 15px;
+  }
+  
+  .zoom-element-icon {
+    font-size: 28px;
+  }
+  
+  .zoom-card-name {
+    font-size: 16px;
+  }
+  
+  .zoom-element-large {
+    font-size: 60px;
+  }
+  
+  .strength-value {
+    font-size: 40px;
+  }
+  
+  .zoom-card-description p {
+    font-size: 12px;
+  }
+}
