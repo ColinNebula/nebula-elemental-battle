@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0c29" />
+  <title>Elemental Battle - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .offline-container {
+      max-width: 500px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .offline-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #e94560, #00d9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    
+    .elements-display {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .element {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      opacity: 0.5;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .element:nth-child(1) { animation-delay: 0s; background: linear-gradient(135deg, #ff4444, #cc0000); }
+    .element:nth-child(2) { animation-delay: 0.2s; background: linear-gradient(135deg, #4488ff, #0044cc); }
+    .element:nth-child(3) { animation-delay: 0.4s; background: linear-gradient(135deg, #44aa44, #008800); }
+    .element:nth-child(4) { animation-delay: 0.6s; background: linear-gradient(135deg, #ffcc00, #cc9900); }
+    .element:nth-child(5) { animation-delay: 0.8s; background: linear-gradient(135deg, #aa44aa, #880088); }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    
+    .retry-btn {
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
+      border: none;
+      color: white;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    
+    .retry-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6);
+    }
+    
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+    
+    .offline-tips {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .offline-tips h3 {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 10px;
+    }
+    
+    .offline-tips ul {
+      list-style: none;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .offline-tips li {
+      margin: 5px 0;
+    }
+    
+    .offline-tips li::before {
+      content: "💡 ";
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon">🌌</div>
+    <h1>You're Offline</h1>
+    <p>The cosmic connection has been disrupted. Your elemental powers await your return!</p>
+    
+    <div class="elements-display">
+      <div class="element">🔥</div>
+      <div class="element">💧</div>
+      <div class="element">🌍</div>
+      <div class="element">💨</div>
+      <div class="element">⚡</div>
+    </div>
+    
+    <button class="retry-btn" onclick="window.location.reload()">
+      🔄 Try Again
+    </button>
+    
+    <div class="offline-tips">
+      <h3>While you wait...</h3>
+      <ul>
+        <li>Check your internet connection</li>
+        <li>Try moving closer to your router</li>
+        <li>The game will auto-reconnect when online</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+    // Auto-retry when connection is restored
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

@@ -70,10 +70,58 @@
   ],
   "start_url": ".",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "theme_color": "#0f0c29",
   "background_color": "#0f0c29",
   "orientation": "any",
   "scope": "/",
   "categories": ["games", "entertainment"],
-  "screenshots": []
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Epic card battles in the cosmic arena"
+    },
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Battle on the go"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Battle",
+      "short_name": "Battle",
+      "description": "Jump straight into a quick match",
+      "url": "/?mode=quick",
+      "icons": [{ "src": "logo96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Story Mode",
+      "short_name": "Story",
+      "description": "Continue your elemental journey",
+      "url": "/?mode=story",
+      "icons": [{ "src": "logo96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Daily Quests",
+      "short_name": "Quests",
+      "description": "Check your daily challenges",
+      "url": "/?view=quests",
+      "icons": [{ "src": "logo96.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }
