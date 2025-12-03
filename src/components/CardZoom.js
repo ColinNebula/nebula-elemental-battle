@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './CardZoom.css';
 import { getElementColor, getElementDisplay } from '../utils/accessibility';
+import { getCardLore, getTierColor, getTierIcon } from '../utils/cardLore';
 
 const CardZoom = ({ card, onClose, position = 'center' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationPhase, setAnimationPhase] = useState('enter');
+  const [showOriginStory, setShowOriginStory] = useState(false);
 
   useEffect(() => {
     // Trigger entrance animation
@@ -32,6 +34,9 @@ const CardZoom = ({ card, onClose, position = 'center' }) => {
   const strength = card.modifiedStrength || card.strength;
   const elementColor = getElementColor(card.element);
   const elementIcon = getElementDisplay(card.element);
+  
+  // Get card lore data
+  const lore = getCardLore(card);
 
   // Generate card description based on element
   const getCardDescription = () => {
@@ -128,6 +133,37 @@ const CardZoom = ({ card, onClose, position = 'center' }) => {
           <div className="zoom-card-description">
             <p>{getCardDescription()}</p>
           </div>
+
+          {/* Card Lore Section */}
+          {lore && (
+            <div className="zoom-lore-section" data-tier={lore.tier}>
+              <div className="zoom-lore-header">
+                <span className="zoom-lore-icon" style={{ color: getTierColor(lore.tier) }}>
+                  {getTierIcon(lore.tier)}
+                </span>
+                <span className="zoom-lore-title">{lore.loreTitle}</span>
+              </div>
+              <div className="zoom-flavor-text">
+                <span className="zoom-quote-mark">"</span>
+                {lore.flavorText}
+                <span className="zoom-quote-mark">"</span>
+              </div>
+              <button 
+                className="zoom-origin-toggle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOriginStory(!showOriginStory);
+                }}
+              >
+                {showOriginStory ? '▲ Hide Origin Story' : '▼ Read Origin Story'}
+              </button>
+              {showOriginStory && (
+                <div className="zoom-origin-story">
+                  {lore.originStory}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Card footer - special abilities */}
           <div className="zoom-card-footer">

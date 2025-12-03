@@ -1,0 +1,413 @@
+/* ============================================
+   COMBO DISPLAY STYLES
+   ============================================ */
+
+/* Combo Notification - Appears when combo achieved */
+.combo-notification {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.98) 0%, rgba(20, 20, 40, 0.98) 100%);
+  border: 3px solid var(--combo-color, #9C27B0);
+  border-radius: 16px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 2000;
+  animation: comboSlideIn 0.5s ease, comboGlow 1s infinite;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+              0 0 30px var(--combo-color);
+}
+
+@keyframes comboSlideIn {
+  from {
+    transform: translateX(-50%) scale(0.5) translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes comboGlow {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 30px var(--combo-color);
+  }
+  50% {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 50px var(--combo-color),
+                0 0 80px var(--combo-color);
+  }
+}
+
+.combo-notification .combo-icon {
+  font-size: 48px;
+  animation: comboIconBounce 0.5s ease;
+}
+
+@keyframes comboIconBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.combo-notification .combo-info {
+  text-align: center;
+}
+
+.combo-notification .combo-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--combo-color, #fff);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.combo-notification .combo-tier {
+  font-size: 14px;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+.combo-notification .combo-message {
+  font-size: 14px;
+  color: #ccc;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* Compact Combo Tracker - Top Left Corner */
+.combo-tracker-compact {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 6px 12px;
+  border-radius: 20px;
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.active-buffs-compact {
+  display: flex;
+  gap: 5px;
+}
+
+.buff-icon {
+  background: rgba(156, 39, 176, 0.3);
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  animation: buffPulse 1.5s infinite;
+}
+
+@keyframes buffPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.combo-progress-compact {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mini-progress {
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Full Combo Tracker Display */
+.combo-tracker-display {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 40, 0.98) 100%);
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+}
+
+.combo-tracker-display h4 {
+  margin: 0 0 15px 0;
+  color: #9C27B0;
+  font-size: 16px;
+}
+
+.active-buffs {
+  background: rgba(156, 39, 176, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.active-buffs h5 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #9C27B0;
+}
+
+.buff-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 13px;
+  color: #fff;
+}
+
+.buff-duration {
+  color: #888;
+  font-size: 11px;
+}
+
+.combo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.combo-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  border-left: 3px solid var(--combo-color, #9C27B0);
+  transition: all 0.3s ease;
+}
+
+.combo-item.achieved {
+  background: rgba(76, 175, 80, 0.2);
+  border-left-color: #4CAF50;
+}
+
+.combo-item .combo-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.combo-item .combo-icon {
+  font-size: 18px;
+}
+
+.combo-item .combo-name {
+  flex: 1;
+  font-weight: bold;
+  color: #fff;
+  font-size: 13px;
+}
+
+.combo-tier-badge {
+  font-size: 12px;
+}
+
+.combo-progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.combo-progress-fill {
+  height: 100%;
+  background: var(--combo-color, #9C27B0);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.combo-description {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Combo Game Summary */
+.combo-game-summary {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 200;
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 40, 0.98) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid #9C27B0;
+  max-width: 350px;
+  animation: slideInFromBottom 0.5s ease-out;
+}
+
+.combo-game-summary.inline {
+  position: static;
+  max-width: 100%;
+  margin: 0 auto;
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.combo-game-summary h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #9C27B0;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-stats .stat {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px 10px;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-stats .value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.summary-stats .label {
+  font-size: 10px;
+  color: #888;
+  margin-top: 5px;
+  text-transform: uppercase;
+}
+
+.achieved-combos {
+  margin-bottom: 20px;
+}
+
+.achieved-combos h4 {
+  font-size: 14px;
+  color: #9C27B0;
+  margin-bottom: 10px;
+}
+
+.achieved-combo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 3px solid;
+}
+
+.achieved-combo-item .combo-icon {
+  font-size: 20px;
+}
+
+.achieved-combo-item .combo-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.achieved-combo-item .combo-name {
+  font-weight: bold;
+  color: #fff;
+}
+
+.achieved-combo-item .combo-tier {
+  font-size: 11px;
+  color: #888;
+}
+
+.achieved-combo-item .bonus {
+  font-size: 16px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.multiplier-info {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: rgba(156, 39, 176, 0.2);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.multiplier-label {
+  color: #aaa;
+}
+
+.multiplier-value {
+  font-weight: bold;
+  color: #9C27B0;
+  font-size: 18px;
+}
+
+.total-bonus {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(139, 195, 74, 0.2) 100%);
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.total-bonus .bonus-value {
+  font-size: 20px;
+  color: #4CAF50;
+}
+
+/* Responsive */
+@media screen and (max-width: 480px) {
+  .combo-notification {
+    width: 90%;
+    padding: 15px 20px;
+  }
+
+  .combo-notification .combo-icon {
+    font-size: 36px;
+  }
+
+  .combo-notification .combo-name {
+    font-size: 18px;
+  }
+
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

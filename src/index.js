@@ -14,8 +14,19 @@ root.render(
 );
 
 // Register service worker for PWA functionality
-// Temporarily unregistered during development to prevent caching issues
-serviceWorkerRegistration.unregister();
+// Enable for production deployments
+serviceWorkerRegistration.register({
+  onUpdate: (registration) => {
+    console.log('🔄 New version available!');
+    // Dispatch event for UpdatePrompt component
+    window.dispatchEvent(new CustomEvent('appUpdateAvailable', {
+      detail: { registration }
+    }));
+  },
+  onSuccess: (registration) => {
+    console.log('✅ App is ready for offline use');
+  }
+});
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

@@ -96,6 +96,18 @@
   transform: translateY(-2px);
 }
 
+.emote-btn {
+  background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+  border-color: #26c6da;
+  color: white;
+}
+
+.emote-btn:hover {
+  background: linear-gradient(135deg, #26c6da 0%, #00bcd4 100%);
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+  transform: translateY(-2px);
+}
+
 .quit-btn {
   background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
   border-color: #e57373;

@@ -1,20 +1,42 @@
-.install-prompt {
+/* Install Prompt Overlay */
+.install-prompt-overlay {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  padding: 25px;
-  max-width: 320px;
-  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 10000;
-  animation: slideIn 0.5s ease-out;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
 }
 
-@keyframes slideIn {
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.install-prompt {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 24px;
+  padding: 30px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(102, 126, 234, 0.3);
+  animation: slideUp 0.4s ease-out;
+  border: 2px solid rgba(102, 126, 234, 0.4);
+}
+
+@keyframes slideUp {
   from {
-    transform: translateY(-100px);
+    transform: translateY(50px);
     opacity: 0;
   }
   to {
@@ -25,14 +47,14 @@
 
 .install-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.3);
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: white;
-  font-size: 20px;
-  width: 30px;
-  height: 30px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -42,132 +64,234 @@
 }
 
 .install-close:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(233, 69, 96, 0.3);
+  color: #e94560;
   transform: rotate(90deg);
 }
 
-.install-icon {
-  font-size: 48px;
-  text-align: center;
-  margin-bottom: 15px;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  animation: bounce 2s ease-in-out infinite;
+/* Header Section */
+.install-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.install-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.install-app-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.install-icon-fallback {
+  font-size: 32px;
+}
+
+.install-title-area {
+  flex: 1;
 }
 
 .install-title {
   color: white;
-  margin: 0 0 10px 0;
-  font-size: 22px;
-  font-weight: 900;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 700;
 }
 
-.install-description {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 15px 0;
+.install-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
   font-size: 14px;
-  text-align: center;
-  line-height: 1.5;
 }
 
+/* Benefits Grid */
 .install-benefits {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 25px;
 }
 
 .benefit-item {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.benefit-icon {
+  font-size: 20px;
+}
+
+.benefit-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.install-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
 }
 
 .install-button {
   width: 100%;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   border: none;
-  color: #1a1a2e;
-  padding: 15px;
+  padding: 14px 20px;
   border-radius: 12px;
-  font-size: 16px;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-.install-button:hover {
+.install-button.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.install-button.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
-  background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
 }
 
-.install-button:active {
-  transform: translateY(0);
+.install-button.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.install-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 .install-btn-icon {
-  font-size: 20px;
-  animation: pulse 1.5s ease-in-out infinite;
+  font-size: 18px;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
+/* Install Note */
+.install-note {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
+/* iOS Instructions */
+.ios-instructions {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ios-title {
+  color: #00d9ff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.ios-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.ios-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ios-steps li:last-child {
+  border-bottom: none;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  flex: 1;
+}
+
+.step-text strong {
+  color: white;
+}
+
+.share-icon,
+.add-icon,
+.confirm-icon {
+  font-size: 18px;
+  margin-left: 5px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
   .install-prompt {
-    top: 10px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-    padding: 20px;
+    padding: 24px;
+    margin: 10px;
+    border-radius: 20px;
   }
-
+  
+  .install-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .install-title-area {
+    text-align: center;
+  }
+  
   .install-title {
     font-size: 18px;
   }
-
-  .install-description {
-    font-size: 13px;
+  
+  .install-benefits {
+    grid-template-columns: 1fr;
   }
-
+  
   .benefit-item {
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-
-  .install-button {
-    font-size: 14px;
-    padding: 12px;
+    justify-content: center;
   }
 }

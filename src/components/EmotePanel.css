@@ -1,0 +1,304 @@
+/* Emote Panel Styles - Quick Chat System */
+
+/* Emote Bubbles (floating chat display) */
+.emote-bubble {
+  position: fixed;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: emoteBubbleIn 0.3s ease-out, emoteBubbleOut 0.5s ease-in 2s forwards;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.emote-bubble.player-emote {
+  bottom: 200px;
+  right: 50px;
+  background: linear-gradient(135deg, #4a9eff 0%, #667eea 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.emote-bubble.ai-emote {
+  top: 200px;
+  left: 50px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.emote-bubble .emote-sender {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.emote-bubble .emote-icon {
+  font-size: 1.5rem;
+}
+
+.emote-bubble .emote-text {
+  font-style: italic;
+}
+
+@keyframes emoteBubbleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes emoteBubbleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+  }
+}
+
+/* Emote Panel */
+.emote-panel {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
+  background: linear-gradient(180deg, rgba(30, 30, 60, 0.98) 0%, rgba(20, 20, 40, 0.98) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(74, 158, 255, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(74, 158, 255, 0.2);
+  z-index: 900;
+  overflow: hidden;
+  animation: panelSlideIn 0.3s ease-out;
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.emote-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(74, 158, 255, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%);
+  border-bottom: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+.emote-panel-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.emote-close-btn {
+  background: rgba(255, 100, 100, 0.3);
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.emote-close-btn:hover {
+  background: rgba(255, 100, 100, 0.6);
+  transform: scale(1.1);
+}
+
+/* Category Tabs */
+.emote-categories {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emote-categories::-webkit-scrollbar {
+  height: 4px;
+}
+
+.emote-categories::-webkit-scrollbar-thumb {
+  background: rgba(74, 158, 255, 0.5);
+  border-radius: 2px;
+}
+
+.emote-category-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.emote-category-btn:hover {
+  background: rgba(74, 158, 255, 0.3);
+  color: #fff;
+}
+
+.emote-category-btn.active {
+  background: linear-gradient(135deg, #4a9eff 0%, #667eea 100%);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Emote Grid */
+.emote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.emote-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.emote-grid::-webkit-scrollbar-thumb {
+  background: rgba(74, 158, 255, 0.5);
+  border-radius: 3px;
+}
+
+.emote-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emote-btn:hover:not(:disabled) {
+  background: rgba(74, 158, 255, 0.3);
+  border-color: rgba(74, 158, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+.emote-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.emote-btn.cooldown {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emote-btn-icon {
+  font-size: 1.5rem;
+}
+
+.emote-btn-text {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Cooldown Notice */
+.emote-cooldown-notice {
+  padding: 8px 12px;
+  background: rgba(255, 152, 0, 0.2);
+  border-top: 1px solid rgba(255, 152, 0, 0.3);
+  color: #ffb74d;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* Emote Toggle Button (to add to GameBoard) */
+.emote-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a9eff 0%, #667eea 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(74, 158, 255, 0.4);
+  transition: all 0.3s ease;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emote-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(74, 158, 255, 0.6);
+}
+
+.emote-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .emote-panel {
+    width: calc(100% - 40px);
+    left: 20px;
+    right: 20px;
+    bottom: 80px;
+  }
+  
+  .emote-bubble.player-emote {
+    right: 20px;
+    bottom: 160px;
+  }
+  
+  .emote-bubble.ai-emote {
+    left: 20px;
+    top: 160px;
+  }
+  
+  .emote-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .emote-toggle-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+}

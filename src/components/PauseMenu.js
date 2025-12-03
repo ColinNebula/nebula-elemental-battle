@@ -1,7 +1,7 @@
 import React from 'react';
 import './PauseMenu.css';
 
-const PauseMenu = ({ onResume, onForfeit, onQuit }) => {
+const PauseMenu = ({ onResume, onForfeit, onQuit, onShowEmotes }) => {
   return (
     <div className="pause-menu-overlay">
       <div className="pause-menu">
@@ -10,6 +10,10 @@ const PauseMenu = ({ onResume, onForfeit, onQuit }) => {
         <div className="pause-menu-buttons">
           <button className="pause-btn resume-btn" onClick={onResume}>
             Resume Game
+          </button>
+          
+          <button className="pause-btn emote-btn" onClick={onShowEmotes}>
+            💬 Quick Chat
           </button>
           
           <button className="pause-btn forfeit-btn" onClick={onForfeit}>

@@ -5,6 +5,7 @@ import '../utils/visualEffects.css';
 import '../utils/advancedCardMechanics.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 import advancedMechanics from '../utils/advancedCardMechanics';
+import { CARD_RARITY, getRarityClassName } from '../utils/cardRarity';
 
 const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost, canAfford = true, canOverdraft = false, onLongPress, isRecommended = false }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -198,11 +199,18 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
   };
 
   const getTierColor = (tier) => {
+    // Use enhanced rarity colors from CARD_RARITY if available
+    const rarity = CARD_RARITY[tier];
+    if (rarity) return rarity.color;
+    
+    // Fallback colors
     const colors = {
       'COMMON': '#9e9e9e',
       'UNCOMMON': '#4caf50',
       'RARE': '#2196f3',
-      'LEGENDARY': '#ff9800'
+      'EPIC': '#9c27b0',
+      'LEGENDARY': '#ff9800',
+      'MYTHIC': '#e91e63'
     };
     return colors[tier] || '#9e9e9e';
   };
@@ -229,14 +237,22 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
   };
 
   const getRarityBorder = () => {
-    const tier = card.tier || 'COMMON';
+    const tier = card.tier || card.rarity || 'COMMON';
     const borderWidths = {
       'COMMON': '3px',
       'UNCOMMON': '3px',
       'RARE': '4px',
-      'LEGENDARY': '5px'
+      'EPIC': '4px',
+      'LEGENDARY': '5px',
+      'MYTHIC': '5px'
     };
-    return borderWidths[tier];
+    return borderWidths[tier] || '3px';
+  };
+
+  // Get keyword icons for display
+  const getKeywordIconsDisplay = () => {
+    if (!card.keywords || card.keywords.length === 0) return null;
+    return card.keywords.map(k => k.icon).join(' ');
   };
 
   const getCardBackgroundImage = () => {
@@ -378,8 +394,14 @@ const Card = memo(({ card, onClick, isPlayable, keyboardKey, onPlayed, manaCost,
         <div className="card-name">{getCardName()}</div>
         <div className="strength-large">{card.modifiedStrength || card.strength}</div>
         {card.tier && (
-          <div className="card-tier" style={{ color: getTierColor(card.tier) }}>
-            {card.tier}
+          <div className="card-tier" style={{ color: getTierColor(card.tier || card.rarity) }}>
+            {card.rarityIcon || ''} {card.tier || card.rarity}
+          </div>
+        )}
+        {/* Keyword display */}
+        {card.keywords && card.keywords.length > 0 && (
+          <div className="card-keywords" title={card.keywords.map(k => `${k.name}: ${k.description}`).join('\n')}>
+            {getKeywordIconsDisplay()}
           </div>
         )}
         {card.isCounter && (

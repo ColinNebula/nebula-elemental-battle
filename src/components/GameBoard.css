@@ -1751,6 +1751,7 @@
   border-radius: 25px;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%);
   transition: all 0.4s ease;
+  z-index: 1; /* Lower z-index than skip button */
   
   /* Triple border effect - outermost */
   outline: 3px solid rgba(255, 215, 0, 0.8);
@@ -3523,6 +3524,21 @@
   color: rgba(255, 255, 255, 0.4);
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Game Over Extras - Ranked & Combo Summary */
+.game-over-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  margin: 20px 0;
+  animation: slideInUp 0.6s ease-out 0.5s both;
+}
+
+.game-over-extras > div {
+  max-width: 400px;
+  width: 100%;
 }
 
 .game-over-buttons {
@@ -5622,6 +5638,42 @@
   transform: translateY(0);
 }
 
+/* Emote Button - positioned below pause button */
+.emote-button {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+  border: 2px solid #00d9ff;
+  border-radius: 10px;
+  color: #00d9ff;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+}
+
+.emote-button:hover {
+  background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+  box-shadow: 0 6px 20px rgba(0, 217, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.emote-button:active {
+  transform: translateY(0);
+}
+
+.emote-button.active {
+  background: linear-gradient(135deg, #00d9ff 0%, #00a3cc 100%);
+  color: #0f3460;
+}
+
 /* Victory celebration */
 @keyframes victoryPulse {
   0%, 100% {
@@ -7124,6 +7176,9 @@
   justify-content: center;
   gap: 10px;
   margin-bottom: 5px;
+  position: relative;
+  z-index: 100;
+  pointer-events: auto;
 }
 
 .skip-turn-controls.no-cards-warning {
@@ -7148,6 +7203,22 @@
   }
 }
 
+.skip-turn-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+  background: linear-gradient(135deg, #666 0%, #888 100%);
+  border-color: #555;
+  pointer-events: auto; /* Allow hover for tooltip */
+}
+
+/* When enabled but player has no cards - make it more prominent */
+.skip-turn-btn:not(:disabled) {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 101;
+}
+
 .skip-turn-btn:hover:not(:disabled) {
   transform: scale(1.1);
   box-shadow: 0 8px 30px rgba(255, 152, 0, 1);
@@ -7165,6 +7236,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 99;
+  pointer-events: none; /* Don't block clicks on elements below */
 }
 
 .skip-turn-message {
@@ -7771,6 +7843,89 @@
   100% {
     filter: brightness(1);
     transform: scale(1);
+  }
+}
+
+/* AI Ultimate Indicator */
+.ai-ultimate-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, rgba(80, 40, 120, 0.6) 0%, rgba(50, 20, 80, 0.8) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(153, 68, 255, 0.4);
+  margin: 6px 0;
+  font-size: 12px;
+}
+
+.ai-ultimate-indicator.ready {
+  background: linear-gradient(135deg, rgba(153, 68, 255, 0.4) 0%, rgba(102, 0, 255, 0.6) 100%);
+  border-color: #9944ff;
+  animation: aiUltimatePulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(153, 68, 255, 0.5);
+}
+
+@keyframes aiUltimatePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(153, 68, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(153, 68, 255, 0.8), 0 0 35px rgba(102, 0, 255, 0.5);
+  }
+}
+
+.ai-ultimate-indicator .ai-ultimate-icon {
+  font-size: 16px;
+}
+
+.ai-ultimate-indicator .ai-ultimate-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.ai-ultimate-indicator.ready .ai-ultimate-label {
+  color: #ff9944;
+  font-weight: 700;
+  animation: aiUltimateReady 1s ease-in-out infinite;
+}
+
+@keyframes aiUltimateReady {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* AI Ultimate damage display (purple theme) */
+.ultimate-card-damage.ai-ultimate {
+  color: #9944ff !important;
+  text-shadow: 0 0 10px #6600ff, 0 0 20px #6600ff, 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.ai-ultimate-display {
+  color: #9944ff !important;
+  text-shadow: 0 0 20px #6600ff, 0 0 40px #6600ff !important;
+}
+
+.ai-ultimate-display .ai-ultimate-icon {
+  font-size: 64px;
+  animation: aiUltimateIconPop 0.5s ease-out;
+}
+
+@keyframes aiUltimateIconPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 

@@ -1,0 +1,79 @@
+/* Network Status Banner */
+.network-status {
+  position: fixed;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  z-index: 9999;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.network-status.show {
+  bottom: 20px;
+}
+
+.network-status.offline {
+  background: linear-gradient(135deg, #e94560 0%, #c73659 100%);
+}
+
+.network-status.online {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+}
+
+.network-status-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.network-icon {
+  font-size: 20px;
+}
+
+.network-message {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.network-retry {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.network-retry:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .network-status {
+    left: 10px;
+    right: 10px;
+    transform: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .network-status.show {
+    bottom: 10px;
+  }
+  
+  .network-message {
+    font-size: 13px;
+    text-align: center;
+  }
+}

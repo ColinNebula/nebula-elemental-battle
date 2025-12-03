@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './CardTooltip.css';
+import { getCardLore, getTierColor, getTierIcon } from '../utils/cardLore';
 
 const CardTooltip = ({ card, position }) => {
+  const [showFullLore, setShowFullLore] = useState(false);
+  
   if (!card) return null;
 
   const elementMatchups = {
@@ -20,10 +23,13 @@ const CardTooltip = ({ card, position }) => {
 
   const matchup = elementMatchups[card.element] || { strong: [], weak: [] };
   const strength = card.modifiedStrength || card.strength;
+  
+  // Get card lore data
+  const lore = getCardLore(card);
 
-  // Determine strength tier
+  // Determine strength tier for display
   let tier = 'Common';
-  let tierColor = '#gray';
+  let tierColor = '#9e9e9e';
   if (strength >= 9) {
     tier = 'Legendary';
     tierColor = '#ffd700';
@@ -92,6 +98,44 @@ const CardTooltip = ({ card, position }) => {
         {card.element === 'TECHNOLOGY' && 'Harnesses electricity and analyzes light.'}
         {card.element === 'METEOR' && 'Devastating impact crushes earth and destroys technology.'}
       </div>
+      
+      {/* Card Lore & Flavor Text Section */}
+      {lore && (
+        <div className="tooltip-lore-section" data-tier={lore.tier}>
+          <div className="lore-divider">
+            <span className="lore-divider-icon">📜</span>
+          </div>
+          
+          <div className="lore-title">
+            <span className="lore-tier-icon" style={{ color: getTierColor(lore.tier) }}>
+              {getTierIcon(lore.tier)}
+            </span>
+            {lore.loreTitle}
+          </div>
+          
+          <div className="flavor-text">
+            <span className="flavor-quote">"</span>
+            {lore.flavorText}
+            <span className="flavor-quote">"</span>
+          </div>
+          
+          <button 
+            className="lore-expand-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowFullLore(!showFullLore);
+            }}
+          >
+            {showFullLore ? '▲ Hide Origin' : '▼ Origin Story'}
+          </button>
+          
+          {showFullLore && (
+            <div className="origin-story">
+              {lore.originStory}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

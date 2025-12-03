@@ -1,6 +1,70 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './MainMenu.css';
 
+// Avatar color themes with gradient definitions (same as PlayerProfile)
+const avatarColors = {
+  default: { 
+    primary: '#4caf50', 
+    glow: 'rgba(76, 175, 80, 0.5)',
+    gradient: 'linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.1) 100%)'
+  },
+  fire: { 
+    primary: '#ff6b35', 
+    glow: 'rgba(255, 107, 53, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(255, 107, 53, 0.4) 0%, rgba(255, 87, 34, 0.2) 100%)'
+  },
+  ice: { 
+    primary: '#00bcd4', 
+    glow: 'rgba(0, 188, 212, 0.5)',
+    gradient: 'linear-gradient(135deg, rgba(0, 188, 212, 0.4) 0%, rgba(77, 208, 225, 0.2) 100%)'
+  },
+  electric: { 
+    primary: '#ffeb3b', 
+    glow: 'rgba(255, 235, 59, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(255, 235, 59, 0.4) 0%, rgba(255, 241, 118, 0.2) 100%)'
+  },
+  dark: { 
+    primary: '#9c27b0', 
+    glow: 'rgba(156, 39, 176, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(156, 39, 176, 0.4) 0%, rgba(186, 104, 200, 0.2) 100%)'
+  },
+  light: { 
+    primary: '#ffc107', 
+    glow: 'rgba(255, 193, 7, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 236, 179, 0.2) 100%)'
+  },
+  ocean: { 
+    primary: '#2196f3', 
+    glow: 'rgba(33, 150, 243, 0.5)',
+    gradient: 'linear-gradient(135deg, rgba(33, 150, 243, 0.4) 0%, rgba(100, 181, 246, 0.2) 100%)'
+  },
+  earth: { 
+    primary: '#795548', 
+    glow: 'rgba(121, 85, 72, 0.5)',
+    gradient: 'linear-gradient(135deg, rgba(121, 85, 72, 0.4) 0%, rgba(161, 136, 127, 0.2) 100%)'
+  },
+  ruby: { 
+    primary: '#e91e63', 
+    glow: 'rgba(233, 30, 99, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(233, 30, 99, 0.4) 0%, rgba(244, 143, 177, 0.2) 100%)'
+  },
+  cosmic: { 
+    primary: '#673ab7', 
+    glow: 'rgba(103, 58, 183, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(103, 58, 183, 0.4) 0%, rgba(179, 157, 219, 0.2) 100%)'
+  },
+  emerald: { 
+    primary: '#00e676', 
+    glow: 'rgba(0, 230, 118, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(0, 230, 118, 0.4) 0%, rgba(105, 240, 174, 0.2) 100%)'
+  },
+  sunset: { 
+    primary: '#ff7043', 
+    glow: 'rgba(255, 112, 67, 0.6)',
+    gradient: 'linear-gradient(135deg, rgba(255, 112, 67, 0.4) 0%, rgba(255, 171, 145, 0.2) 100%)'
+  }
+};
+
 const MainMenu = ({ 
   onPlayGame,
   onStoryMode,
@@ -12,17 +76,75 @@ const MainMenu = ({
   onShowInventory,
   onShowSettings,
   onShowNews,
+  onShowMatchHistory,
+  onShowDailyQuests,
   onQuit,
   playerAvatar: propAvatar,
-  playerName: propName
+  playerName: propName,
+  rankInfo,
+  dailyQuestProgress
 }) => {
   const menuMusicRef = useRef(null);
   const [expandedSection, setExpandedSection] = useState('gameplay');
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+  const [avatarColor, setAvatarColor] = useState('default');
+  const [avatarStyle, setAvatarStyle] = useState('standard');
+  const [avatarIcon, setAvatarIcon] = useState(null);
   
   // Use prop avatar if provided, otherwise fall back to default
   const playerAvatar = propAvatar || { icon: '👤', name: 'Player', id: 'default' };
   const playerName = propName || 'Player';
+  
+  // Load avatar settings from localStorage (icon, color, style)
+  useEffect(() => {
+    const loadAvatarFromStorage = () => {
+      try {
+        const savedAvatar = localStorage.getItem('savedAvatar');
+        if (savedAvatar) {
+          const parsed = JSON.parse(savedAvatar);
+          if (parsed?.icon) {
+            setAvatarIcon(parsed.icon);
+          }
+          if (parsed?.color && avatarColors[parsed.color]) {
+            setAvatarColor(parsed.color);
+          }
+          if (parsed?.style) {
+            setAvatarStyle(parsed.style);
+          }
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    };
+    
+    // Load initially
+    loadAvatarFromStorage();
+    
+    // Listen for avatar updates
+    const handleStorageChange = (e) => {
+      if (e.key === 'savedAvatar') {
+        loadAvatarFromStorage();
+      }
+    };
+    
+    const handleAvatarUpdate = () => {
+      loadAvatarFromStorage();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('userPreferencesUpdated', handleAvatarUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userPreferencesUpdated', handleAvatarUpdate);
+    };
+  }, [propAvatar]);
+  
+  // Determine which icon to display - prefer localStorage, fallback to prop
+  const displayIcon = avatarIcon || playerAvatar.icon || playerAvatar.name?.charAt(0) || '👤';
+  
+  // Get current avatar color theme
+  const currentColor = avatarColors[avatarColor] || avatarColors.default;
 
   const playSelectSound = () => {
     const selectSound = new Audio(`${process.env.PUBLIC_URL}/mixkit-arcade-player-select-2036.mp3`);
@@ -102,8 +224,15 @@ const MainMenu = ({
           {/* Player Info - Avatar and Name */}
           {playerAvatar && (
             <div className="player-info-banner" onClick={onShowProfile} title="View Profile">
-              <div className="player-avatar-display">
-                {playerAvatar.icon || playerAvatar.name?.charAt(0) || '👤'}
+              <div 
+                className={`player-avatar-display avatar-style-${avatarStyle}`}
+                style={{
+                  background: currentColor.gradient,
+                  borderColor: `${currentColor.primary}88`,
+                  boxShadow: `0 0 15px ${currentColor.glow}, 0 0 25px ${currentColor.glow}`
+                }}
+              >
+                {displayIcon}
               </div>
               <div className="player-name-display">{playerName}</div>
             </div>
@@ -179,6 +308,26 @@ const MainMenu = ({
                 <span className="btn-text">STATISTICS</span>
                 <span className="btn-subtitle">View Your Records</span>
               </button>
+
+              <button className="menu-btn match-history-btn" onClick={() => { playSelectSound(); onShowMatchHistory && onShowMatchHistory(); }}>
+                <span className="btn-icon">📜</span>
+                <span className="btn-text">MATCH HISTORY</span>
+                <span className="btn-subtitle">Battle Records & Rank</span>
+                {rankInfo && (
+                  <span className="rank-badge" style={{ color: rankInfo.color }}>
+                    {rankInfo.icon} {rankInfo.division}
+                  </span>
+                )}
+              </button>
+
+              <button className="menu-btn daily-quests-btn" onClick={() => { playSelectSound(); onShowDailyQuests && onShowDailyQuests(); }}>
+                <span className="btn-icon">📋</span>
+                <span className="btn-text">DAILY QUESTS</span>
+                <span className="btn-subtitle">Challenges & Rewards</span>
+                {dailyQuestProgress && dailyQuestProgress.available > 0 && (
+                  <span className="quest-badge">{dailyQuestProgress.completed}/{dailyQuestProgress.available}</span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -249,6 +398,19 @@ const MainMenu = ({
           <p className="version-text">v2.1.0 • © 2025</p>
         </div>
       </div>
+      
+      {/* Floating Daily Quests Button */}
+      <button 
+        className="floating-quests-btn"
+        onClick={() => { playSelectSound(); onShowDailyQuests && onShowDailyQuests(); }}
+        title="Daily Quests"
+      >
+        <span className="quests-icon">📋</span>
+        <span className="quests-label">Quests</span>
+        {dailyQuestProgress && dailyQuestProgress.available > 0 && (
+          <span className="quests-count">{dailyQuestProgress.completed}/{dailyQuestProgress.available}</span>
+        )}
+      </button>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import './PlayerProfile.css';
 import userPreferences from '../utils/userPreferences';
@@ -10,6 +10,118 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(player?.name || 'Player');
   const [saveMessage, setSaveMessage] = useState(null);
+  const [selectedColor, setSelectedColor] = useState('default');
+  const [avatarStyle, setAvatarStyle] = useState('standard');
+
+  // Initialize color and style from saved data - must be before any conditionals
+  useEffect(() => {
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed?.color) setSelectedColor(parsed.color);
+        if (parsed?.style) setAvatarStyle(parsed.style);
+      }
+    } catch (e) {}
+  }, []);
+  
+  // Avatar color themes with gradient definitions
+  const avatarColors = {
+    default: { 
+      name: '🌟 Default', 
+      primary: '#4caf50', 
+      secondary: '#81c784',
+      glow: 'rgba(76, 175, 80, 0.5)',
+      gradient: 'linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.1) 100%)'
+    },
+    fire: { 
+      name: '🔥 Inferno', 
+      primary: '#ff6b35', 
+      secondary: '#ff9a5a',
+      glow: 'rgba(255, 107, 53, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(255, 107, 53, 0.4) 0%, rgba(255, 87, 34, 0.2) 100%)'
+    },
+    ice: { 
+      name: '❄️ Frost', 
+      primary: '#00bcd4', 
+      secondary: '#4dd0e1',
+      glow: 'rgba(0, 188, 212, 0.5)',
+      gradient: 'linear-gradient(135deg, rgba(0, 188, 212, 0.4) 0%, rgba(77, 208, 225, 0.2) 100%)'
+    },
+    electric: { 
+      name: '⚡ Storm', 
+      primary: '#ffeb3b', 
+      secondary: '#fff176',
+      glow: 'rgba(255, 235, 59, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(255, 235, 59, 0.4) 0%, rgba(255, 241, 118, 0.2) 100%)'
+    },
+    dark: { 
+      name: '🌙 Shadow', 
+      primary: '#9c27b0', 
+      secondary: '#ba68c8',
+      glow: 'rgba(156, 39, 176, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(156, 39, 176, 0.4) 0%, rgba(186, 104, 200, 0.2) 100%)'
+    },
+    light: { 
+      name: '☀️ Radiant', 
+      primary: '#ffc107', 
+      secondary: '#ffecb3',
+      glow: 'rgba(255, 193, 7, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 236, 179, 0.2) 100%)'
+    },
+    ocean: { 
+      name: '🌊 Ocean', 
+      primary: '#2196f3', 
+      secondary: '#64b5f6',
+      glow: 'rgba(33, 150, 243, 0.5)',
+      gradient: 'linear-gradient(135deg, rgba(33, 150, 243, 0.4) 0%, rgba(100, 181, 246, 0.2) 100%)'
+    },
+    earth: { 
+      name: '🌍 Terra', 
+      primary: '#795548', 
+      secondary: '#a1887f',
+      glow: 'rgba(121, 85, 72, 0.5)',
+      gradient: 'linear-gradient(135deg, rgba(121, 85, 72, 0.4) 0%, rgba(161, 136, 127, 0.2) 100%)'
+    },
+    ruby: { 
+      name: '💎 Ruby', 
+      primary: '#e91e63', 
+      secondary: '#f48fb1',
+      glow: 'rgba(233, 30, 99, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(233, 30, 99, 0.4) 0%, rgba(244, 143, 177, 0.2) 100%)'
+    },
+    cosmic: { 
+      name: '🌌 Cosmic', 
+      primary: '#673ab7', 
+      secondary: '#b39ddb',
+      glow: 'rgba(103, 58, 183, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(103, 58, 183, 0.4) 0%, rgba(179, 157, 219, 0.2) 100%)'
+    },
+    emerald: { 
+      name: '💚 Emerald', 
+      primary: '#00e676', 
+      secondary: '#69f0ae',
+      glow: 'rgba(0, 230, 118, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(0, 230, 118, 0.4) 0%, rgba(105, 240, 174, 0.2) 100%)'
+    },
+    sunset: { 
+      name: '🌅 Sunset', 
+      primary: '#ff7043', 
+      secondary: '#ffab91',
+      glow: 'rgba(255, 112, 67, 0.6)',
+      gradient: 'linear-gradient(135deg, rgba(255, 112, 67, 0.4) 0%, rgba(255, 171, 145, 0.2) 100%)'
+    }
+  };
+
+  // Avatar visual styles
+  const avatarStyles = {
+    standard: { name: '◯ Standard', borderStyle: 'solid', animation: 'avatarGlow' },
+    pulsing: { name: '◎ Pulsing', borderStyle: 'solid', animation: 'avatarPulse' },
+    spinning: { name: '↻ Rotating', borderStyle: 'solid', animation: 'avatarSpin' },
+    neon: { name: '✧ Neon', borderStyle: 'double', animation: 'avatarNeon' },
+    rainbow: { name: '🌈 Rainbow', borderStyle: 'solid', animation: 'avatarRainbow' },
+    flame: { name: '🔥 Flame', borderStyle: 'solid', animation: 'avatarFlame' }
+  };
   
   const avatarCategories = {
     heroes: {
@@ -96,6 +208,34 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       // Ignore parse errors
     }
     return stats?.avatar || player?.avatar || '👤';
+  };
+
+  // Get current avatar color theme
+  const getAvatarColor = () => {
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed && parsed.color && avatarColors[parsed.color]) {
+          return parsed.color;
+        }
+      }
+    } catch (e) {}
+    return selectedColor || 'default';
+  };
+
+  // Get current avatar style
+  const getAvatarStyle = () => {
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        if (parsed && parsed.style && avatarStyles[parsed.style]) {
+          return parsed.style;
+        }
+      }
+    } catch (e) {}
+    return avatarStyle || 'standard';
   };
 
   const getRank = () => {
@@ -185,12 +325,14 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   
   const handleAvatarChange = (newAvatar) => {
     if (!isAI) {
-      // Create proper avatar object
+      // Create proper avatar object with color and style
       const avatarData = {
         id: 'custom',
         name: 'Custom Avatar',
         icon: newAvatar,
-        element: 'NEUTRAL'
+        element: 'NEUTRAL',
+        color: selectedColor,
+        style: avatarStyle
       };
       
       // Save to userPreferences immediately
@@ -198,6 +340,11 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       
       // Also save directly to localStorage for redundancy
       localStorage.setItem('savedAvatar', JSON.stringify(avatarData));
+      
+      // Dispatch event to notify other components (MainMenu)
+      window.dispatchEvent(new CustomEvent('userPreferencesUpdated', { 
+        detail: { type: 'avatar', avatar: avatarData }
+      }));
       
       console.log('🎭 [PROFILE] Avatar saved:', avatarData);
       
@@ -212,6 +359,44 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       setSaveMessage('✅ Avatar saved!');
       setTimeout(() => setSaveMessage(null), 2000);
     }
+  };
+
+  // Handle color change - update preview and save
+  const handleColorChange = (colorKey) => {
+    setSelectedColor(colorKey);
+    // Update localStorage immediately
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        parsed.color = colorKey;
+        localStorage.setItem('savedAvatar', JSON.stringify(parsed));
+        userPreferences.updateAvatar(parsed);
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('userPreferencesUpdated', { 
+          detail: { type: 'avatar', avatar: parsed }
+        }));
+      }
+    } catch (e) {}
+  };
+
+  // Handle style change - update preview and save
+  const handleStyleChange = (styleKey) => {
+    setAvatarStyle(styleKey);
+    // Update localStorage immediately
+    try {
+      const savedAvatar = localStorage.getItem('savedAvatar');
+      if (savedAvatar) {
+        const parsed = JSON.parse(savedAvatar);
+        parsed.style = styleKey;
+        localStorage.setItem('savedAvatar', JSON.stringify(parsed));
+        userPreferences.updateAvatar(parsed);
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('userPreferencesUpdated', { 
+          detail: { type: 'avatar', avatar: parsed }
+        }));
+      }
+    } catch (e) {}
   };
 
   const handleNameEdit = () => {
@@ -301,6 +486,8 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
   const level = getLevel();
   const exp = getExperience();
   const favoriteElement = getFavoriteElement();
+  const currentColor = avatarColors[getAvatarColor()];
+  const currentStyle = avatarStyles[getAvatarStyle()];
 
   return (
     <div className={`player-profile ${isAI ? 'ai-profile' : 'human-profile'}`}>
@@ -308,9 +495,15 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
       <div className="profile-header">
         <div className="profile-avatar-container">
           <div 
-            className="profile-avatar-large" 
+            className={`profile-avatar-large avatar-style-${getAvatarStyle()}`}
             onClick={() => !isAI && setShowAvatarSelector(!showAvatarSelector)}
-            style={{ cursor: isAI ? 'default' : 'pointer' }}
+            style={{ 
+              cursor: isAI ? 'default' : 'pointer',
+              background: currentColor.gradient,
+              borderColor: `${currentColor.primary}88`,
+              boxShadow: `0 6px 20px ${currentColor.glow}, 0 0 30px ${currentColor.glow}`,
+              borderStyle: currentStyle.borderStyle
+            }}
             title={isAI ? '' : 'Click to change avatar'}
           >
             {getAvatar()}
@@ -320,14 +513,69 @@ const PlayerProfile = ({ player, isAI, stats, onUpdateProfile }) => {
               <div className="avatar-selector-backdrop" onClick={() => setShowAvatarSelector(false)} />
               <div className="avatar-selector-enhanced">
                 <div className="avatar-selector-header">
-                  <h3>Choose Your Avatar</h3>
+                  <h3>✨ Customize Avatar</h3>
                   <button className="avatar-close-btn" onClick={() => setShowAvatarSelector(false)}>✕</button>
                 </div>
+
+                {/* Avatar Preview */}
+                <div className="avatar-preview-section">
+                  <div 
+                    className={`avatar-preview avatar-style-${avatarStyle}`}
+                    style={{ 
+                      background: avatarColors[selectedColor].gradient,
+                      borderColor: avatarColors[selectedColor].primary,
+                      boxShadow: `0 8px 30px ${avatarColors[selectedColor].glow}, 0 0 40px ${avatarColors[selectedColor].glow}`
+                    }}
+                  >
+                    {getAvatar()}
+                  </div>
+                  <div className="avatar-preview-label">Preview</div>
+                </div>
+
+                {/* Color Selection */}
+                <div className="avatar-customization-section">
+                  <div className="customization-label">🎨 Color Theme</div>
+                  <div className="color-grid">
+                    {Object.entries(avatarColors).map(([key, color]) => (
+                      <button
+                        key={key}
+                        className={`color-option ${selectedColor === key ? 'selected' : ''}`}
+                        onClick={() => handleColorChange(key)}
+                        style={{ 
+                          background: color.gradient,
+                          borderColor: selectedColor === key ? color.primary : 'transparent',
+                          boxShadow: selectedColor === key ? `0 0 15px ${color.glow}` : 'none'
+                        }}
+                        title={color.name}
+                      >
+                        <span className="color-dot" style={{ background: color.primary }} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Style Selection */}
+                <div className="avatar-customization-section">
+                  <div className="customization-label">✨ Animation Style</div>
+                  <div className="style-grid">
+                    {Object.entries(avatarStyles).map(([key, style]) => (
+                      <button
+                        key={key}
+                        className={`style-option ${avatarStyle === key ? 'selected' : ''}`}
+                        onClick={() => handleStyleChange(key)}
+                      >
+                        {style.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               
-              <div className="avatar-categories">
-                {Object.keys(avatarCategories).map((catKey) => (
-                  <button
-                    key={catKey}
+                {/* Avatar Categories */}
+                <div className="customization-label">🎭 Choose Icon</div>
+                <div className="avatar-categories">
+                  {Object.keys(avatarCategories).map((catKey) => (
+                    <button
+                      key={catKey}
                     className={`category-btn ${avatarCategory === catKey ? 'active' : ''}`}
                     onClick={() => setAvatarCategory(catKey)}
                   >

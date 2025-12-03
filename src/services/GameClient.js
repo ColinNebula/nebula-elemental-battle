@@ -19,6 +19,12 @@
 import { AI_PERSONALITIES } from '../utils/aiPersonalities';
 import { checkFusionCompatibility, fuseCards } from '../utils/advancedCardMechanics';
 
+// Import new gameplay systems
+import { assignKeywords, hasKeyword, applyKeywordEffect, getKeywordIcons } from '../utils/cardKeywords';
+import { comboTracker, COMBOS, COMBO_TIERS } from '../utils/comboSystem';
+import { rankedLadder } from '../utils/rankedLadder';
+import { rollRarity, getRarity, getRarityClassName, injectRarityStyles } from '../utils/cardRarity';
+
 // Performance optimization: Memoize element counter lookups
 const ELEMENT_COUNTERS = Object.freeze({
   FIRE: Object.freeze(['ICE', 'WATER']),
@@ -305,6 +311,10 @@ class GameClient {
         const tutorialFlag = parts[2]; // Get tutorial flag from command
         const isTutorial = tutorialFlag === 'true';
         const roomId = `room_${this.mockState.nextRoomId++}`;
+        
+        // Reset combo tracker for new game
+        comboTracker.reset();
+        
         this.mockState.rooms[roomId] = {
           roomId,
           players: [],
@@ -316,7 +326,10 @@ class GameClient {
           maxRounds: 5,
           battlePhase: false,
           aiPersonality: aiPersonalityParam, // Store the specified AI personality
-          isTutorial: isTutorial // Store tutorial flag for faster AI timing
+          isTutorial: isTutorial, // Store tutorial flag for faster AI timing
+          gameStartTime: Date.now(), // Track game start time for ranked
+          achievedCombos: [], // Track combos achieved during game
+          comboStrengthBonus: 0 // Active combo bonus for next card
         };
         console.log('🎮 Room created with AI personality:', aiPersonalityParam);
         return { type: 'ROOM_CREATED', roomId };
@@ -415,7 +428,7 @@ class GameClient {
               const selectedIndices = [0, 1, 2, 3, 4];
               player.hand = player.hand.slice(0, 5);
               player.deck = this.generateAdvancedCards(10); // 10 cards in AI reserve deck
-              player.cardCount = 5;
+              player.cardCount = player.hand.length + player.deck.length; // Correctly count hand + deck
               player.selectedHand = true;
             }
             
@@ -447,7 +460,7 @@ class GameClient {
             player.deck = remainingCards;
             // Generate additional reserve deck cards
             player.deck.push(...this.generateAdvancedCards(5)); // Add 5 more cards to reserve
-            player.cardCount = 5;
+            player.cardCount = player.hand.length + player.deck.length; // Correctly count hand + deck
             player.selectedHand = true;
             player.playedCards = [];
             player.graveyard = [];
@@ -540,6 +553,28 @@ class GameClient {
         if (chooseRoom && chooseRoom.gameStarted) {
           const player = chooseRoom.players.find(p => p.id === choosePlayerId);
           const ai = chooseRoom.players.find(p => p.isAI);
+          
+          // Sanity check: Ensure cardCount is accurate (hand + deck)
+          if (player) {
+            const correctPlayerCount = (player.hand?.length || 0) + (player.deck?.length || 0);
+            if (player.cardCount !== correctPlayerCount) {
+              console.warn('⚠️ Player cardCount mismatch, fixing:', { 
+                was: player.cardCount, 
+                shouldBe: correctPlayerCount 
+              });
+              player.cardCount = correctPlayerCount;
+            }
+          }
+          if (ai) {
+            const correctAICount = (ai.hand?.length || 0) + (ai.deck?.length || 0);
+            if (ai.cardCount !== correctAICount) {
+              console.warn('⚠️ AI cardCount mismatch, fixing:', { 
+                was: ai.cardCount, 
+                shouldBe: correctAICount 
+              });
+              ai.cardCount = correctAICount;
+            }
+          }
           
           console.log('🃏 Card chosen:', { player: player?.name, cardIndex, hand: player?.hand?.length });
           
@@ -660,22 +695,31 @@ class GameClient {
             
             // If opponent is out of cards, check if player is also out
             if (opponentOutOfCards) {
+              // Player played a card against an opponent with NO cards
+              // This means the player's card has no opposition - player wins this round
+              console.log('🎯 Player card played against out-of-cards opponent - counting as win');
+              player.score++; // Award point for unopposed card
+              
               if (player.hand.length === 0 && (!player.deck || player.deck.length === 0)) {
-                // Both out of cards - end game
+                // Both out of cards - end game (player should win since they got this last point)
                 chooseRoom.gameOver = true;
                 const playerTotalStrength = player.playedCards.reduce((sum, card) => 
                   sum + (card.modifiedStrength || card.strength || 0), 0);
                 const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
                   sum + (card.modifiedStrength || card.strength || 0), 0);
                 
-                if (playerTotalStrength > aiTotalStrength) {
+                // Player played last, so should generally win unless tie situation
+                if (playerTotalStrength >= aiTotalStrength) {
                   chooseRoom.winner = player.name;
-                } else if (aiTotalStrength > playerTotalStrength) {
-                  chooseRoom.winner = ai.name;
                 } else {
-                  chooseRoom.winner = 'Tie';
+                  // Rare case where AI still had higher total despite being out first
+                  chooseRoom.winner = ai.name;
                 }
-                console.log('🏁 Game over! Both players out of cards.');
+                console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                this.notifyListeners('GAME_UPDATE', chooseRoom);
+              } else {
+                // Player still has cards in deck - notify update and player continues
+                console.log('📢 Player continues with remaining deck cards');
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
               }
               // Player continues - no AI activation needed
@@ -1345,6 +1389,39 @@ class GameClient {
                       console.log('🤝 Round tie!');
                     }
                     
+                    // Track combo system - record the played card and result
+                    const playerWonRound = player1Card.winner === true;
+                    const newCombos = comboTracker.recordCardPlay(
+                      player1Card, 
+                      playerWonRound, 
+                      player2Card.modifiedStrength || player2Card.strength
+                    );
+                    
+                    // Apply combo rewards if any were achieved
+                    if (newCombos && newCombos.length > 0) {
+                      chooseRoom.achievedCombos = chooseRoom.achievedCombos || [];
+                      newCombos.forEach(combo => {
+                        console.log(`🎯 COMBO ACHIEVED: ${combo.icon} ${combo.name}`);
+                        chooseRoom.achievedCombos.push(combo);
+                        
+                        // Store combo notification for UI
+                        chooseRoom.lastCombo = {
+                          name: combo.name,
+                          icon: combo.icon,
+                          tier: COMBO_TIERS[combo.tier],
+                          message: combo.reward.message,
+                          timestamp: Date.now()
+                        };
+                      });
+                    }
+                    
+                    // Apply active combo buffs to next card
+                    const comboStrengthBonus = comboTracker.getActiveStrengthBonus();
+                    if (comboStrengthBonus > 0) {
+                      console.log(`🔥 Combo bonus active: +${comboStrengthBonus} strength on next card`);
+                      chooseRoom.comboStrengthBonus = comboStrengthBonus;
+                    }
+                    
                     // Clean up single-use effects like critical hit
                     const removeSingleUseEffects = (player) => {
                       const playerKey = player.isAI ? 'ai' : 'player';
@@ -1392,6 +1469,28 @@ class GameClient {
                       }
                       
                       console.log('🏁 Game over! All cards played. Winner:', chooseRoom.winner);
+                      
+                      // Update ranked ladder with game result
+                      const playerWon = chooseRoom.winner === player.name;
+                      const comboSummary = comboTracker.getGameSummary();
+                      const rankedResult = rankedLadder.recordMatch({
+                        won: playerWon,
+                        opponentRank: null, // AI doesn't have rank
+                        roundsWon: player.score,
+                        roundsLost: ai.score,
+                        comboBonus: comboSummary.totalComboBonus,
+                        gameTime: Date.now() - (chooseRoom.gameStartTime || Date.now())
+                      });
+                      
+                      // Store ranked update in room for UI display
+                      chooseRoom.rankedResult = rankedResult;
+                      chooseRoom.comboSummary = comboSummary;
+                      
+                      console.log('🏆 Ranked update:', rankedResult);
+                      console.log('🎯 Combo summary:', comboSummary);
+                      
+                      // Reset combo tracker for next game
+                      comboTracker.reset();
                       
                       // Delay game over notification to let players see the final card played
                       console.log('⏱️ Delaying game over notification to show final card...');
@@ -1716,6 +1815,35 @@ class GameClient {
             opponentIsAI: opponent?.isAI
           });
           
+          // Check immediately if both players are out of cards - end game right away
+          if (forfeitPlayer && opponent) {
+            const playerCompletelyOut = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
+                                       (!forfeitPlayer.deck || forfeitPlayer.deck.length === 0);
+            const opponentCompletelyOut = (!opponent.hand || opponent.hand.length === 0) && 
+                                         (!opponent.deck || opponent.deck.length === 0);
+            
+            if (playerCompletelyOut && opponentCompletelyOut) {
+              console.log('🏁 Both players completely out of cards on forfeit - ending game immediately');
+              forfeitRoom.gameOver = true;
+              
+              const playerTotalScore = forfeitPlayer.score + 
+                (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+              const opponentTotalScore = opponent.score + 
+                (opponent.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+              
+              if (playerTotalScore > opponentTotalScore) {
+                forfeitRoom.winner = forfeitPlayer.name;
+              } else if (opponentTotalScore > playerTotalScore) {
+                forfeitRoom.winner = opponent.name;
+              } else {
+                forfeitRoom.winner = 'Tie';
+              }
+              
+              this.notifyListeners('GAME_UPDATE', forfeitRoom);
+              return { type: 'GAME_OVER', success: true, winner: forfeitRoom.winner };
+            }
+          }
+          
           // Allow forfeit even if not strictly "active" - handles ultimate ability case
           if (forfeitPlayer) {
             console.log('⏭️ Player forfeited turn (ultimate/fusion/trap action)');
@@ -1772,6 +1900,30 @@ class GameClient {
                   forfeitRoom.battlePhase = false;
                   forfeitRoom.currentRound++;
                   
+                  // Check if both players are now out of cards after AI played
+                  const playerOutAfterAI = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
+                                          (!forfeitPlayer.deck || forfeitPlayer.deck.length === 0);
+                  const aiOutAfterPlay = (!opponent.hand || opponent.hand.length === 0) && 
+                                        (!opponent.deck || opponent.deck.length === 0);
+                  
+                  if (playerOutAfterAI && aiOutAfterPlay) {
+                    console.log('🏁 Both players out of cards after AI turn - ending game');
+                    forfeitRoom.gameOver = true;
+                    
+                    const playerFinalScore = forfeitPlayer.score + 
+                      (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                    const aiFinalScore = opponent.score + 
+                      (opponent.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                    
+                    if (playerFinalScore > aiFinalScore) {
+                      forfeitRoom.winner = forfeitPlayer.name;
+                    } else if (aiFinalScore > playerFinalScore) {
+                      forfeitRoom.winner = opponent.name;
+                    } else {
+                      forfeitRoom.winner = 'Tie';
+                    }
+                  }
+                  
                   console.log('✅ AI move complete - switching back to player');
                   this.notifyListeners('GAME_UPDATE', forfeitRoom);
                 }
@@ -1804,6 +1956,30 @@ class GameClient {
                     opponent.active = false;
                     forfeitPlayer.active = true;
                     forfeitRoom.currentRound++;
+                    
+                    // Check if both players are now out of cards after AI drew and played
+                    const playerOutAfterAIDraw = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
+                                                (!forfeitPlayer.deck || forfeitPlayer.deck.length === 0);
+                    const aiOutAfterDraw = (!opponent.hand || opponent.hand.length === 0) && 
+                                          (!opponent.deck || opponent.deck.length === 0);
+                    
+                    if (playerOutAfterAIDraw && aiOutAfterDraw) {
+                      console.log('🏁 Both players out of cards after AI draw+play - ending game');
+                      forfeitRoom.gameOver = true;
+                      
+                      const playerScore2 = forfeitPlayer.score + 
+                        (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                      const aiScore2 = opponent.score + 
+                        (opponent.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                      
+                      if (playerScore2 > aiScore2) {
+                        forfeitRoom.winner = forfeitPlayer.name;
+                      } else if (aiScore2 > playerScore2) {
+                        forfeitRoom.winner = opponent.name;
+                      } else {
+                        forfeitRoom.winner = 'Tie';
+                      }
+                    }
                     
                     console.log('✅ AI drew and played - switching back to player');
                     this.notifyListeners('GAME_UPDATE', forfeitRoom);
@@ -2228,20 +2404,20 @@ class GameClient {
     return room.statusEffects[playerKey] || [];
   }
   
-  // Generate advanced cards with element abilities and tiers
-  generateAdvancedCards(count) {
+  // Generate advanced cards with element abilities, tiers, and keywords
+  generateAdvancedCards(count, luckBonus = 0) {
     const elements = ['FIRE', 'ICE', 'WATER', 'ELECTRICITY', 'EARTH', 'POWER', 'NATURE', 'LIGHT', 'DARK', 'NEUTRAL', 'TECHNOLOGY', 'METEOR'];
-    const tiers = ['COMMON', 'UNCOMMON', 'RARE', 'LEGENDARY'];
-    const tierWeights = [0.5, 0.3, 0.15, 0.05]; // Common most likely
+    const tiers = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY'];
+    const tierWeights = [0.50, 0.30, 0.14, 0.05, 0.01]; // With luck bonus these shift
     
     const cards = [];
     
     for (let i = 0; i < count; i++) {
       const element = elements[Math.floor(Math.random() * elements.length)];
       
-      // Determine tier based on weights
+      // Determine tier based on weights (luck bonus improves chances)
       let tier = 'COMMON';
-      const roll = Math.random();
+      const roll = Math.random() * (1 - luckBonus * 0.1);
       let cumulative = 0;
       for (let t = 0; t < tiers.length; t++) {
         cumulative += tierWeights[t];
@@ -2255,25 +2431,42 @@ class GameClient {
       let baseStrength;
       switch (tier) {
         case 'LEGENDARY': baseStrength = 8 + Math.floor(Math.random() * 3); break; // 8-10
-        case 'RARE': baseStrength = 6 + Math.floor(Math.random() * 3); break; // 6-8 
-        case 'UNCOMMON': baseStrength = 4 + Math.floor(Math.random() * 3); break; // 4-6
+        case 'EPIC': baseStrength = 7 + Math.floor(Math.random() * 3); break; // 7-9
+        case 'RARE': baseStrength = 5 + Math.floor(Math.random() * 3); break; // 5-7 
+        case 'UNCOMMON': baseStrength = 4 + Math.floor(Math.random() * 2); break; // 4-5
         default: baseStrength = 2 + Math.floor(Math.random() * 3); break; // 2-4
       }
       
-      const card = {
+      // Get rarity info for visual styling
+      const rarityInfo = getRarity(tier);
+      
+      let card = {
         element,
         strength: baseStrength,
         tier,
+        rarity: tier,
+        rarityClass: getRarityClassName(tier),
+        rarityColor: rarityInfo.color,
+        rarityIcon: rarityInfo.icon,
         id: Date.now() + '_' + i + '_' + Math.random().toString(36).substr(2, 9),
         evolved: false,
-        isCounter: false
+        isCounter: false,
+        keywords: []
       };
+      
+      // Assign keywords based on rarity and element
+      card = assignKeywords(card);
       
       // Add element-specific abilities
       if (element === 'NEUTRAL') {
         card.neutralAbility = Math.random() > 0.5 ? 'COPY' : 'BOOST';
       } else if (element === 'TECHNOLOGY') {
         card.techAbility = Math.random() > 0.5 ? 'SHIELD' : 'CREATE';
+      }
+      
+      // Add keyword icons for display
+      if (card.keywords && card.keywords.length > 0) {
+        card.keywordIcons = getKeywordIcons(card);
       }
       
       cards.push(card);

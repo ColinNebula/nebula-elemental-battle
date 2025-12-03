@@ -32,11 +32,15 @@ const PlayerProfile = lazy(() => import('./components/PlayerProfile'));
 const NewsModal = lazy(() => import('./components/NewsModal'));
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
 const UpdatePrompt = lazy(() => import('./components/UpdatePrompt'));
+const NetworkStatus = lazy(() => import('./components/NetworkStatus'));
 const Credits = lazy(() => import('./components/Credits'));
 const CoinToss = lazy(() => import('./components/CoinToss'));
 const ThemeShop = lazy(() => import('./components/ThemeShop'));
 const DonationBanner = lazy(() => import('./components/DonationBanner'));
 const Inventory = lazy(() => import('./components/Inventory'));
+const MatchHistory = lazy(() => import('./components/MatchHistory'));
+const DailyQuests = lazy(() => import('./components/DailyQuests'));
+const EmotePanel = lazy(() => import('./components/EmotePanel'));
 
 function App() {
   // Donation banner state
@@ -223,6 +227,9 @@ function App() {
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
   const [showThemeShop, setShowThemeShop] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [showMatchHistory, setShowMatchHistory] = useState(false);
+  const [showDailyQuests, setShowDailyQuests] = useState(false);
+  const [showEmotePanel, setShowEmotePanel] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
@@ -1270,12 +1277,16 @@ function App() {
     setShowCharacterSelection(false);
     
     // Save character to both userPreferences and playerProfile
+    // Include all relevant properties for full avatar experience
     const avatarData = {
       id: character.id,
       name: character.name,
       image: character.image,
       icon: character.icon,
-      element: character.element
+      element: character.element,
+      description: character.description,
+      color: character.color || 'default',
+      style: character.style || 'standard'
     };
     
     // Update userPreferences system (primary storage)
@@ -1283,6 +1294,12 @@ function App() {
     
     // Save directly to localStorage (most reliable)
     localStorage.setItem('savedAvatar', JSON.stringify(avatarData));
+    
+    // Also save player name if not already set
+    const savedName = localStorage.getItem('playerName');
+    if (!savedName && playerProfile?.name) {
+      localStorage.setItem('playerName', playerProfile.name);
+    }
     
     // Update playerProfile for backwards compatibility
     const updatedProfile = {
@@ -1402,6 +1419,11 @@ function App() {
             </Suspense>
           )}
           
+          {/* Network Status Banner - Always visible when offline */}
+          <Suspense fallback={null}>
+            <NetworkStatus />
+          </Suspense>
+          
           {/* Update Prompt - Show when update is available */}
           <Suspense fallback={null}>
             <UpdatePrompt 
@@ -1469,6 +1491,58 @@ function App() {
           />
         </Suspense>
       )}
+
+      {/* Match History Modal */}
+      {showMatchHistory && (
+        <Suspense fallback={<LoadingFallback />}>
+          <MatchHistory 
+            isVisible={showMatchHistory}
+            onClose={() => setShowMatchHistory(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Daily Quests Modal */}
+      {showDailyQuests && (
+        <Suspense fallback={<LoadingFallback />}>
+          <DailyQuests 
+            isVisible={showDailyQuests}
+            onClose={() => setShowDailyQuests(false)}
+            playerLevel={playerProfile?.level || 1}
+            onClaimReward={(rewards) => {
+              // Add gold and XP to player profile
+              if (rewards.gold) {
+                setPlayerProfile(prev => ({
+                  ...prev,
+                  coins: (prev?.coins || 0) + rewards.gold
+                }));
+              }
+              if (rewards.xp) {
+                setPlayerProfile(prev => ({
+                  ...prev,
+                  xp: (prev?.xp || 0) + rewards.xp
+                }));
+              }
+              console.log('🎁 Claimed quest rewards:', rewards);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Emote Panel - visible during games */}
+      {inGame && showEmotePanel && (
+        <Suspense fallback={null}>
+          <EmotePanel 
+            isVisible={showEmotePanel}
+            onClose={() => setShowEmotePanel(false)}
+            isPlayerTurn={gameState?.players?.find(p => !p.isAI)?.active}
+            aiName={gameState?.players?.find(p => p.isAI)?.name || 'AI'}
+            onEmote={(emote) => {
+              console.log('💬 Player sent emote:', emote.text);
+            }}
+          />
+        </Suspense>
+      )}
       
       {/* Player Profile Modal */}
       {showProfile && (
@@ -1482,8 +1556,10 @@ function App() {
                 stats={playerProfile}
                 onUpdateProfile={(updates) => {
                   // Update avatar in userPreferences if avatar changed
-                  if (updates.avatar) {
-                    const avatarData = {
+                  if (updates.avatar || updates.selectedAvatar) {
+                    // Use the complete selectedAvatar from PlayerProfile if available (includes color/style)
+                    // Otherwise create a basic avatar data object
+                    const avatarData = updates.selectedAvatar || {
                       id: 'custom',
                       name: 'Custom Avatar',
                       icon: updates.avatar,
@@ -1498,7 +1574,7 @@ function App() {
                     // Also save to playerProfile directly for MainMenu fallback
                     const currentProfile = secureStorage.getItem('playerProfile') || {};
                     currentProfile.selectedAvatar = avatarData;
-                    currentProfile.avatar = updates.avatar;
+                    currentProfile.avatar = avatarData.icon || updates.avatar;
                     secureStorage.setItem('playerProfile', currentProfile);
                     console.log('🎭 [APP] Also saved to playerProfile:', currentProfile);
                     
@@ -1543,10 +1619,26 @@ function App() {
           onShowNews={() => setShowNews(true)}
           onShowThemeShop={() => setShowThemeShop(true)}
           onShowInventory={() => setShowInventory(true)}
+          onShowMatchHistory={() => setShowMatchHistory(true)}
+          onShowDailyQuests={() => setShowDailyQuests(true)}
           onShowSettings={() => setShowSettings(true)}
           onQuit={handleQuit}
           playerAvatar={selectedCharacter}
           playerName={playerProfile?.name || 'Player'}
+          rankInfo={(() => {
+            try {
+              const points = parseInt(localStorage.getItem('rankPoints') || '0', 10);
+              const { calculateRank, RANKS } = require('./utils/gameEnhancements');
+              const rank = calculateRank(points);
+              return { icon: rank.rankData.icon, division: rank.division, color: rank.rankData.color };
+            } catch { return null; }
+          })()}
+          dailyQuestProgress={(() => {
+            try {
+              const quests = JSON.parse(localStorage.getItem('dailyQuests') || '[]');
+              return { available: quests.length, completed: quests.filter(q => q.completed).length };
+            } catch { return null; }
+          })()}
         />
       ) : !showSplash && showStoryMode && !inGame ? (
         <Suspense fallback={<LoadingFallback />}>
