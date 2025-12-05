@@ -12,6 +12,16 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 0;
+  animation: screenFadeIn 0.5s ease-out;
+}
+
+@keyframes screenFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Background themes */
@@ -21,6 +31,24 @@
     rgba(0, 40, 0, 0.98) 50%,
     rgba(20, 60, 20, 0.95) 100%
   );
+  animation: screenFadeIn 0.5s ease-out, victoryBgPulse 4s ease-in-out infinite;
+}
+
+@keyframes victoryBgPulse {
+  0%, 100% {
+    background: linear-gradient(135deg, 
+      rgba(20, 60, 20, 0.95) 0%, 
+      rgba(0, 40, 0, 0.98) 50%,
+      rgba(20, 60, 20, 0.95) 100%
+    );
+  }
+  50% {
+    background: linear-gradient(135deg, 
+      rgba(30, 80, 30, 0.95) 0%, 
+      rgba(10, 60, 10, 0.98) 50%,
+      rgba(30, 80, 30, 0.95) 100%
+    );
+  }
 }
 
 .victory-screen.defeat {
@@ -98,29 +126,58 @@
   left: 0;
   right: 0;
   bottom: 0;
+  perspective: 1000px;
 }
 
 .confetti {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: var(--color);
   left: var(--x);
   top: -20px;
-  animation: confettiFall 4s ease-out infinite;
+  animation: confettiFall 4s ease-out infinite, confettiSpin 1s linear infinite;
   animation-delay: var(--delay);
   transform: rotate(var(--rotation));
+  box-shadow: 0 0 10px var(--color);
+  border-radius: 2px;
+}
+
+/* Different confetti shapes */
+.confetti:nth-child(3n) {
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+}
+
+.confetti:nth-child(5n) {
+  width: 8px;
+  height: 16px;
+  border-radius: 1px;
+}
+
+.confetti:nth-child(7n) {
+  width: 14px;
+  height: 6px;
 }
 
 @keyframes confettiFall {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg) rotateX(0deg);
+    opacity: 1;
+  }
+  50% {
     opacity: 1;
   }
   100% {
-    transform: translateY(100vh) rotate(720deg);
+    transform: translateY(100vh) rotate(720deg) rotateX(360deg);
     opacity: 0;
   }
+}
+
+@keyframes confettiSpin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
 }
 
 /* Defeat embers */
@@ -180,17 +237,55 @@
 
 /* Result icon */
 .result-icon {
-  font-size: 60px;
+  font-size: 80px;
   opacity: 0;
-  transform: scale(0);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0) rotate(-180deg);
+  transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
   filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+  position: relative;
 }
 
 .result-icon.visible {
   opacity: 1;
-  transform: scale(1);
-  animation: iconBounce 0.5s ease-out 0.5s;
+  transform: scale(1) rotate(0deg);
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+/* Glow ring behind icon */
+.result-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: iconRingPulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes iconPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1));
+  }
+}
+
+@keyframes iconRingPulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
 }
 
 @keyframes iconBounce {
@@ -200,41 +295,79 @@
 
 /* Titles */
 .victory-title {
-  font-size: 42px;
+  font-size: 48px;
   font-weight: 900;
   margin: 0;
   opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   text-transform: uppercase;
-  letter-spacing: 6px;
+  letter-spacing: 8px;
+  position: relative;
 }
 
 .victory-title.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
+/* Victory title - rainbow shimmer effect */
 .victory-screen.victory .victory-title {
   color: #ffd700;
   text-shadow: 
-    0 0 20px rgba(255, 215, 0, 0.8),
-    0 0 40px rgba(255, 215, 0, 0.4),
+    0 0 30px rgba(255, 215, 0, 0.9),
+    0 0 60px rgba(255, 215, 0, 0.5),
+    0 0 90px rgba(255, 152, 0, 0.3),
     0 4px 8px rgba(0, 0, 0, 0.8);
-  animation: victoryGlow 2s ease-in-out infinite;
+  animation: victoryTitleGlow 2s ease-in-out infinite, victoryTitleFloat 3s ease-in-out infinite;
+  background: linear-gradient(90deg, #ffd700, #ffec8b, #ffd700);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes victoryTitleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes victoryTitleGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) brightness(1);
+    background-position: 0% center;
+  }
+  50% { 
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)) brightness(1.2);
+    background-position: 100% center;
+  }
 }
 
 .victory-screen.defeat .victory-title {
   color: #f44336;
   text-shadow: 
     0 0 20px rgba(244, 67, 54, 0.8),
+    0 0 40px rgba(244, 67, 54, 0.4),
     0 4px 8px rgba(0, 0, 0, 0.8);
+  animation: defeatPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes defeatPulse {
+  0%, 100% { 
+    filter: brightness(1);
+    text-shadow: 0 0 20px rgba(244, 67, 54, 0.8), 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+  50% { 
+    filter: brightness(0.8);
+    text-shadow: 0 0 30px rgba(244, 67, 54, 0.6), 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
 }
 
 .victory-screen.tie .victory-title {
   color: #64b5f6;
   text-shadow: 
     0 0 20px rgba(100, 181, 246, 0.8),
+    0 0 40px rgba(100, 181, 246, 0.4),
     0 4px 8px rgba(0, 0, 0, 0.8);
 }
 

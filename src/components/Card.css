@@ -8,7 +8,7 @@
   margin: 5px;
   cursor: default;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, filter 0.2s;
   user-select: none;
   padding: 10px;
   overflow: hidden;
@@ -19,6 +19,57 @@
   contain: layout style paint;
   will-change: transform;
   backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Holographic shimmer overlay for all cards */
+.card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
+    transparent 70%
+  );
+  transform: translateX(-100%) rotate(45deg);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.card:hover::after {
+  transform: translateX(100%) rotate(45deg);
+}
+
+/* 3D hover effect */
+.card:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(-5deg) translateY(-8px) scale(1.05);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    0 0 30px var(--element-color),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 100;
+}
+
+/* Playable card glow pulse */
+.card.playable {
+  animation: cardEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), playableGlow 2s ease-in-out infinite;
+}
+
+@keyframes playableGlow {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(76, 175, 80, 0.8), 0 0 50px rgba(76, 175, 80, 0.4);
+  }
 }
 
 /* Default background for cards without a background image */
@@ -150,31 +201,141 @@
 
 .card.uncommon {
   border-color: #4caf50;
-  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4), inset 0 1px 0 rgba(76, 175, 80, 0.3);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4), 
+              0 0 15px rgba(76, 175, 80, 0.3),
+              inset 0 1px 0 rgba(76, 175, 80, 0.3);
+  animation: cardEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), uncommonGlow 4s ease-in-out infinite;
 }
 
 .card.uncommon:not(.has-background-image) {
   background: linear-gradient(135deg, #2d5a2d 0%, #1e4a1e 100%);
 }
 
+/* Uncommon subtle glow animation */
+@keyframes uncommonGlow {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4), 
+                0 0 15px rgba(76, 175, 80, 0.3),
+                inset 0 1px 0 rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.5), 
+                0 0 25px rgba(76, 175, 80, 0.5),
+                inset 0 1px 0 rgba(76, 175, 80, 0.4);
+  }
+}
+
 .card.rare {
   border-color: #2196f3;
-  box-shadow: 0 6px 12px rgba(33, 150, 243, 0.5), inset 0 1px 0 rgba(33, 150, 243, 0.3);
+  box-shadow: 0 6px 12px rgba(33, 150, 243, 0.5), 
+              0 0 20px rgba(33, 150, 243, 0.4),
+              inset 0 1px 0 rgba(33, 150, 243, 0.3);
+  animation: cardEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), rareGlow 3s ease-in-out infinite;
 }
 
 .card.rare:not(.has-background-image) {
   background: linear-gradient(135deg, #1e4a7f 0%, #0f3a6f 100%);
 }
 
+/* Rare card electric shimmer effect */
+.card.rare::before {
+  background: linear-gradient(135deg, 
+    rgba(33, 150, 243, 0.2) 0%, 
+    transparent 30%,
+    rgba(33, 150, 243, 0.1) 50%,
+    transparent 70%,
+    rgba(33, 150, 243, 0.2) 100%);
+  animation: rareShimmer 2s linear infinite;
+}
+
+@keyframes rareGlow {
+  0%, 100% {
+    box-shadow: 0 6px 12px rgba(33, 150, 243, 0.5), 
+                0 0 20px rgba(33, 150, 243, 0.4),
+                inset 0 1px 0 rgba(33, 150, 243, 0.3);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 8px 16px rgba(33, 150, 243, 0.6), 
+                0 0 35px rgba(33, 150, 243, 0.6),
+                0 0 50px rgba(100, 181, 246, 0.3),
+                inset 0 1px 0 rgba(33, 150, 243, 0.5);
+    filter: brightness(1.05);
+  }
+}
+
+@keyframes rareShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .card.legendary {
   border-color: #ffa726;
-  box-shadow: 0 8px 16px rgba(255, 167, 38, 0.6), inset 0 1px 0 rgba(255, 167, 38, 0.4);
+  border-width: 4px;
+  box-shadow: 0 8px 16px rgba(255, 167, 38, 0.6), 
+              0 0 30px rgba(255, 167, 38, 0.5),
+              0 0 60px rgba(255, 215, 0, 0.3),
+              inset 0 1px 0 rgba(255, 167, 38, 0.4);
   position: relative;
   overflow: hidden;
+  animation: cardEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), legendaryFlare 4s ease-in-out infinite;
 }
 
 .card.legendary:not(.has-background-image) {
-  background: linear-gradient(135deg, #5a4a1e 0%, #4a3a0e 100%);
+  background: linear-gradient(135deg, #5a4a1e 0%, #4a3a0e 50%, #3a2a00 100%);
+}
+
+/* Legendary rainbow border effect */
+.card.legendary::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff, #ff0000
+  );
+  background-size: 400% 400%;
+  animation: legendaryRainbow 3s linear infinite;
+  border-radius: 14px;
+  z-index: -2;
+  opacity: 0.6;
+}
+
+@keyframes legendaryFlare {
+  0%, 100% {
+    box-shadow: 0 8px 16px rgba(255, 167, 38, 0.6), 
+                0 0 30px rgba(255, 167, 38, 0.5),
+                0 0 60px rgba(255, 215, 0, 0.3),
+                inset 0 1px 0 rgba(255, 167, 38, 0.4);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 10px 25px rgba(255, 167, 38, 0.8), 
+                0 0 50px rgba(255, 167, 38, 0.7),
+                0 0 80px rgba(255, 215, 0, 0.5),
+                0 0 100px rgba(255, 152, 0, 0.3),
+                inset 0 1px 0 rgba(255, 167, 38, 0.6);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes legendaryRainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Enhanced styling for fused cards */
@@ -1086,6 +1247,9 @@
 @media (hover: none) and (pointer: coarse) {
   .card.playable {
     cursor: pointer;
+    /* Larger touch target */
+    padding: 12px;
+    margin: 8px;
   }
   
   .card.playable:hover {
@@ -1095,6 +1259,50 @@
   .card.playable:active {
     transform: translateY(-8px) scale(1.05);
     transition: transform 0.1s ease;
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+  }
+  
+  /* Touch feedback visual indicator */
+  .card::after {
+    display: none !important; /* Disable shimmer on touch for performance */
+  }
+  
+  /* Better tap indicator */
+  .card.playable::before {
+    content: '👆';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    opacity: 0.8;
+    animation: tapBounce 1.5s ease-in-out infinite;
+    z-index: 100;
+    pointer-events: none;
+  }
+  
+  @keyframes tapBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+  }
+  
+  /* Swipe hint for hand cards */
+  .hand .card:first-child::before,
+  .hand .card:last-child::before {
+    content: '←→';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+  }
+  
+  /* Active touch state for all cards */
+  .card:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease;
   }
 }
 

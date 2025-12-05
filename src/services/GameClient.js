@@ -2864,7 +2864,7 @@ class GameClient {
       console.log('🌑 DARK: AI applied curse and poison debuffs');
     }
     
-    // BLACKHOLE: Gravitational Collapse - Damage ALL cards on arena by -5
+    // BLACKHOLE: Gravitational Collapse - Damage ALL cards on arena by -5 AND steal weakest opponent card
     if (player1Card.ability === 'gravitational_collapse' && !player1Silenced) {
       console.log('🌌🕳️ BLACKHOLE: Gravitational collapse initiated!');
       let totalDamaged = 0;
@@ -2901,6 +2901,33 @@ class GameClient {
             }
           }
         });
+      }
+      
+      // STEAL: Take the weakest card from opponent's arena and add to player's hand
+      if (player2.playedCards && player2.playedCards.length > 0) {
+        // Find the weakest card (lowest strength)
+        let weakestIdx = 0;
+        let weakestStrength = Infinity;
+        player2.playedCards.forEach((card, idx) => {
+          if (card) {
+            const str = card.modifiedStrength ?? card.strength ?? 0;
+            if (str < weakestStrength) {
+              weakestStrength = str;
+              weakestIdx = idx;
+            }
+          }
+        });
+        
+        // Remove from opponent's arena and add to player's hand
+        const stolenCard = player2.playedCards.splice(weakestIdx, 1)[0];
+        if (stolenCard) {
+          // Reset the card's modified strength when stolen
+          stolenCard.modifiedStrength = stolenCard.strength;
+          stolenCard.stolen = true; // Mark as stolen for UI
+          player1.hand.push(stolenCard);
+          player1.cardCount = player1.hand.length + (player1.deck?.length || 0);
+          console.log(`🌌🕳️ BLACKHOLE: Sucked in and stole opponent's ${stolenCard.element} card (${stolenCard.strength} strength)!`);
+        }
       }
       
       console.log(`🌌🕳️ BLACKHOLE: Massive swirling blackhole damaged ${totalDamaged} cards on arena (-5 strength each)`);
@@ -2944,10 +2971,37 @@ class GameClient {
         });
       }
       
+      // STEAL: AI takes the weakest card from player's arena and adds to AI's hand
+      if (player1.playedCards && player1.playedCards.length > 0) {
+        // Find the weakest card (lowest strength)
+        let weakestIdx = 0;
+        let weakestStrength = Infinity;
+        player1.playedCards.forEach((card, idx) => {
+          if (card) {
+            const str = card.modifiedStrength ?? card.strength ?? 0;
+            if (str < weakestStrength) {
+              weakestStrength = str;
+              weakestIdx = idx;
+            }
+          }
+        });
+        
+        // Remove from player's arena and add to AI's hand
+        const stolenCard = player1.playedCards.splice(weakestIdx, 1)[0];
+        if (stolenCard) {
+          // Reset the card's modified strength when stolen
+          stolenCard.modifiedStrength = stolenCard.strength;
+          stolenCard.stolen = true; // Mark as stolen for UI
+          player2.hand.push(stolenCard);
+          player2.cardCount = player2.hand.length + (player2.deck?.length || 0);
+          console.log(`🌌🕳️ BLACKHOLE: AI's blackhole sucked in and stole player's ${stolenCard.element} card (${stolenCard.strength} strength)!`);
+        }
+      }
+      
       console.log(`🌌🕳️ BLACKHOLE: AI's massive swirling blackhole damaged ${totalDamaged} cards on arena (-5 strength each)`);
     }
     
-    // WIND STORM: Damage EARTH cards on arena for 2 turns
+    // WIND STORM: Damage EARTH cards on arena for 2 turns AND steal weakest opponent card
     if (player1Card.ability === 'wind_storm' && !player1Silenced) {
       console.log('🌪️💨 WIND STORM: Creating powerful wind storms!');
       
@@ -2972,6 +3026,33 @@ class GameClient {
             }
           }
         });
+      }
+      
+      // STEAL: Wind sweeps up the weakest card from opponent's arena
+      if (player2.playedCards && player2.playedCards.length > 0) {
+        // Find the weakest card (lowest strength)
+        let weakestIdx = 0;
+        let weakestStrength = Infinity;
+        player2.playedCards.forEach((card, idx) => {
+          if (card) {
+            const str = card.modifiedStrength ?? card.strength ?? 0;
+            if (str < weakestStrength) {
+              weakestStrength = str;
+              weakestIdx = idx;
+            }
+          }
+        });
+        
+        // Remove from opponent's arena and add to player's hand
+        const stolenCard = player2.playedCards.splice(weakestIdx, 1)[0];
+        if (stolenCard) {
+          // Reset the card's modified strength when stolen
+          stolenCard.modifiedStrength = stolenCard.strength;
+          stolenCard.stolen = true; // Mark as stolen for UI
+          player1.hand.push(stolenCard);
+          player1.cardCount = player1.hand.length + (player1.deck?.length || 0);
+          console.log(`🌪️💨 WIND STORM: Swept up and stole opponent's ${stolenCard.element} card (${stolenCard.strength} strength)!`);
+        }
       }
       
       console.log(`🌪️💨 WIND STORM: Damaged ${earthDamaged} EARTH cards on arena (-1 strength, active for 2 turns)`);
@@ -3001,6 +3082,33 @@ class GameClient {
             }
           }
         });
+      }
+      
+      // STEAL: AI's wind sweeps up the weakest card from player's arena
+      if (player1.playedCards && player1.playedCards.length > 0) {
+        // Find the weakest card (lowest strength)
+        let weakestIdx = 0;
+        let weakestStrength = Infinity;
+        player1.playedCards.forEach((card, idx) => {
+          if (card) {
+            const str = card.modifiedStrength ?? card.strength ?? 0;
+            if (str < weakestStrength) {
+              weakestStrength = str;
+              weakestIdx = idx;
+            }
+          }
+        });
+        
+        // Remove from player's arena and add to AI's hand
+        const stolenCard = player1.playedCards.splice(weakestIdx, 1)[0];
+        if (stolenCard) {
+          // Reset the card's modified strength when stolen
+          stolenCard.modifiedStrength = stolenCard.strength;
+          stolenCard.stolen = true; // Mark as stolen for UI
+          player2.hand.push(stolenCard);
+          player2.cardCount = player2.hand.length + (player2.deck?.length || 0);
+          console.log(`🌪️💨 WIND STORM: AI's wind swept up and stole player's ${stolenCard.element} card (${stolenCard.strength} strength)!`);
+        }
       }
       
       console.log(`🌪️💨 WIND STORM: AI damaged ${earthDamaged} EARTH cards on arena (-1 strength, active for 2 turns)`);
