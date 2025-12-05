@@ -702,21 +702,30 @@ class GameClient {
               
               if (player.hand.length === 0 && (!player.deck || player.deck.length === 0)) {
                 // Both out of cards - end game (player should win since they got this last point)
-                chooseRoom.gameOver = true;
-                const playerTotalStrength = player.playedCards.reduce((sum, card) => 
-                  sum + (card.modifiedStrength || card.strength || 0), 0);
-                const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
-                  sum + (card.modifiedStrength || card.strength || 0), 0);
+                // IMPORTANT: Delay setting gameOver so the last card has time to appear on arena
+                console.log('⏳ Delaying game over to show last card on arena...');
                 
-                // Player played last, so should generally win unless tie situation
-                if (playerTotalStrength >= aiTotalStrength) {
-                  chooseRoom.winner = player.name;
-                } else {
-                  // Rare case where AI still had higher total despite being out first
-                  chooseRoom.winner = ai.name;
-                }
-                console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                // Notify listeners first with the card on the arena (but game not over yet)
                 this.notifyListeners('GAME_UPDATE', chooseRoom);
+                
+                // Delay game over by 3 seconds so player can see their winning card
+                setTimeout(() => {
+                  chooseRoom.gameOver = true;
+                  const playerTotalStrength = player.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  const aiTotalStrength = ai.playedCards.reduce((sum, card) => 
+                    sum + (card.modifiedStrength || card.strength || 0), 0);
+                  
+                  // Player played last, so should generally win unless tie situation
+                  if (playerTotalStrength >= aiTotalStrength) {
+                    chooseRoom.winner = player.name;
+                  } else {
+                    // Rare case where AI still had higher total despite being out first
+                    chooseRoom.winner = ai.name;
+                  }
+                  console.log('🏁 Game over! Both players out of cards. Winner:', chooseRoom.winner);
+                  this.notifyListeners('GAME_UPDATE', chooseRoom);
+                }, 3000);
               } else {
                 // Player still has cards in deck - notify update and player continues
                 console.log('📢 Player continues with remaining deck cards');

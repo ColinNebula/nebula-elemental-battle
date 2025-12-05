@@ -885,17 +885,17 @@ const GameBoard = ({
       
       // For ties or if no cards available, skip directly to victory
       if (isTie || winnerCards.length === 0) {
-        // Small delay to show final card play first
+        // Longer delay to show final card play first (3 seconds)
         setTimeout(() => {
           setWinningCardPhase(prev => ({
             ...prev,
             showVictory: true
           }));
-        }, 1500);
+        }, 3000);
         return;
       }
       
-      // Small delay to allow final battle animation to complete before showing winning card selection
+      // Longer delay to allow final card to be shown on arena before showing winning card selection
       setTimeout(() => {
         // Activate winning card placement phase
         setWinningCardPhase({
@@ -946,7 +946,7 @@ const GameBoard = ({
             }, 3000);
           }, 2000); // Give more time to show the "choosing" message
         }
-      }, 1500); // Wait 1.5s for final battle animation before showing winning card selection
+      }, 3000); // Wait 3s for final card to appear on arena before showing winning card selection
     }
   }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, humanPlayer?.playedCards, aiPlayer?.playedCards]);
 
