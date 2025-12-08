@@ -2103,3 +2103,829 @@
   color: rgba(255, 255, 255, 0.8);
   min-width: 60px;
 }
+
+/* ============================================
+   ENHANCED COMBAT ANIMATIONS
+   ============================================ */
+
+/* Attack line effect - card to card */
+.attack-line {
+  position: fixed;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    var(--element-color, #ff6b35) 10%,
+    #fff 50%,
+    var(--element-color, #ff6b35) 90%,
+    transparent 100%
+  );
+  z-index: 9999;
+  pointer-events: none;
+  transform-origin: left center;
+  animation: attackLineSlash 0.3s ease-out forwards;
+  box-shadow: 0 0 10px var(--element-color, #ff6b35),
+              0 0 20px var(--element-color, #ff6b35);
+}
+
+@keyframes attackLineSlash {
+  0% {
+    opacity: 0;
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  30% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+/* Slash marks on impact */
+.slash-mark {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  z-index: 500;
+}
+
+.slash-mark::before,
+.slash-mark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  transform-origin: center;
+  animation: slashAppear 0.4s ease-out forwards;
+}
+
+.slash-mark::before {
+  transform: translate(-50%, -50%) rotate(45deg) scaleX(0);
+}
+
+.slash-mark::after {
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
+  animation-delay: 0.05s;
+}
+
+@keyframes slashAppear {
+  0% {
+    transform: translate(-50%, -50%) rotate(45deg) scaleX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* Screen flash on big damage */
+.damage-flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, 
+    rgba(255, 0, 0, 0.4) 0%, 
+    transparent 70%
+  );
+  z-index: 10000;
+  pointer-events: none;
+  animation: damageFlash 0.3s ease-out forwards;
+}
+
+@keyframes damageFlash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Healing flash (green) */
+.heal-flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, 
+    rgba(76, 175, 80, 0.4) 0%, 
+    transparent 70%
+  );
+  z-index: 10000;
+  pointer-events: none;
+  animation: damageFlash 0.3s ease-out forwards;
+}
+
+/* Impact shake on the battlefield */
+.impact-shake {
+  animation: impactShake 0.4s ease-out;
+}
+
+@keyframes impactShake {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  10% { transform: translateX(-5px) translateY(-3px); }
+  20% { transform: translateX(5px) translateY(2px); }
+  30% { transform: translateX(-4px) translateY(-2px); }
+  40% { transform: translateX(4px) translateY(1px); }
+  50% { transform: translateX(-3px) translateY(-1px); }
+  60% { transform: translateX(3px) translateY(1px); }
+  70% { transform: translateX(-2px) translateY(0); }
+  80% { transform: translateX(2px) translateY(0); }
+  90% { transform: translateX(-1px) translateY(0); }
+}
+
+/* Card taking damage animation */
+.card-damage-taken {
+  animation: cardDamageTaken 0.5s ease-out;
+}
+
+@keyframes cardDamageTaken {
+  0% { 
+    transform: scale(1); 
+    filter: brightness(1);
+  }
+  15% { 
+    transform: scale(0.95) translateX(-5px); 
+    filter: brightness(0.5) saturate(0);
+  }
+  30% { 
+    transform: scale(1.05) translateX(5px);
+    filter: brightness(1.5) saturate(1.5);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+  }
+  50% {
+    transform: scale(1) translateX(-3px);
+    filter: brightness(0.8);
+  }
+  100% { 
+    transform: scale(1) translateX(0); 
+    filter: brightness(1);
+  }
+}
+
+/* Card dealing damage (attacker) */
+.card-attacking {
+  animation: cardAttacking 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 200;
+}
+
+@keyframes cardAttacking {
+  0% { 
+    transform: translateY(0) scale(1); 
+  }
+  25% { 
+    transform: translateY(-20px) scale(1.15);
+    filter: brightness(1.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    transform: translateY(10px) scale(1.1);
+  }
+  100% { 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* Power up effect */
+.power-up-effect {
+  position: relative;
+}
+
+.power-up-effect::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(ellipse at center, 
+    rgba(76, 175, 80, 0.6) 0%,
+    transparent 70%
+  );
+  animation: powerUpGlow 0.6s ease-out forwards;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes powerUpGlow {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(1.5);
+  }
+}
+
+/* Power down effect */
+.power-down-effect {
+  position: relative;
+}
+
+.power-down-effect::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(ellipse at center, 
+    rgba(244, 67, 54, 0.6) 0%,
+    transparent 70%
+  );
+  animation: powerDownDrain 0.6s ease-out forwards;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes powerDownDrain {
+  0% { 
+    opacity: 0; 
+    transform: scale(1.5);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.5);
+  }
+}
+
+/* Combo counter display */
+.combo-counter {
+  position: fixed;
+  top: 15%;
+  right: 5%;
+  font-size: 64px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 
+    0 0 20px #ffd700,
+    0 0 40px #ffa500,
+    0 0 60px #ff8c00,
+    3px 3px 6px rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  pointer-events: none;
+  animation: comboAppear 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.combo-counter span {
+  display: inline-block;
+  animation: comboPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes comboAppear {
+  0% { 
+    transform: scale(0) rotate(-30deg); 
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.3) rotate(10deg);
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1;
+  }
+}
+
+@keyframes comboPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ============================================
+   STATUS EFFECT VISUALS
+   ============================================ */
+
+/* Poisoned status */
+.status-poisoned {
+  position: relative;
+}
+
+.status-poisoned::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, 
+    rgba(156, 39, 176, 0.3) 0%,
+    transparent 70%
+  );
+  animation: poisonPulse 1.5s ease-in-out infinite;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes poisonPulse {
+  0%, 100% { 
+    opacity: 0.3;
+    background-size: 100% 100%;
+  }
+  50% { 
+    opacity: 0.7;
+    background-size: 120% 120%;
+  }
+}
+
+.status-poisoned .poison-bubbles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.poison-bubble {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(156, 39, 176, 0.8);
+  border-radius: 50%;
+  animation: poisonBubbleRise 2s ease-out infinite;
+  box-shadow: 0 0 6px rgba(156, 39, 176, 0.8);
+}
+
+@keyframes poisonBubbleRise {
+  0% {
+    transform: translateY(100%) scale(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(80%) scale(1);
+  }
+  100% {
+    transform: translateY(-20%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Frozen status */
+.status-frozen {
+  position: relative;
+  filter: saturate(0.5) brightness(1.2);
+}
+
+.status-frozen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(135deg, 
+      rgba(150, 220, 255, 0.4) 0%,
+      transparent 30%
+    ),
+    linear-gradient(-135deg, 
+      rgba(200, 240, 255, 0.4) 0%,
+      transparent 30%
+    );
+  animation: frozenShimmer 2s ease-in-out infinite;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes frozenShimmer {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Ice crystals decoration */
+.frozen-crystals {
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ice-crystal {
+  position: absolute;
+  color: rgba(200, 240, 255, 0.9);
+  font-size: 16px;
+  text-shadow: 0 0 8px rgba(150, 220, 255, 1);
+  animation: crystalTwinkle 1.5s ease-in-out infinite;
+}
+
+@keyframes crystalTwinkle {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Burning status */
+.status-burning {
+  position: relative;
+}
+
+.status-burning::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at bottom center, 
+    rgba(255, 100, 0, 0.5) 0%,
+    transparent 60%
+  );
+  animation: burningFlicker 0.15s ease-in-out infinite;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+@keyframes burningFlicker {
+  0%, 100% { 
+    opacity: 0.5;
+    transform: scaleY(1);
+  }
+  25% { 
+    opacity: 0.8;
+    transform: scaleY(1.05);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scaleY(0.98);
+  }
+  75% { 
+    opacity: 0.9;
+    transform: scaleY(1.02);
+  }
+}
+
+/* Fire particles for burning */
+.burning-flames {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.flame-particle {
+  position: absolute;
+  width: 10px;
+  height: 20px;
+  background: linear-gradient(to top, rgba(255, 100, 0, 0.9), rgba(255, 200, 0, 0.6), transparent);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: flameRise 0.8s ease-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes flameRise {
+  0% {
+    transform: translateY(100%) scaleY(0.5) scaleX(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50%) scaleY(1.2) scaleX(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-20%) scaleY(0.3) scaleX(0.5);
+    opacity: 0;
+  }
+}
+
+/* Shielded status */
+.status-shielded {
+  position: relative;
+}
+
+.status-shielded::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 3px solid rgba(100, 200, 255, 0.6);
+  border-radius: inherit;
+  animation: shieldRotate 4s linear infinite, shieldPulse 2s ease-in-out infinite;
+  pointer-events: none;
+  box-shadow: 
+    0 0 15px rgba(100, 200, 255, 0.5),
+    inset 0 0 15px rgba(100, 200, 255, 0.3);
+}
+
+@keyframes shieldRotate {
+  from { 
+    border-radius: 50% 20% 50% 20%;
+    transform: rotate(0deg);
+  }
+  50% {
+    border-radius: 20% 50% 20% 50%;
+  }
+  to { 
+    border-radius: 50% 20% 50% 20%;
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shieldPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 15px rgba(100, 200, 255, 0.5),
+      inset 0 0 15px rgba(100, 200, 255, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(100, 200, 255, 0.8),
+      inset 0 0 25px rgba(100, 200, 255, 0.5);
+  }
+}
+
+/* Shield break effect */
+.shield-break {
+  position: absolute;
+  inset: -10px;
+  pointer-events: none;
+  animation: shieldShatter 0.5s ease-out forwards;
+}
+
+@keyframes shieldShatter {
+  0% {
+    opacity: 1;
+    border: 3px solid rgba(100, 200, 255, 0.8);
+    border-radius: inherit;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+    border-color: transparent;
+  }
+}
+
+/* Stunned status */
+.status-stunned {
+  position: relative;
+  filter: grayscale(0.5);
+}
+
+.status-stunned::after {
+  content: '💫';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  animation: stunnedStars 1s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes stunnedStars {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* Buffed status (general power up) */
+.status-buffed {
+  position: relative;
+}
+
+.status-buffed::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 2px solid rgba(76, 175, 80, 0.6);
+  border-radius: inherit;
+  box-shadow: 
+    0 0 10px rgba(76, 175, 80, 0.5),
+    inset 0 0 10px rgba(76, 175, 80, 0.2);
+  animation: buffedGlow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes buffedGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(76, 175, 80, 0.5),
+      inset 0 0 10px rgba(76, 175, 80, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(76, 175, 80, 0.8),
+      inset 0 0 15px rgba(76, 175, 80, 0.4);
+  }
+}
+
+/* Debuffed status (general power down) */
+.status-debuffed {
+  position: relative;
+  filter: brightness(0.9);
+}
+
+.status-debuffed::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 2px solid rgba(244, 67, 54, 0.6);
+  border-radius: inherit;
+  box-shadow: 
+    0 0 10px rgba(244, 67, 54, 0.5),
+    inset 0 0 10px rgba(244, 67, 54, 0.2);
+  animation: debuffedGlow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes debuffedGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(244, 67, 54, 0.5),
+      inset 0 0 10px rgba(244, 67, 54, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(244, 67, 54, 0.8),
+      inset 0 0 15px rgba(244, 67, 54, 0.4);
+  }
+}
+
+/* ============================================
+   DAMAGE NUMBER POPUP SYSTEM
+   ============================================ */
+
+.damage-number {
+  position: absolute;
+  font-size: 32px;
+  font-weight: 900;
+  z-index: 10001;
+  pointer-events: none;
+  animation: damageNumberPop 1.2s ease-out forwards;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 10px currentColor;
+}
+
+.damage-number.damage {
+  color: #ff4444;
+}
+
+.damage-number.heal {
+  color: #4caf50;
+}
+
+.damage-number.critical {
+  color: #ffd700;
+  font-size: 42px;
+  animation: criticalDamageNumberPop 1.2s ease-out forwards;
+}
+
+.damage-number.buff {
+  color: #2196f3;
+}
+
+@keyframes damageNumberPop {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+  40% {
+    transform: translateY(-35px) scale(1);
+  }
+  100% {
+    transform: translateY(-80px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes criticalDamageNumberPop {
+  0% {
+    transform: translateY(0) scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-30px) scale(1.5) rotate(5deg);
+    opacity: 1;
+  }
+  40% {
+    transform: translateY(-50px) scale(1.2) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(-100px) scale(0.8) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   ELEMENT CLASH EFFECTS
+   ============================================ */
+
+.element-clash {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.clash-burst {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 200, 100, 0.6) 30%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: clashBurst 0.5s ease-out forwards;
+}
+
+@keyframes clashBurst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.clash-sparks {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.clash-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ffd700, 0 0 16px #ff8c00;
+  animation: sparkFly 0.6s ease-out forwards;
+}
+
+@keyframes sparkFly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--spark-x, 50px), var(--spark-y, -50px)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   WIN STREAK / COMBO CELEBRATION
+   ============================================ */
+
+.win-streak-banner {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 40px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 152, 0, 0.95));
+  border-radius: 25px;
+  font-size: 28px;
+  font-weight: 900;
+  color: #1a1a2e;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 215, 0, 0.5);
+  z-index: 10001;
+  animation: winStreakAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), 
+             winStreakFade 0.5s ease-in 2.5s forwards;
+}
+
+@keyframes winStreakAppear {
+  0% {
+    transform: translateX(-50%) translateY(-100px) scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) translateY(10px) scale(1.1);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes winStreakFade {
+  to {
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}

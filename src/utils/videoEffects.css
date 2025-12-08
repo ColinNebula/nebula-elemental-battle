@@ -5,8 +5,8 @@
   position: absolute;
   pointer-events: none;
   z-index: 500;
-  border-radius: 50%;
-  overflow: hidden;
+  overflow: visible;
+  background: transparent;
 }
 
 .video-effect {
@@ -14,7 +14,9 @@
   width: 200px;
   height: 200px;
   object-fit: contain;
-  border-radius: inherit;
+  background: transparent;
+  /* Apply blend mode directly to video to make black background transparent */
+  mix-blend-mode: screen;
 }
 
 /* Fire effect specific styling */
@@ -23,7 +25,8 @@
 }
 
 .video-effect-fire .video-effect {
-  /* Transparent background with screen blend works best for fire */
+  /* Screen blend mode makes black transparent, perfect for fire effects */
+  mix-blend-mode: screen;
   background: transparent;
 }
 
@@ -31,6 +34,12 @@
 .video-effect-smoke {
   filter: brightness(0.9) contrast(1.2);
   opacity: 0.8;
+}
+
+.video-effect-smoke .video-effect {
+  /* Lighten or screen blend for smoke */
+  mix-blend-mode: lighten;
+  background: transparent;
 }
 
 /* ===== ENTRANCE/EXIT ANIMATIONS ===== */

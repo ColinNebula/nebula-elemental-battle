@@ -40,6 +40,56 @@
   box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
 }
 
+/* Turn announcement avatar styles */
+.turn-announcement-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 8px auto;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: avatarBounce 0.5s ease-out;
+}
+
+.turn-announcement-avatar.ai-avatar {
+  border-color: rgba(244, 67, 54, 0.8);
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.6);
+}
+
+.turn-announcement-avatar.player-avatar {
+  border-color: rgba(76, 175, 80, 0.8);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+}
+
+.turn-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.turn-avatar-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+@keyframes avatarBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @keyframes turnFadeIn {
   0% {
     opacity: 0;
@@ -1478,6 +1528,87 @@
 }
 
 /* ========================================
+   HAND CONTAINER - BASE DESKTOP STYLES
+======================================== */
+.hand-container {
+  position: fixed;
+  bottom: 0;
+  top: auto;
+  left: 240px;
+  right: 240px;
+  padding: 12px 25px 8px 25px;
+  z-index: 100;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  max-height: 220px;
+  pointer-events: none;
+  /* Sleek dark glass background */
+  background: linear-gradient(180deg, 
+    rgba(15, 20, 35, 0.95) 0%, 
+    rgba(25, 30, 50, 0.98) 100%);
+  border-radius: 24px 24px 0 0;
+  /* Elegant gold accent border */
+  border-top: 3px solid;
+  border-image: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 215, 0, 0.8) 20%, 
+    rgba(255, 215, 0, 1) 50%, 
+    rgba(255, 215, 0, 0.8) 80%, 
+    transparent 100%) 1;
+  border-left: 1px solid rgba(255, 215, 0, 0.3);
+  border-right: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 
+    0 -8px 32px rgba(0, 0, 0, 0.6),
+    0 -2px 12px rgba(255, 215, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -20px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  animation: slideUpHand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpHand {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.hand {
+  display: flex;
+  flex-wrap: nowrap !important;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0;
+  perspective: 1500px;
+  pointer-events: all;
+  position: relative;
+  width: 100%;
+  min-height: 150px;
+  padding: 20px 15px 12px 15px;
+  border-radius: 16px;
+  overflow: visible;
+  /* Subtle inner container */
+  background: linear-gradient(180deg, 
+    rgba(30, 35, 55, 0.6) 0%, 
+    rgba(20, 25, 40, 0.8) 100%);
+  transition: all 0.4s ease;
+  z-index: 1;
+  /* Clean border with subtle glow */
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 8px rgba(255, 215, 0, 0.05),
+    0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
    MOBILE & TABLET RESPONSIVE STYLES
 ======================================== */
 
@@ -1717,152 +1848,89 @@
     font-size: 13px;
     padding: 6px 15px;
   }
-  
-.hand-container {
-  position: fixed;
-  bottom: 0;
+
+/* Subtle accent line on hand */
+.hand::before {
+  content: '';
+  position: absolute;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 95%;
-  max-width: 900px;
-  padding: 25px 20px 20px 20px;
-  z-index: 45;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 70%, transparent 100%);
-  border-radius: 30px 30px 0 0;
-}
-
-
-
-.hand {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: -20px;
-  perspective: 1500px;
-  pointer-events: all;
-  position: relative;
-  width: 100%;
-  min-height: 200px;
-  padding: 30px 40px 25px 40px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%);
-  transition: all 0.4s ease;
-  z-index: 1; /* Lower z-index than skip button */
-  
-  /* Triple border effect - outermost */
-  outline: 3px solid rgba(255, 215, 0, 0.8);
-  outline-offset: 3px;
-  
-  /* Middle border */
-  border: 5px solid transparent;
-  background-image: 
-    linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%),
-    linear-gradient(135deg, #ffd700, #4a90e2, #9b59b6, #e74c3c, #ffd700);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  
-  /* Shadows and glow */
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(255, 215, 0, 0.5),
-    0 0 50px rgba(100, 150, 255, 0.3),
-    inset 0 0 30px rgba(255, 215, 0, 0.1);
-}
-
-/* Decorative corner diamonds */
-.hand::before {
-  content: '◆';
-  position: absolute;
-  top: -10px;
-  left: 20px;
-  font-size: 24px;
-  color: #ffd700;
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 1),
-    0 0 20px rgba(255, 215, 0, 0.8),
-    0 0 30px rgba(255, 215, 0, 0.6);
-  animation: gemPulse 2s ease-in-out infinite;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 215, 0, 0.6) 30%, 
+    rgba(255, 215, 0, 0.8) 50%, 
+    rgba(255, 215, 0, 0.6) 70%, 
+    transparent 100%);
+  border-radius: 2px;
   z-index: 10;
   pointer-events: none;
 }
 
 .hand::after {
-  content: '◆';
+  content: '';
   position: absolute;
-  bottom: -10px;
-  right: 20px;
-  font-size: 24px;
-  color: #4a90e2;
-  text-shadow: 
-    0 0 10px rgba(74, 144, 226, 1),
-    0 0 20px rgba(74, 144, 226, 0.8),
-    0 0 30px rgba(74, 144, 226, 0.6);
-  animation: gemPulse 2s ease-in-out infinite 1s;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 215, 0, 0.3) 30%, 
+    rgba(255, 215, 0, 0.5) 50%, 
+    rgba(255, 215, 0, 0.3) 70%, 
+    transparent 100%);
+  border-radius: 1px;
   z-index: 10;
   pointer-events: none;
 }
 
-@keyframes gemPulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.2) rotate(45deg);
-    opacity: 1;
-  }
-}
-
-/* Active turn - green border */
+/* Active turn - elegant green glow */
 .hand.your-turn {
-  outline: 3px solid rgba(76, 175, 80, 1);
-  outline-offset: 3px;
-  
-  background-image: 
-    linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%),
-    linear-gradient(135deg, #4caf50, #8bc34a, #cddc39, #8bc34a, #4caf50);
-  
+  border-color: rgba(76, 175, 80, 0.6);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.7),
-    0 0 40px rgba(76, 175, 80, 0.8),
-    0 0 60px rgba(76, 175, 80, 0.6),
-    0 0 80px rgba(76, 175, 80, 0.4),
-    inset 0 0 30px rgba(76, 175, 80, 0.2);
-  
-  animation: handGlowPulse 2s ease-in-out infinite;
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 0 20px rgba(76, 175, 80, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(76, 175, 80, 0.3);
+  animation: yourTurnGlow 2s ease-in-out infinite;
 }
 
-.hand.your-turn::before,
+.hand.your-turn::before {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(76, 175, 80, 0.6) 30%, 
+    rgba(76, 175, 80, 0.9) 50%, 
+    rgba(76, 175, 80, 0.6) 70%, 
+    transparent 100%);
+}
+
 .hand.your-turn::after {
-  color: #4caf50;
-  text-shadow: 
-    0 0 10px rgba(76, 175, 80, 1),
-    0 0 20px rgba(76, 175, 80, 0.8),
-    0 0 30px rgba(76, 175, 80, 0.6);
-  animation: gemPulseActive 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(76, 175, 80, 0.3) 30%, 
+    rgba(76, 175, 80, 0.5) 50%, 
+    rgba(76, 175, 80, 0.3) 70%, 
+    transparent 100%);
 }
 
-@keyframes gemPulseActive {
+@keyframes yourTurnGlow {
   0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.9;
+    box-shadow: 
+      inset 0 2px 8px rgba(0, 0, 0, 0.4),
+      inset 0 0 20px rgba(76, 175, 80, 0.1),
+      0 4px 20px rgba(0, 0, 0, 0.5),
+      0 0 25px rgba(76, 175, 80, 0.25);
   }
   50% {
-    transform: scale(1.3) rotate(90deg);
-    opacity: 1;
-  }
-}
-
-@keyframes handGlowPulse {
-  0%, 100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.15);
+    box-shadow: 
+      inset 0 2px 8px rgba(0, 0, 0, 0.4),
+      inset 0 0 25px rgba(76, 175, 80, 0.15),
+      0 4px 20px rgba(0, 0, 0, 0.5),
+      0 0 40px rgba(76, 175, 80, 0.4);
   }
 }
 
@@ -1873,53 +1941,75 @@
   width: 100%;
 }
 
-/* Fan layout for cards in hand */
+/* Fan layout for cards in hand - overlapping style for 10 cards */
 .hand .card {
   position: relative;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-origin: bottom center;
-  margin: 0 -25px;
+  margin: 0 !important;
+  margin-left: -45px !important;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
+/* First and last card margin adjustments */
+.hand .card:first-child {
+  margin-left: 0 !important;
+}
+
+/* Fan rotation for up to 10 cards */
 .hand .card:nth-child(1) { 
-  transform: rotate(-12deg) translateY(15px); 
+  transform: scale(0.75) rotate(-16deg) translateY(18px); 
   z-index: 1;
 }
 .hand .card:nth-child(2) { 
-  transform: rotate(-8deg) translateY(10px); 
+  transform: scale(0.75) rotate(-12deg) translateY(13px); 
   z-index: 2;
 }
 .hand .card:nth-child(3) { 
-  transform: rotate(-4deg) translateY(5px); 
+  transform: scale(0.75) rotate(-8deg) translateY(8px); 
   z-index: 3;
 }
 .hand .card:nth-child(4) { 
-  transform: rotate(0deg) translateY(0px); 
+  transform: scale(0.75) rotate(-5deg) translateY(5px); 
   z-index: 4;
 }
 .hand .card:nth-child(5) { 
-  transform: rotate(4deg) translateY(5px); 
+  transform: scale(0.75) rotate(-2deg) translateY(2px); 
   z-index: 5;
 }
 .hand .card:nth-child(6) { 
-  transform: rotate(8deg) translateY(10px); 
+  transform: scale(0.75) rotate(2deg) translateY(2px); 
   z-index: 6;
 }
 .hand .card:nth-child(7) { 
-  transform: rotate(12deg) translateY(15px); 
+  transform: scale(0.75) rotate(5deg) translateY(5px); 
   z-index: 7;
+}
+.hand .card:nth-child(8) { 
+  transform: scale(0.75) rotate(8deg) translateY(8px); 
+  z-index: 8;
+}
+.hand .card:nth-child(9) { 
+  transform: scale(0.75) rotate(12deg) translateY(13px); 
+  z-index: 9;
+}
+.hand .card:nth-child(10) { 
+  transform: scale(0.75) rotate(16deg) translateY(18px); 
+  z-index: 10;
 }
 
 /* Enhanced hover for cards in hand */
 .hand .card.playable:hover {
-  transform: translateY(-70px) scale(1.3) rotate(0deg) !important;
+  transform: translateY(-50px) scale(1.15) rotate(0deg) !important;
   z-index: 100 !important;
-  margin: 0 20px;
+  margin-left: 15px !important;
+  margin-right: 15px !important;
   cursor: pointer;
-  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.95),
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.95),
+              0 0 40px var(--element-color, currentColor),
               0 0 60px var(--element-color, currentColor),
-              0 0 100px var(--element-color, currentColor),
-              inset 0 2px 25px rgba(255, 255, 255, 0.4);
+              inset 0 2px 15px rgba(255, 255, 255, 0.4);
   filter: brightness(1.3) saturate(1.5);
 }
 
@@ -1982,12 +2072,15 @@
 }
 
 .hand .card:nth-child(1) { animation-delay: 0s; }
-.hand .card:nth-child(2) { animation-delay: 0.05s; }
-.hand .card:nth-child(3) { animation-delay: 0.1s; }
-.hand .card:nth-child(4) { animation-delay: 0.15s; }
-.hand .card:nth-child(5) { animation-delay: 0.2s; }
-.hand .card:nth-child(6) { animation-delay: 0.25s; }
-.hand .card:nth-child(7) { animation-delay: 0.3s; }
+.hand .card:nth-child(2) { animation-delay: 0.04s; }
+.hand .card:nth-child(3) { animation-delay: 0.08s; }
+.hand .card:nth-child(4) { animation-delay: 0.12s; }
+.hand .card:nth-child(5) { animation-delay: 0.16s; }
+.hand .card:nth-child(6) { animation-delay: 0.20s; }
+.hand .card:nth-child(7) { animation-delay: 0.24s; }
+.hand .card:nth-child(8) { animation-delay: 0.28s; }
+.hand .card:nth-child(9) { animation-delay: 0.32s; }
+.hand .card:nth-child(10) { animation-delay: 0.36s; }
 
 /* Card sorting controls */
 .hand-controls {
@@ -2027,15 +2120,20 @@
 .sort-button span {
   margin-right: 5px;
 }
+}
 
 /* End of first mobile (768px) media query - hand adjustments moved to consolidated block */
   
+/* Tablet hand adjustments */
+@media (max-width: 768px) {
   .hand-container {
+    bottom: 0 !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    width: 95%;
-    padding: 10px 8px 8px 8px;
+    width: 100%;
+    padding: 10px 5px 8px 5px;
   }
   
   .hand-container .hand-label {
@@ -2055,11 +2153,12 @@
   }
   
   .hand {
-    min-height: 130px;
-    gap: -15px;
-    outline: 3px solid rgba(255, 215, 0, 0.8) !important;
-    outline-offset: 3px !important;
-    border: 5px solid transparent !important;
+    min-height: 110px;
+    padding: 12px 5px 8px 5px;
+    flex-wrap: nowrap !important;
+    outline: 2px solid rgba(255, 215, 0, 0.8) !important;
+    outline-offset: 2px !important;
+    border: 4px solid transparent !important;
     background-image: 
       linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%),
       linear-gradient(135deg, #ffd700, #4a90e2, #9b59b6, #e74c3c, #ffd700) !important;
@@ -2068,20 +2167,27 @@
   }
   
   .hand .card {
-    margin: 0 -18px;
+    margin: 0 !important;
+    margin-left: -30px !important;
   }
   
-  .hand .card:nth-child(1) { transform: rotate(-10deg) translateY(12px); }
-  .hand .card:nth-child(2) { transform: rotate(-6deg) translateY(8px); }
-  .hand .card:nth-child(3) { transform: rotate(-3deg) translateY(4px); }
-  .hand .card:nth-child(4) { transform: rotate(0deg) translateY(0px); }
-  .hand .card:nth-child(5) { transform: rotate(3deg) translateY(4px); }
-  .hand .card:nth-child(6) { transform: rotate(6deg) translateY(8px); }
-  .hand .card:nth-child(7) { transform: rotate(10deg) translateY(12px); }
+  .hand .card:first-child { margin-left: 0 !important; }
+  
+  .hand .card:nth-child(1) { transform: scale(0.68) rotate(-15deg) translateY(16px); }
+  .hand .card:nth-child(2) { transform: scale(0.68) rotate(-11deg) translateY(11px); }
+  .hand .card:nth-child(3) { transform: scale(0.68) rotate(-8deg) translateY(7px); }
+  .hand .card:nth-child(4) { transform: scale(0.68) rotate(-4deg) translateY(4px); }
+  .hand .card:nth-child(5) { transform: scale(0.68) rotate(-1deg) translateY(1px); }
+  .hand .card:nth-child(6) { transform: scale(0.68) rotate(1deg) translateY(1px); }
+  .hand .card:nth-child(7) { transform: scale(0.68) rotate(4deg) translateY(4px); }
+  .hand .card:nth-child(8) { transform: scale(0.68) rotate(8deg) translateY(7px); }
+  .hand .card:nth-child(9) { transform: scale(0.68) rotate(11deg) translateY(11px); }
+  .hand .card:nth-child(10) { transform: scale(0.68) rotate(15deg) translateY(16px); }
   
   .hand .card.playable:hover {
-    transform: translateY(-40px) scale(1.15) rotate(0deg) !important;
-    margin: 0 10px;
+    transform: translateY(-45px) scale(1.05) rotate(0deg) !important;
+    margin-left: 10px !important;
+    margin-right: 10px !important;
   }
   
   .hand-controls {
@@ -2100,14 +2206,17 @@
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    padding: 8px 5px 5px 5px;
+    padding: 6px 2px 4px 2px;
+    width: 100%;
   }
   
   .hand {
-    min-height: 110px;
-    outline: 3px solid rgba(255, 215, 0, 0.8) !important;
-    outline-offset: 2px !important;
-    border: 4px solid transparent !important;
+    min-height: 85px;
+    padding: 8px 3px 6px 3px;
+    flex-wrap: nowrap !important;
+    outline: 2px solid rgba(255, 215, 0, 0.8) !important;
+    outline-offset: 1px !important;
+    border: 2px solid transparent !important;
     background-image: 
       linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(20, 20, 40, 0.6) 100%),
       linear-gradient(135deg, #ffd700, #4a90e2, #9b59b6, #e74c3c, #ffd700) !important;
@@ -2116,12 +2225,27 @@
   }
   
   .hand .card {
-    margin: 0 -15px;
+    margin: 0 !important;
+    margin-left: -28px !important;
   }
   
+  .hand .card:first-child { margin-left: 0 !important; }
+  
+  .hand .card:nth-child(1) { transform: scale(0.55) rotate(-14deg) translateY(14px); }
+  .hand .card:nth-child(2) { transform: scale(0.55) rotate(-10deg) translateY(9px); }
+  .hand .card:nth-child(3) { transform: scale(0.55) rotate(-7deg) translateY(5px); }
+  .hand .card:nth-child(4) { transform: scale(0.55) rotate(-4deg) translateY(3px); }
+  .hand .card:nth-child(5) { transform: scale(0.55) rotate(-1deg) translateY(1px); }
+  .hand .card:nth-child(6) { transform: scale(0.55) rotate(1deg) translateY(1px); }
+  .hand .card:nth-child(7) { transform: scale(0.55) rotate(4deg) translateY(3px); }
+  .hand .card:nth-child(8) { transform: scale(0.55) rotate(7deg) translateY(5px); }
+  .hand .card:nth-child(9) { transform: scale(0.55) rotate(10deg) translateY(9px); }
+  .hand .card:nth-child(10) { transform: scale(0.55) rotate(14deg) translateY(14px); }
+  
   .hand .card.playable:hover {
-    transform: translateY(-30px) scale(1.1) rotate(0deg) !important;
-    margin: 0 8px;
+    transform: translateY(-35px) scale(0.95) rotate(0deg) !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
   }
   
   /* Toggle buttons already styled in previous media query - ensuring consistency */
@@ -2141,6 +2265,16 @@
     font-size: 16px;
     padding: 6px 12px;
     border-width: 3px;
+  }
+  
+  .turn-announcement-avatar {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 6px;
+  }
+  
+  .turn-avatar-icon {
+    font-size: 24px;
   }
   
   .timer-display {
@@ -2332,6 +2466,7 @@
   /* Optimize hand position */
   .hand-container {
     bottom: 5px !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -2345,11 +2480,15 @@
     min-height: 90px;
     max-height: 100px;
     border-width: 2px;
+    flex-wrap: nowrap !important;
   }
   
   .hand .card {
-    margin: 0 -20px;
+    margin: 0 !important;
+    margin-left: -18px !important;
   }
+  
+  .hand .card:first-child { margin-left: 0 !important; }
   
   .hand-label {
     font-size: 10px !important;
@@ -2497,6 +2636,7 @@
   .hand {
     min-height: 80px;
     max-height: 85px;
+    flex-wrap: nowrap !important;
   }
   
   .hand-container {
@@ -2698,6 +2838,8 @@
   }
   
   .hand-container {
+    bottom: 0 !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -2724,12 +2866,16 @@
   .hand {
     min-height: 130px;
     gap: -15px;
+    flex-wrap: nowrap !important;
   }
   
   .hand .card {
-    margin: 0 -18px;
+    margin: 0 !important;
+    margin-left: -22px !important;
   }
-  
+
+  .hand .card:first-child { margin-left: 0 !important; }
+
   .hand .card:nth-child(1) { transform: rotate(-10deg) translateY(12px); }
   .hand .card:nth-child(2) { transform: rotate(-6deg) translateY(8px); }
   .hand .card:nth-child(3) { transform: rotate(-3deg) translateY(4px); }
@@ -4928,42 +5074,18 @@
 .players-container {
   display: none;
 }
-.hand-container {
-  position: fixed;
-  bottom: 0;
-  left: 280px;
-  right: 280px;
-  background: linear-gradient(180deg, 
-    rgba(255, 243, 224, 0.98) 0%, 
-    rgba(255, 235, 210, 0.98) 100%);
-  padding: 8px 20px;
-  border-radius: 20px 20px 0 0;
-  border-top: 4px solid #ff9800;
-  border-left: 2px solid rgba(255, 152, 0, 0.5);
-  border-right: 2px solid rgba(255, 152, 0, 0.5);
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.5),
-              inset 0 2px 4px rgba(255, 255, 255, 0.3),
-              0 0 30px rgba(255, 152, 0, 0.3);
-  z-index: 50;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  max-height: 200px;
-  backdrop-filter: blur(8px);
-  animation: slideUpHand 0.5s ease-out;
-}
 
-@keyframes slideUpHand {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+/* Themed hand styling - matches sleek dark container */
+.hand.themed {
+  background: linear-gradient(180deg, 
+    rgba(30, 35, 55, 0.6) 0%, 
+    rgba(20, 25, 40, 0.8) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 8px rgba(255, 215, 0, 0.05),
+    0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
 }
 
 .chosen-cards-area {
@@ -5230,6 +5352,19 @@
   z-index: 10;
   position: relative;
   animation: arenaGlow 3s ease-in-out infinite;
+}
+
+/* Arena Title Wrapper with Timer */
+.arena-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.arena-turn-timer {
+  margin-bottom: 10px;
 }
 
 /* Strategic Systems Display */
@@ -6115,6 +6250,8 @@
   
   /* Adjust hand container for notch */
   .hand-container {
+    bottom: 0 !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -6126,12 +6263,16 @@
   .hand {
     min-height: 140px;
     padding: 15px 10px 10px 10px;
+    flex-wrap: nowrap !important;
   }
   
   /* Optimize card sizing */
   .hand .card {
-    margin: 0 -20px;
+    margin: 0 !important;
+    margin-left: -22px !important;
   }
+
+  .hand .card:first-child { margin-left: 0 !important; }
   
   .card {
     width: 80px !important;
@@ -6190,6 +6331,8 @@
   }
   
   .hand-container {
+    bottom: 0 !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -6201,11 +6344,15 @@
   .hand {
     min-height: 120px;
     padding: 12px 8px 8px 8px;
+    flex-wrap: nowrap !important;
   }
   
   .hand .card {
-    margin: 0 -22px;
+    margin: 0 !important;
+    margin-left: -22px !important;
   }
+
+  .hand .card:first-child { margin-left: 0 !important; }
   
   .card {
     width: 70px !important;
@@ -6242,6 +6389,8 @@
   }
   
   .hand-container {
+    bottom: 0 !important;
+    top: auto !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -6252,6 +6401,7 @@
   .hand {
     min-height: 100px;
     padding: 8px;
+    flex-wrap: nowrap !important;
   }
   
   .card {
@@ -6260,8 +6410,11 @@
   }
   
   .hand .card {
-    margin: 0 -18px;
+    margin: 0 !important;
+    margin-left: -20px !important;
   }
+
+  .hand .card:first-child { margin-left: 0 !important; }
   
   .center-battle-area {
     top: 40%;
@@ -7940,7 +8093,7 @@
   right: 0;
   bottom: 0;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
-  z-index: 9999;
+  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -8,7 +8,8 @@ const TurnTimer = ({
   isVisible = true,
   onTimeWarning,
   onTimeCritical,
-  onTimeNormal 
+  onTimeNormal,
+  inline = false
 }) => {
   const [warningTriggered, setWarningTriggered] = useState(false);
   const [criticalTriggered, setCriticalTriggered] = useState(false);
@@ -92,7 +93,7 @@ const TurnTimer = ({
   if (!isVisible) return null;
 
   return (
-    <div className={`turn-timer ${urgencyLevel} ${!isActive ? 'paused' : ''}`}>
+    <div className={`turn-timer ${urgencyLevel} ${!isActive ? 'paused' : ''} ${inline ? 'inline-timer' : ''}`}>
       {/* Burning rope container */}
       <div className="rope-container">
         {/* Rope background (burned) */}

@@ -145,8 +145,8 @@ export const createVideoEffect = (effectType, targetElement, container, options 
     transform: translate(-50%, -50%) scale(${scale});
     pointer-events: none;
     z-index: 500;
-    mix-blend-mode: ${blendMode};
     opacity: ${opacity};
+    background: transparent;
   `;
 
   // Create video element
@@ -159,11 +159,13 @@ export const createVideoEffect = (effectType, targetElement, container, options 
   video.playbackRate = playbackRate;
   video.autoplay = true;
   
-  // Style the video
+  // Style the video - mix-blend-mode: screen makes black transparent
   video.style.cssText = `
     width: 200px;
     height: 200px;
     object-fit: contain;
+    background: transparent;
+    mix-blend-mode: ${blendMode};
   `;
 
   videoContainer.appendChild(video);

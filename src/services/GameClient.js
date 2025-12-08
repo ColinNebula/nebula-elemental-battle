@@ -416,19 +416,19 @@ class GameClient {
           startRoom.cardSelectionPhase = true;
           startRoom.gameStarted = false;
           
-          // Deal 10 cards to each player for selection
+          // Deal 15 cards to each player for selection (pick best 10)
           startRoom.players.forEach(player => {
-            player.hand = this.generateAdvancedCards(10);
+            player.hand = this.generateAdvancedCards(15);
             player.deck = [];
-            player.cardCount = 10;
+            player.cardCount = 15;
             player.selectedHand = false;
             
-            // AI auto-selects first 5 cards immediately
+            // AI auto-selects first 10 cards immediately
             if (player.isAI) {
-              const selectedIndices = [0, 1, 2, 3, 4];
-              player.hand = player.hand.slice(0, 5);
-              player.deck = this.generateAdvancedCards(10); // 10 cards in AI reserve deck
-              player.cardCount = player.hand.length + player.deck.length; // Correctly count hand + deck
+              const selectedIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+              player.hand = player.hand.slice(0, 10);
+              player.deck = []; // No reserve deck
+              player.cardCount = player.hand.length;
               player.selectedHand = true;
             }
             
@@ -452,15 +452,12 @@ class GameClient {
           if (player && !player.selectedHand) {
             const selectedIndices = cardIndices.map(idx => parseInt(idx));
             
-            // Move selected cards to hand, rest to deck
+            // Move selected cards to hand (10 cards), discard the rest
             const selectedCards = selectedIndices.map(idx => player.hand[idx]);
-            const remainingCards = player.hand.filter((_, idx) => !selectedIndices.includes(idx));
             
             player.hand = selectedCards;
-            player.deck = remainingCards;
-            // Generate additional reserve deck cards
-            player.deck.push(...this.generateAdvancedCards(5)); // Add 5 more cards to reserve
-            player.cardCount = player.hand.length + player.deck.length; // Correctly count hand + deck
+            player.deck = []; // No reserve deck - all 10 cards are in hand
+            player.cardCount = player.hand.length;
             player.selectedHand = true;
             player.playedCards = [];
             player.graveyard = [];
@@ -1810,8 +1807,15 @@ class GameClient {
           roomId: forfeitRoomId, 
           playerId: forfeitPlayerId,
           roomExists: !!forfeitRoom,
-          gameStarted: forfeitRoom?.gameStarted
+          gameStarted: forfeitRoom?.gameStarted,
+          gameOver: forfeitRoom?.gameOver
         });
+        
+        // Early exit if game is already over
+        if (forfeitRoom && forfeitRoom.gameOver) {
+          console.log('🛑 Game already over - ignoring FORFEIT_TURN');
+          return { type: 'GAME_OVER', success: true, winner: forfeitRoom.winner };
+        }
         
         if (forfeitRoom && forfeitRoom.gameStarted) {
           const forfeitPlayer = forfeitRoom.players.find(p => p.id === forfeitPlayerId);
@@ -1820,20 +1824,37 @@ class GameClient {
           console.log('🔄 FORFEIT_TURN state:', {
             forfeitPlayerExists: !!forfeitPlayer,
             forfeitPlayerActive: forfeitPlayer?.active,
+            forfeitPlayerHandSize: forfeitPlayer?.hand?.length,
+            forfeitPlayerDeckSize: forfeitPlayer?.deck?.length,
             opponentExists: !!opponent,
-            opponentIsAI: opponent?.isAI
+            opponentIsAI: opponent?.isAI,
+            opponentHandSize: opponent?.hand?.length,
+            opponentDeckSize: opponent?.deck?.length,
+            opponentOutOfCards: opponent?.outOfCards,
+            gameOver: forfeitRoom?.gameOver
           });
+          
+          // Early exit if game is already over (race condition prevention)
+          if (forfeitRoom.gameOver) {
+            console.log('🛑 Game already over - ignoring FORFEIT_TURN');
+            return { type: 'GAME_OVER', success: true, winner: forfeitRoom.winner };
+          }
           
           // Check immediately if both players are out of cards - end game right away
           if (forfeitPlayer && opponent) {
             const playerCompletelyOut = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
                                        (!forfeitPlayer.deck || forfeitPlayer.deck.length === 0);
-            const opponentCompletelyOut = (!opponent.hand || opponent.hand.length === 0) && 
-                                         (!opponent.deck || opponent.deck.length === 0);
+            const opponentCompletelyOut = opponent.outOfCards || 
+                                         ((!opponent.hand || opponent.hand.length === 0) && 
+                                          (!opponent.deck || opponent.deck.length === 0));
+            
+            console.log('🔍 Checking if both out of cards:', { playerCompletelyOut, opponentCompletelyOut });
             
             if (playerCompletelyOut && opponentCompletelyOut) {
               console.log('🏁 Both players completely out of cards on forfeit - ending game immediately');
               forfeitRoom.gameOver = true;
+              forfeitPlayer.active = false;
+              opponent.active = false;
               
               const playerTotalScore = forfeitPlayer.score + 
                 (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
@@ -1864,7 +1885,12 @@ class GameClient {
             forfeitPlayer.active = false;
             forfeitPlayer.chosenCard = null;
             
-            if (opponent) {
+            // Check if opponent has cards before activating them
+            const opponentHasCards = opponent && 
+                                    ((opponent.hand && opponent.hand.length > 0) || 
+                                     (opponent.deck && opponent.deck.length > 0));
+            
+            if (opponent && opponentHasCards) {
               opponent.active = true;
               opponent.chosenCard = null;
               console.log('🔄 Switched to opponent:', {
@@ -1872,8 +1898,41 @@ class GameClient {
                 opponentName: opponent.name,
                 isAI: opponent.isAI,
                 handSize: opponent.hand?.length,
+                deckSize: opponent.deck?.length,
                 active: opponent.active
               });
+            } else if (opponent) {
+              // Opponent has no cards - mark them as out and don't activate
+              console.log('🏳️ Opponent has no cards - marking as out');
+              opponent.active = false;
+              opponent.outOfCards = true;
+              
+              // Check if player is also out - this should have been caught above, but safety check
+              const playerHasCards = (forfeitPlayer.hand && forfeitPlayer.hand.length > 0) ||
+                                    (forfeitPlayer.deck && forfeitPlayer.deck.length > 0);
+              if (!playerHasCards) {
+                console.log('🏁 Both players out of cards - ending game (safety check)');
+                forfeitRoom.gameOver = true;
+                
+                const playerTotalScore = forfeitPlayer.score + 
+                  (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                const opponentTotalScore = opponent.score + 
+                  (opponent.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
+                
+                if (playerTotalScore > opponentTotalScore) {
+                  forfeitRoom.winner = forfeitPlayer.name;
+                } else if (opponentTotalScore > playerTotalScore) {
+                  forfeitRoom.winner = opponent.name;
+                } else {
+                  forfeitRoom.winner = 'Tie';
+                }
+                
+                this.notifyListeners('GAME_UPDATE', forfeitRoom);
+                return { type: 'GAME_OVER', success: true, winner: forfeitRoom.winner };
+              } else {
+                // Player still has cards - let them continue
+                forfeitPlayer.active = true;
+              }
             }
             
             forfeitRoom.battlePhase = false;
@@ -1918,6 +1977,8 @@ class GameClient {
                   if (playerOutAfterAI && aiOutAfterPlay) {
                     console.log('🏁 Both players out of cards after AI turn - ending game');
                     forfeitRoom.gameOver = true;
+                    forfeitPlayer.active = false; // Don't give player another turn - game is over
+                    opponent.active = false;
                     
                     const playerFinalScore = forfeitPlayer.score + 
                       (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
@@ -1975,6 +2036,8 @@ class GameClient {
                     if (playerOutAfterAIDraw && aiOutAfterDraw) {
                       console.log('🏁 Both players out of cards after AI draw+play - ending game');
                       forfeitRoom.gameOver = true;
+                      forfeitPlayer.active = false; // Don't give player another turn - game is over
+                      opponent.active = false;
                       
                       const playerScore2 = forfeitPlayer.score + 
                         (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
@@ -1995,11 +2058,8 @@ class GameClient {
                   }
                 }, 500);
               } else {
-                // AI has no cards at all - skip AI turn and go back to player
-                console.log('⏭️ AI has no cards - skipping AI turn');
-                opponent.active = false;
-                forfeitPlayer.active = true;
-                forfeitRoom.currentRound++;
+                // AI has no cards at all - skip AI turn and check for game over
+                console.log('⏭️ AI has no cards - checking for game end');
                 
                 // Check if both players are out of cards
                 const playerOutOfCards = (!forfeitPlayer.hand || forfeitPlayer.hand.length === 0) && 
@@ -2011,6 +2071,8 @@ class GameClient {
                   // Both players out of cards - end game
                   console.log('🏁 Both players out of cards - ending game');
                   forfeitRoom.gameOver = true;
+                  forfeitPlayer.active = false; // Don't give player another turn - game is over
+                  opponent.active = false;
                   
                   const playerScore = forfeitPlayer.score + 
                     (forfeitPlayer.playedCards?.reduce((sum, c) => sum + (c.modifiedStrength || c.strength || 0), 0) || 0);
@@ -2024,6 +2086,16 @@ class GameClient {
                   } else {
                     forfeitRoom.winner = 'Tie';
                   }
+                } else if (!playerOutOfCards) {
+                  // Player still has cards - let player continue
+                  opponent.active = false;
+                  forfeitPlayer.active = true;
+                  forfeitRoom.currentRound++;
+                } else {
+                  // Only AI is out - this shouldn't happen in forfeit flow, but handle it
+                  opponent.active = false;
+                  opponent.outOfCards = true;
+                  forfeitPlayer.active = true;
                 }
                 
                 this.notifyListeners('GAME_UPDATE', forfeitRoom);

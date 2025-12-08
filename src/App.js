@@ -18,6 +18,7 @@ import mobileScreenManager from './utils/mobileScreenManager';
 import soundManager from './utils/sounds';
 import userPreferences from './utils/userPreferences';
 import gameProgress from './utils/gameProgress';
+import { cleanupVisualEffects } from './utils/VisualEffectsManager';
 
 // Lazy load heavy components for code splitting
 const StoryMode = lazy(() => import('./components/StoryMode'));
@@ -41,6 +42,7 @@ const Inventory = lazy(() => import('./components/Inventory'));
 const MatchHistory = lazy(() => import('./components/MatchHistory'));
 const DailyQuests = lazy(() => import('./components/DailyQuests'));
 const EmotePanel = lazy(() => import('./components/EmotePanel'));
+const DeckManager = lazy(() => import('./components/DeckManager'));
 
 function App() {
   // Donation banner state
@@ -57,8 +59,38 @@ function App() {
     mobileScreenManager.init();
     soundManager.init();
     
+    // Save settings before page unload (tab close, refresh, navigation)
+    const handleBeforeUnload = () => {
+      try {
+        // Get current settings from localStorage backup or state
+        const currentSettings = localStorage.getItem('settingsBackup');
+        if (currentSettings) {
+          // Re-save to ensure persistence
+          const parsed = JSON.parse(currentSettings);
+          secureStorage.setItem('gameSettings', parsed);
+          userPreferences.updatePreferences(parsed);
+        }
+        console.log('💾 Settings persisted on page unload');
+      } catch (e) {
+        console.warn('Could not persist settings on unload:', e);
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Also save on visibility change (mobile browsers may not fire beforeunload)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        handleBeforeUnload();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     return () => {
       mobileScreenManager.destroy();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -229,6 +261,7 @@ function App() {
   const [showInventory, setShowInventory] = useState(false);
   const [showMatchHistory, setShowMatchHistory] = useState(false);
   const [showDailyQuests, setShowDailyQuests] = useState(false);
+  const [showDeckManager, setShowDeckManager] = useState(false);
   const [showEmotePanel, setShowEmotePanel] = useState(false);
   const [showLobby, setShowLobby] = useState(false);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
@@ -310,36 +343,77 @@ function App() {
     return saved ? PlayerInventory.fromJSON(saved) : createDefaultInventory();
   });
   const [settings, setSettings] = useState(() => {
-    // Load from userPreferences system first
+    // Load from userPreferences system first (primary storage)
     const prefs = userPreferences.getUserPreferences();
     const accessibilitySettings = initializeAccessibility();
     
-    // Merge preferences with accessibility settings
-    const baseSettings = {
-      soundEnabled: prefs.soundEnabled,
-      musicEnabled: prefs.musicEnabled,
-      animationsEnabled: prefs.animationsEnabled,
-      timerEnabled: prefs.timerEnabled,
-      keyboardEnabled: prefs.keyboardEnabled,
-      colorblindMode: prefs.colorblindMode || accessibilitySettings.colorblindMode,
-      highContrast: prefs.highContrast !== undefined ? prefs.highContrast : accessibilitySettings.highContrast,
-      textSize: prefs.textSize || accessibilitySettings.textSize,
-      showElementIcons: prefs.showElementIcons !== undefined ? prefs.showElementIcons : accessibilitySettings.showElementIcons,
-      difficulty: prefs.difficulty,
-      gameSpeed: prefs.gameSpeed,
-      autoSortHand: prefs.autoSortHand,
-      particleEffects: prefs.particleEffects,
-      screenShake: prefs.screenShake,
-      showStats: prefs.showStats,
-      showTooltips: prefs.showTooltips,
-      confirmActions: prefs.confirmActions,
-      autoEndTurn: prefs.autoEndTurn
+    // Also check localStorage backup for any settings that might be missing
+    let backupSettings = {};
+    try {
+      const backup = localStorage.getItem('settingsBackup');
+      if (backup) {
+        backupSettings = JSON.parse(backup);
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    
+    // Also check legacy gameSettings from secureStorage
+    const legacySettings = secureStorage.getItem('gameSettings') || {};
+    
+    // Merge all sources: defaults < legacy < backup < userPreferences
+    const mergedSettings = {
+      // Defaults
+      soundEnabled: true,
+      musicEnabled: true,
+      animationsEnabled: true,
+      timerEnabled: true,
+      keyboardEnabled: true,
+      colorblindMode: 'none',
+      highContrast: false,
+      showElementIcons: true,
+      textSize: 'medium',
+      difficulty: 'normal',
+      gameSpeed: 'normal',
+      autoSortHand: true,
+      particleEffects: true,
+      screenShake: true,
+      showStats: true,
+      showTooltips: true,
+      confirmActions: false,
+      autoEndTurn: false,
+      // Override with legacy settings
+      ...legacySettings,
+      // Override with backup settings
+      ...backupSettings,
+      // Override with userPreferences (highest priority)
+      soundEnabled: prefs.soundEnabled ?? backupSettings.soundEnabled ?? legacySettings.soundEnabled ?? true,
+      musicEnabled: prefs.musicEnabled ?? backupSettings.musicEnabled ?? legacySettings.musicEnabled ?? true,
+      animationsEnabled: prefs.animationsEnabled ?? backupSettings.animationsEnabled ?? legacySettings.animationsEnabled ?? true,
+      timerEnabled: prefs.timerEnabled ?? backupSettings.timerEnabled ?? legacySettings.timerEnabled ?? true,
+      keyboardEnabled: prefs.keyboardEnabled ?? backupSettings.keyboardEnabled ?? legacySettings.keyboardEnabled ?? true,
+      colorblindMode: prefs.colorblindMode || backupSettings.colorblindMode || legacySettings.colorblindMode || accessibilitySettings.colorblindMode || 'none',
+      highContrast: prefs.highContrast ?? backupSettings.highContrast ?? legacySettings.highContrast ?? accessibilitySettings.highContrast ?? false,
+      textSize: prefs.textSize || backupSettings.textSize || legacySettings.textSize || accessibilitySettings.textSize || 'medium',
+      showElementIcons: prefs.showElementIcons ?? backupSettings.showElementIcons ?? legacySettings.showElementIcons ?? accessibilitySettings.showElementIcons ?? true,
+      difficulty: prefs.difficulty || backupSettings.difficulty || legacySettings.difficulty || 'normal',
+      gameSpeed: prefs.gameSpeed || backupSettings.gameSpeed || legacySettings.gameSpeed || 'normal',
+      autoSortHand: prefs.autoSortHand ?? backupSettings.autoSortHand ?? legacySettings.autoSortHand ?? true,
+      particleEffects: prefs.particleEffects ?? backupSettings.particleEffects ?? legacySettings.particleEffects ?? true,
+      screenShake: prefs.screenShake ?? backupSettings.screenShake ?? legacySettings.screenShake ?? true,
+      showStats: prefs.showStats ?? backupSettings.showStats ?? legacySettings.showStats ?? true,
+      showTooltips: prefs.showTooltips ?? backupSettings.showTooltips ?? legacySettings.showTooltips ?? true,
+      confirmActions: prefs.confirmActions ?? backupSettings.confirmActions ?? legacySettings.confirmActions ?? false,
+      autoEndTurn: prefs.autoEndTurn ?? backupSettings.autoEndTurn ?? legacySettings.autoEndTurn ?? false
     };
     
     // Remove strategicMode from initial settings - it should only be set when explicitly choosing Strategic Mode
-    delete baseSettings.strategicMode;
+    delete mergedSettings.strategicMode;
+    delete mergedSettings.timestamp; // Remove backup timestamp
     
-    return baseSettings;
+    console.log('🎮 [SETTINGS] Loaded settings from storage:', mergedSettings);
+    
+    return mergedSettings;
   });
 
   // Initialize themes on app startup
@@ -431,10 +505,48 @@ function App() {
     }
   }, [showLobby, showCharacterSelection, gameState?.cardSelectionPhase, gameState?.gameStarted, showMainMenu, inGame, settings.musicEnabled]);
 
-  // Handler for settings changes that also persists to localStorage
+  // Handler for settings changes that also persists to localStorage and userPreferences
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings);
+    
+    // Save to secureStorage for backwards compatibility
     secureStorage.setItem('gameSettings', newSettings);
+    
+    // IMPORTANT: Also save to userPreferences for persistent storage
+    userPreferences.updatePreferences({
+      soundEnabled: newSettings.soundEnabled,
+      musicEnabled: newSettings.musicEnabled,
+      animationsEnabled: newSettings.animationsEnabled,
+      timerEnabled: newSettings.timerEnabled,
+      keyboardEnabled: newSettings.keyboardEnabled,
+      colorblindMode: newSettings.colorblindMode,
+      highContrast: newSettings.highContrast,
+      showElementIcons: newSettings.showElementIcons,
+      textSize: newSettings.textSize,
+      difficulty: newSettings.difficulty,
+      gameSpeed: newSettings.gameSpeed,
+      autoSortHand: newSettings.autoSortHand,
+      particleEffects: newSettings.particleEffects,
+      screenShake: newSettings.screenShake,
+      showStats: newSettings.showStats,
+      showTooltips: newSettings.showTooltips,
+      confirmActions: newSettings.confirmActions,
+      autoEndTurn: newSettings.autoEndTurn,
+      soundVolume: newSettings.soundVolume,
+      musicVolume: newSettings.musicVolume
+    });
+    
+    // Also save to localStorage directly as backup
+    try {
+      localStorage.setItem('settingsBackup', JSON.stringify({
+        ...newSettings,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.warn('[SETTINGS] Could not save backup to localStorage:', e);
+    }
+    
+    console.log('✅ [SETTINGS] Settings saved to all storage locations');
   };
 
   // Persist inventory changes to localStorage
@@ -880,6 +992,25 @@ function App() {
   };
 
   const handleQuit = () => {
+    // Clean up all visual effects from the previous game
+    try {
+      cleanupVisualEffects();
+      console.log('🧹 Cleaned up visual effects on quit');
+    } catch (e) {
+      console.warn('Could not cleanup visual effects:', e);
+    }
+    
+    // Save current settings before quitting to ensure persistence
+    try {
+      // Save to all storage locations for maximum persistence
+      secureStorage.setItem('gameSettings', settings);
+      userPreferences.updatePreferences(settings);
+      localStorage.setItem('settingsBackup', JSON.stringify(settings));
+      console.log('💾 Settings saved on quit to menu');
+    } catch (e) {
+      console.warn('Could not save settings on quit:', e);
+    }
+    
     // Return to main menu
     setInGame(false);
     setShowStoryMode(false);
@@ -909,6 +1040,55 @@ function App() {
     } catch (e) {
       console.log('Could not restore avatar/name:', e);
     }
+  };
+
+  // Handler for AI ultimate ability damage to player cards
+  const handleApplyUltimateDamage = (damageAmount, targetPlayerId) => {
+    if (!gameState?.players) return;
+    
+    setGameState(prevState => {
+      if (!prevState?.players) return prevState;
+      
+      const updatedPlayers = prevState.players.map(player => {
+        // Apply damage to the target player's cards (usually the human player)
+        if (player.id === targetPlayerId || (!targetPlayerId && !player.isAI)) {
+          const updatedPlayedCards = (player.playedCards || []).map(card => {
+            if (!card) return card;
+            const oldStrength = card.modifiedStrength || card.strength || 0;
+            const newStrength = Math.max(1, oldStrength - damageAmount);
+            return {
+              ...card,
+              modifiedStrength: newStrength,
+              strength: newStrength
+            };
+          });
+          
+          const updatedHand = (player.hand || []).map(card => {
+            if (!card) return card;
+            const oldStrength = card.modifiedStrength || card.strength || 0;
+            const newStrength = Math.max(1, oldStrength - damageAmount);
+            return {
+              ...card,
+              modifiedStrength: newStrength,
+              strength: newStrength
+            };
+          });
+          
+          return {
+            ...player,
+            playedCards: updatedPlayedCards,
+            hand: updatedHand
+          };
+        }
+        return player;
+      });
+      
+      console.log('⚡ Applied ultimate damage to player cards:', damageAmount);
+      return {
+        ...prevState,
+        players: updatedPlayers
+      };
+    });
   };
 
   const handleSinglePlayer = async (playerName, aiPersonality = 'CHAOS', strategicMode = null) => {
@@ -1529,6 +1709,19 @@ function App() {
         </Suspense>
       )}
 
+      {/* Deck Manager Modal */}
+      {showDeckManager && (
+        <Suspense fallback={<LoadingFallback />}>
+          <DeckManager 
+            onClose={() => setShowDeckManager(false)}
+            onSelectDeck={(deck) => {
+              console.log('🎴 Selected deck:', deck.name);
+              // Deck is saved to localStorage by DeckManager
+            }}
+          />
+        </Suspense>
+      )}
+
       {/* Emote Panel - visible during games */}
       {inGame && showEmotePanel && (
         <Suspense fallback={null}>
@@ -1621,6 +1814,7 @@ function App() {
           onShowInventory={() => setShowInventory(true)}
           onShowMatchHistory={() => setShowMatchHistory(true)}
           onShowDailyQuests={() => setShowDailyQuests(true)}
+          onShowDeckManager={() => setShowDeckManager(true)}
           onShowSettings={() => setShowSettings(true)}
           onQuit={handleQuit}
           playerAvatar={selectedCharacter}
@@ -1744,6 +1938,7 @@ function App() {
               onForfeit={handleForfeitTurn}
               onQuit={handleQuit}
               onFuseCards={handleFuseCards}
+              onApplyUltimateDamage={handleApplyUltimateDamage}
               settings={settings}
               isStoryMode={!!storyModeStage}
               selectedCharacter={selectedCharacter}

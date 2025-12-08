@@ -1,5 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import './MainMenu.css';
+
+// Event/seasonal banners
+const eventBanners = [
+  { id: 'summer', text: '🌟 Season 3 Now Live!', color: '#ffd700', active: true },
+  { id: 'weekend', text: '🎁 Double XP Weekend!', color: '#4caf50', active: false },
+];
 
 // Avatar color themes with gradient definitions (same as PlayerProfile)
 const avatarColors = {
@@ -74,6 +80,7 @@ const MainMenu = ({
   onShowProfile,
   onShowThemeShop,
   onShowInventory,
+  onShowDeckManager,
   onShowSettings,
   onShowNews,
   onShowMatchHistory,
@@ -82,7 +89,8 @@ const MainMenu = ({
   playerAvatar: propAvatar,
   playerName: propName,
   rankInfo,
-  dailyQuestProgress
+  dailyQuestProgress,
+  playerStats: propPlayerStats
 }) => {
   const menuMusicRef = useRef(null);
   const [expandedSection, setExpandedSection] = useState('gameplay');
@@ -90,6 +98,13 @@ const MainMenu = ({
   const [avatarColor, setAvatarColor] = useState('default');
   const [avatarStyle, setAvatarStyle] = useState('standard');
   const [avatarIcon, setAvatarIcon] = useState(null);
+  const [shootingStars, setShootingStars] = useState([]);
+  const [playerStats, setPlayerStats] = useState(propPlayerStats || null);
+  
+  // Active event banner
+  const activeEvent = useMemo(() => {
+    return eventBanners.find(e => e.active) || null;
+  }, []);
   
   // Use prop avatar if provided, otherwise fall back to default
   const playerAvatar = propAvatar || { icon: '👤', name: 'Player', id: 'default' };
@@ -198,8 +213,80 @@ const MainMenu = ({
     };
   }, []);
 
+  // Shooting stars effect
+  useEffect(() => {
+    const createShootingStar = () => {
+      const id = Date.now() + Math.random();
+      const star = {
+        id,
+        left: Math.random() * 100,
+        top: Math.random() * 40,
+        duration: 1 + Math.random() * 1.5,
+        delay: 0
+      };
+      setShootingStars(prev => [...prev.slice(-5), star]);
+      
+      // Remove star after animation
+      setTimeout(() => {
+        setShootingStars(prev => prev.filter(s => s.id !== id));
+      }, star.duration * 1000 + 500);
+    };
+    
+    // Create shooting stars periodically
+    const interval = setInterval(createShootingStar, 3000 + Math.random() * 4000);
+    createShootingStar(); // Initial star
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Load player stats
+  useEffect(() => {
+    if (propPlayerStats) {
+      setPlayerStats(propPlayerStats);
+      return;
+    }
+    
+    // Try to load from localStorage
+    try {
+      const savedStats = localStorage.getItem('gameStats');
+      if (savedStats) {
+        const parsed = JSON.parse(savedStats);
+        setPlayerStats({
+          wins: parsed.wins || 0,
+          losses: parsed.losses || 0,
+          streak: parsed.currentStreak || 0,
+          level: parsed.level || 1
+        });
+      }
+    } catch (e) {
+      console.log('Could not load player stats');
+    }
+  }, [propPlayerStats]);
+  
+  // Button hover sound
+  const playHoverSound = useCallback(() => {
+    try {
+      const hoverSound = new Audio(`${process.env.PUBLIC_URL}/audio/sfx/hover.mp3`);
+      hoverSound.volume = 0.15;
+      hoverSound.play().catch(() => {});
+    } catch (e) {}
+  }, []);
+  
+  // Calculate win rate
+  const winRate = useMemo(() => {
+    if (!playerStats) return null;
+    const total = (playerStats.wins || 0) + (playerStats.losses || 0);
+    if (total === 0) return 0;
+    return Math.round((playerStats.wins / total) * 100);
+  }, [playerStats]);
+
   return (
     <div className="main-menu">
+      {/* Background image from public folder */}
+      <div 
+        className="menu-bg-image"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/slpashscreen-1.png)` }}
+      />
       <div className="menu-background">
         <div className="cosmic-particles">
           {Array(50).fill(null).map((_, i) => (
@@ -211,19 +298,57 @@ const MainMenu = ({
             }}></div>
           ))}
         </div>
+        
+        {/* Shooting Stars */}
+        <div className="shooting-stars-container">
+          {shootingStars.map(star => (
+            <div 
+              key={star.id} 
+              className="shooting-star"
+              style={{
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                animationDuration: `${star.duration}s`
+              }}
+            />
+          ))}
+        </div>
       </div>
+      
+      {/* Event Banner */}
+      {activeEvent && (
+        <div className="event-banner" style={{ '--event-color': activeEvent.color }}>
+          <span className="event-text">{activeEvent.text}</span>
+          <div className="event-sparkles">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className="event-sparkle" style={{ animationDelay: `${i * 0.2}s` }}>✦</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="menu-content">
         <div className="game-title">
+          {/* Enhanced Title with Sparkles */}
           <h1 className="title-text">
-            <span className="title-elemental">ELEMENTAL</span>
+            <span className="title-elemental">
+              ELEMENTAL
+              <span className="title-sparkles">
+                {[...Array(6)].map((_, i) => (
+                  <span key={i} className="title-sparkle" style={{ 
+                    left: `${10 + i * 15}%`,
+                    animationDelay: `${i * 0.3}s`
+                  }}>✦</span>
+                ))}
+              </span>
+            </span>
             <span className="title-battle">BATTLE</span>
           </h1>
           <p className="title-subtitle">Master the Elements • Conquer the Arena</p>
           
-          {/* Player Info - Avatar and Name */}
+          {/* Player Info - Avatar, Name, and Quick Stats */}
           {playerAvatar && (
-            <div className="player-info-banner" onClick={onShowProfile} title="View Profile">
+            <div className="player-info-banner" onClick={onShowProfile} onMouseEnter={playHoverSound} title="View Profile">
               <div 
                 className={`player-avatar-display avatar-style-${avatarStyle}`}
                 style={{
@@ -234,12 +359,31 @@ const MainMenu = ({
               >
                 {displayIcon}
               </div>
-              <div className="player-name-display">{playerName}</div>
+              <div className="player-info-details">
+                <div className="player-name-display">{playerName}</div>
+                {playerStats && (
+                  <div className="player-quick-stats">
+                    <span className="quick-stat" title="Win Rate">
+                      <span className="stat-icon">🏆</span>
+                      <span className="stat-value">{winRate}%</span>
+                    </span>
+                    <span className="quick-stat" title="Current Streak">
+                      <span className="stat-icon">🔥</span>
+                      <span className="stat-value">{playerStats.streak || 0}</span>
+                    </span>
+                    <span className="quick-stat" title="Level">
+                      <span className="stat-icon">⭐</span>
+                      <span className="stat-value">Lv.{playerStats.level || 1}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <span className="banner-arrow">▶</span>
             </div>
           )}
           
           {/* News Alert Button */}
-          <button className="news-alert-btn" onClick={onShowNews} title="What's New">
+          <button className="news-alert-btn" onClick={onShowNews} onMouseEnter={playHoverSound} title="What's New">
             <span className="news-icon">📰</span>
             <span className="news-text">What's New</span>
             {unreadNewsCount > 0 && (
@@ -260,25 +404,25 @@ const MainMenu = ({
               <span className="accordion-arrow">{expandedSection === 'gameplay' ? '▼' : '▶'}</span>
             </button>
             <div className={`accordion-content ${expandedSection === 'gameplay' ? 'expanded' : ''}`}>
-              <button className="menu-btn primary-btn" onClick={() => { playSelectSound(); onPlayGame(); }}>
+              <button className="menu-btn primary-btn" onClick={() => { playSelectSound(); onPlayGame(); }} onMouseEnter={playHoverSound}>
                 <span className="btn-icon">⚔️</span>
                 <span className="btn-text">QUICK PLAY</span>
                 <span className="btn-subtitle">Single Match</span>
               </button>
 
-              <button className="menu-btn story-btn" onClick={() => { playSelectSound(); onStoryMode(); }}>
+              <button className="menu-btn story-btn" onClick={() => { playSelectSound(); onStoryMode(); }} onMouseEnter={playHoverSound}>
                 <span className="btn-icon">📜</span>
                 <span className="btn-text">STORY MODE</span>
                 <span className="btn-subtitle">Epic Campaign</span>
               </button>
 
-              <button className="menu-btn tutorial-btn" onClick={() => { playSelectSound(); onTutorialMode(); }}>
+              <button className="menu-btn tutorial-btn" onClick={() => { playSelectSound(); onTutorialMode(); }} onMouseEnter={playHoverSound}>
                 <span className="btn-icon">🎓</span>
                 <span className="btn-text">TUTORIAL MODE</span>
                 <span className="btn-subtitle">Learn By Playing</span>
               </button>
 
-              <button className="menu-btn" onClick={() => { playSelectSound(); onShowTutorial(); }}>
+              <button className="menu-btn" onClick={() => { playSelectSound(); onShowTutorial(); }} onMouseEnter={playHoverSound}>
                 <span className="btn-icon">📖</span>
                 <span className="btn-text">HOW TO PLAY</span>
                 <span className="btn-subtitle">Quick Guide</span>
@@ -346,6 +490,12 @@ const MainMenu = ({
                 <span className="btn-icon">📦</span>
                 <span className="btn-text">INVENTORY</span>
                 <span className="btn-subtitle">Power-Ups & Equipment</span>
+              </button>
+
+              <button className="menu-btn deck-manager-btn" onClick={() => { playSelectSound(); onShowDeckManager && onShowDeckManager(); }}>
+                <span className="btn-icon">🎴</span>
+                <span className="btn-text">DECK MANAGER</span>
+                <span className="btn-subtitle">Create & Save Custom Decks</span>
               </button>
 
               <button className="menu-btn theme-shop-btn" onClick={() => { playSelectSound(); onShowThemeShop(); }}>

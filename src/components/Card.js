@@ -2,6 +2,7 @@ import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 import CardTooltip from './CardTooltip';
 import './Card.css';
 import '../utils/visualEffects.css';
+import '../utils/premiumEffects.css';
 import '../utils/advancedCardMechanics.css';
 import { getElementColor, getElementDisplay, ELEMENT_LABELS } from '../utils/accessibility';
 import advancedMechanics from '../utils/advancedCardMechanics';

@@ -12,11 +12,34 @@ class SoundManager {
     this.maxAudioContextAttempts = 3;
     this.unlockListenersAdded = false; // Track if unlock listeners are set up
     this.silentAudioElement = null; // Silent audio element for iOS unlock
-    // Load saved volumes from localStorage or use defaults
-    const savedVolume = localStorage.getItem('soundVolume');
-    const savedMusicVolume = localStorage.getItem('musicVolume');
-    this.volume = savedVolume !== null ? parseFloat(savedVolume) : 0.5;
-    this.musicVolume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.3;
+    
+    // Load saved volumes from multiple sources for robustness
+    // Priority: userPreferences > localStorage > defaults
+    let savedVolume = null;
+    let savedMusicVolume = null;
+    
+    // Try localStorage first (most reliable)
+    const lsVolume = localStorage.getItem('soundVolume');
+    const lsMusicVolume = localStorage.getItem('musicVolume');
+    if (lsVolume !== null) savedVolume = parseFloat(lsVolume);
+    if (lsMusicVolume !== null) savedMusicVolume = parseFloat(lsMusicVolume);
+    
+    // Try userPreferences (may have more recent values)
+    try {
+      const userPrefs = require('./userPreferences').default;
+      const prefs = userPrefs.getUserPreferences();
+      if (prefs.soundVolume !== undefined) {
+        savedVolume = prefs.soundVolume / 100;
+      }
+      if (prefs.musicVolume !== undefined) {
+        savedMusicVolume = prefs.musicVolume / 100;
+      }
+    } catch (e) {
+      // userPreferences not available, use localStorage values
+    }
+    
+    this.volume = savedVolume !== null ? savedVolume : 0.5;
+    this.musicVolume = savedMusicVolume !== null ? savedMusicVolume : 0.3;
     this.currentMusicIntensity = 'calm';
     this.backgroundMusic = null;
     this.currentTrack = null;
@@ -1434,6 +1457,9 @@ class SoundManager {
     const startTime = Date.now();
     
     const adjustVolume = () => {
+      // Check if music still exists (could have been stopped during transition)
+      if (!this.backgroundMusic) return;
+      
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
@@ -1481,11 +1507,27 @@ class SoundManager {
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume));
     localStorage.setItem('soundVolume', this.volume.toString());
+    
+    // Also update userPreferences for centralized settings
+    try {
+      const userPrefs = require('./userPreferences').default;
+      userPrefs.updatePreferences({ soundVolume: Math.round(this.volume * 100) });
+    } catch (e) {
+      // Ignore if userPreferences not available
+    }
   }
 
   setMusicVolume(volume) {
     this.musicVolume = Math.max(0, Math.min(1, volume));
     localStorage.setItem('musicVolume', this.musicVolume.toString());
+    
+    // Also update userPreferences for centralized settings
+    try {
+      const userPrefs = require('./userPreferences').default;
+      userPrefs.updatePreferences({ musicVolume: Math.round(this.musicVolume * 100) });
+    } catch (e) {
+      // Ignore if userPreferences not available
+    }
     
     // Update legacy oscillator music
     if (this.music && this.music.gainNode) {

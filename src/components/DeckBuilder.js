@@ -124,9 +124,19 @@ const DeckBuilder = ({ onSaveDeck, onCancel, currentDeck = null }) => {
             <h3>Your Deck ({selectedCards.length})</h3>
             <div className="selected-cards-grid">
               {selectedCards.map((card) => (
-                <div key={card.deckId} className="mini-card selected" onClick={() => handleRemoveCard(card.deckId)}>
-                  <div className="mini-card-element">{card.element}</div>
-                  <div className="mini-card-strength">{card.strength}</div>
+                <div 
+                  key={card.deckId} 
+                  className="mini-card selected" 
+                  onClick={() => handleRemoveCard(card.deckId)}
+                  style={{ 
+                    borderColor: getElementColor(card.element),
+                    backgroundImage: getCardImage(card.element) ? `url(${getCardImage(card.element)})` : 'none'
+                  }}
+                >
+                  <div className="mini-card-overlay">
+                    <div className="mini-card-element">{card.element}</div>
+                    <div className="mini-card-strength">{card.strength}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -156,10 +166,15 @@ const DeckBuilder = ({ onSaveDeck, onCancel, currentDeck = null }) => {
                   key={card.id} 
                   className="mini-card available" 
                   onClick={() => handleAddCard(card)}
-                  style={{ borderColor: getElementColor(card.element) }}
+                  style={{ 
+                    borderColor: getElementColor(card.element),
+                    backgroundImage: getCardImage(card.element) ? `url(${getCardImage(card.element)})` : 'none'
+                  }}
                 >
-                  <div className="mini-card-element">{card.element}</div>
-                  <div className="mini-card-strength">{card.strength}</div>
+                  <div className="mini-card-overlay">
+                    <div className="mini-card-element">{card.element}</div>
+                    <div className="mini-card-strength">{card.strength}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -206,6 +221,25 @@ const getElementColor = (element) => {
     METEOR: '#ff6600'
   };
   return colors[element] || '#808080';
+};
+
+const getCardImage = (element) => {
+  const basePath = process.env.PUBLIC_URL || '';
+  const elementImages = {
+    'ELECTRICITY': `${basePath}/electricity-card.png`,
+    'FIRE': `${basePath}/fire card.png`,
+    'ICE': `${basePath}/ice-card.png`,
+    'WATER': `${basePath}/water-card.png`,
+    'EARTH': `${basePath}/earth-card.png`,
+    'DARK': `${basePath}/dark-card.png`,
+    'LIGHT': `${basePath}/star-card.png`,
+    'TECHNOLOGY': `${basePath}/tech-card.png`,
+    'METEOR': `${basePath}/meteor.png`,
+    'NATURE': `${basePath}/nature-card.png`,
+    'POWER': `${basePath}/power-card.png`,
+    'NEUTRAL': `${basePath}/shifter-card.png`
+  };
+  return elementImages[element] || null;
 };
 
 export default DeckBuilder;

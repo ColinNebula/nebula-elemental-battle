@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import './VictoryScreen.css';
+import '../utils/premiumEffects.css';
 import Card from './Card';
 
 const VictoryScreen = ({ 

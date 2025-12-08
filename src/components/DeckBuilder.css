@@ -157,41 +157,58 @@
   font-size: 20px;
 }
 
-.element-filters {
+.available-cards-section .element-filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 15px;
+  justify-content: flex-start;
 }
 
-.element-filter-btn {
-  padding: 6px 12px;
-  font-size: 11px;
-  background: transparent;
+.available-cards-section .element-filter-btn {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.4);
   border: 2px solid;
-  border-radius: 15px;
+  border-radius: 20px;
   color: #fff;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: auto;
+  height: auto;
 }
 
-.element-filter-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.available-cards-section .element-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
   transform: scale(1.05);
+}
+
+.available-cards-section .element-filter-btn.active {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px currentColor;
 }
 
 .selected-cards-grid,
 .available-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 10px;
-  overflow-y: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   flex: 1;
   padding: 10px;
+  align-items: flex-start;
 }
 
 .mini-card {
-  aspect-ratio: 2/3;
+  min-width: 60px;
+  width: 60px;
+  height: 85px;
+  flex-shrink: 0;
   border: 2px solid;
   border-radius: 8px;
   display: flex;
@@ -200,7 +217,30 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.mini-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.7) 100%);
+  transition: background 0.2s;
+}
+
+.mini-card:hover .mini-card-overlay {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 .mini-card.available {
@@ -214,7 +254,10 @@
 
 .mini-card.selected {
   border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.2);
+}
+
+.mini-card.selected .mini-card-overlay {
+  background: linear-gradient(180deg, rgba(76, 175, 80, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(76, 175, 80, 0.5) 100%);
 }
 
 .mini-card.selected:hover {
@@ -228,12 +271,17 @@
   color: #fff;
   margin-bottom: 5px;
   text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
 }
 
 .mini-card-strength {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .deck-builder-footer {
@@ -301,7 +349,10 @@
 
 /* Scrollbar styling */
 .selected-cards-grid::-webkit-scrollbar,
-.available-cards-grid::-webkit-scrollbar,
+.available-cards-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
 .deck-stats::-webkit-scrollbar {
   width: 8px;
 }

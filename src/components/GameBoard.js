@@ -44,6 +44,7 @@ import {
   createPowerPlayShake,
   createScreenShake
 } from '../utils/visualEffects';
+import { cleanupVisualEffects } from '../utils/VisualEffectsManager';
 import {
   initializeMana,
   regenerateMana,
@@ -87,6 +88,7 @@ import './RankedDisplay.css';
 import './ComboDisplay.css';
 import './GameBoard.css';
 import '../utils/visualEffects.css';
+import '../utils/premiumEffects.css';
 import '../utils/videoEffects.css';
 import '../utils/advancedCardMechanics.css';
 import '../utils/powerUpSystem.css';
@@ -103,6 +105,7 @@ const GameBoard = ({
   onQuit,
   onFuseCards,
   onReviveFromGraveyard,
+  onApplyUltimateDamage,
   settings,
   isStoryMode,
   isTutorial,
@@ -350,6 +353,14 @@ const GameBoard = ({
     }
   }, [settings]);
 
+  // Cleanup visual effects when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('🧹 GameBoard unmounting - cleaning up visual effects');
+      cleanupVisualEffects();
+    };
+  }, []);
+
   // Load hand theme from localStorage and listen for changes
   useEffect(() => {
     const loadHandTheme = () => {
@@ -451,33 +462,21 @@ const GameBoard = ({
         if (ultimate) {
           // Delay to make it dramatic
           setTimeout(() => {
-            // Apply damage to player's arena cards
+            // Apply damage to player's arena cards using the callback
             const damageAmount = ultimate.effect.damage || 15;
-            let totalDamageDealt = 0;
             
             if (ultimate.effect.type === 'AOE_DAMAGE' && humanPlayer?.playedCards) {
-              humanPlayer.playedCards.forEach((card, index) => {
-                if (card) {
-                  const oldStrength = card.modifiedStrength || card.strength || 0;
-                  const newStrength = Math.max(1, oldStrength - damageAmount);
-                  card.modifiedStrength = newStrength;
-                  card.strength = newStrength;
-                  totalDamageDealt += (oldStrength - newStrength);
-                  console.log(`🤖⚡ AI Ultimate hit player card ${index}: ${card.element} ${oldStrength} → ${newStrength}`);
-                }
-              });
+              // Calculate total damage for logging before applying
+              const totalDamageDealt = (humanPlayer.playedCards?.length || 0) * damageAmount + 
+                                       (humanPlayer.hand?.length || 0) * damageAmount;
               
-              // Also damage cards in player's hand
-              if (humanPlayer?.hand) {
-                humanPlayer.hand.forEach((card) => {
-                  if (card) {
-                    const oldStrength = card.modifiedStrength || card.strength || 0;
-                    const newStrength = Math.max(1, oldStrength - damageAmount);
-                    card.modifiedStrength = newStrength;
-                    card.strength = newStrength;
-                    totalDamageDealt += (oldStrength - newStrength);
-                  }
-                });
+              // Use the callback to properly update game state
+              if (onApplyUltimateDamage) {
+                onApplyUltimateDamage(damageAmount, humanPlayer?.id);
+                console.log(`🤖⚡ AI Ultimate applied ${damageAmount} damage to player cards via callback`);
+              } else {
+                // Fallback: Log warning if callback not available
+                console.warn('⚠️ onApplyUltimateDamage callback not available!');
               }
             }
             
@@ -530,7 +529,7 @@ const GameBoard = ({
               });
               
               // Show AI ultimate announcement
-              if (totalDamageDealt > 0) {
+              if (humanPlayer?.playedCards?.length > 0) {
                 setTimeout(() => {
                   const damageDiv = document.createElement('div');
                   damageDiv.className = 'ultimate-damage-display ai-ultimate-display';
@@ -563,7 +562,7 @@ const GameBoard = ({
         }
       }
     }
-  }, [isMyTurn, gameState?.gameStarted, gameState?.gameOver, aiPlayer?.active, aiUltimateSystem.currentCooldown, humanPlayer?.playedCards?.length, humanPlayer?.score, aiPlayer?.score]);
+  }, [isMyTurn, gameState?.gameStarted, gameState?.gameOver, aiPlayer?.active, aiUltimateSystem.currentCooldown, humanPlayer?.playedCards?.length, humanPlayer?.score, aiPlayer?.score, humanPlayer?.id, onApplyUltimateDamage]);
 
   // Update weather every few rounds (strategic mode)
   useEffect(() => {
@@ -773,12 +772,30 @@ const GameBoard = ({
     // If it's player's turn and they have no cards, automatically skip after delay (only once)
     // The delay allows the player to manually click skip if they prefer
     if (humanPlayer.hand?.length === 0 && !gameState?.battlePhase && !hasAutoSkipped) {
+      // Also check if AI has no cards - if so, game should end, not skip
+      const aiHasNoCards = aiPlayer?.outOfCards || 
+                          ((aiPlayer?.hand?.length === 0 || !aiPlayer?.hand) && 
+                           (!aiPlayer?.deck || aiPlayer.deck.length === 0));
+      const playerHasNoCards = (humanPlayer?.hand?.length === 0 || !humanPlayer?.hand) && 
+                              (!humanPlayer?.deck || humanPlayer.deck.length === 0);
+      
+      if (playerHasNoCards && aiHasNoCards) {
+        console.log('🏁 Both players out of cards - forcing game end via forfeit');
+        // Trigger forfeit which will properly end the game in GameClient
+        setHasAutoSkipped(true);
+        if (onForfeit) {
+          onForfeit();
+        }
+        return;
+      }
+      
       console.log('🔄 Player has no cards - will auto-skip in 3 seconds (or click skip manually)');
       setHasAutoSkipped(true);
       
       // Longer delay so player can manually skip if they want
       const skipTimer = setTimeout(() => {
-        if (onForfeit && humanPlayer?.active) {
+        // Double-check game isn't already over before skipping
+        if (onForfeit && humanPlayer?.active && !gameState?.gameOver) {
           console.log('🔄 Auto-skipping turn due to no cards');
           onForfeit(); // This will skip the turn without showing forfeit announcement
         }
@@ -786,7 +803,7 @@ const GameBoard = ({
       
       return () => clearTimeout(skipTimer);
     }
-  }, [humanPlayer?.active, humanPlayer?.hand?.length, gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, onForfeit, hasAutoSkipped]);
+  }, [humanPlayer?.active, humanPlayer?.hand?.length, humanPlayer?.deck?.length, aiPlayer?.hand?.length, aiPlayer?.deck?.length, gameState?.gameStarted, gameState?.gameOver, gameState?.battlePhase, onForfeit, hasAutoSkipped]);
 
   // Story mode defeat countdown
   useEffect(() => {
@@ -886,67 +903,67 @@ const GameBoard = ({
       // For ties or if no cards available, skip directly to victory
       if (isTie || winnerCards.length === 0) {
         // Longer delay to show final card play first (3 seconds)
-        setTimeout(() => {
+        const tieTimeout = setTimeout(() => {
           setWinningCardPhase(prev => ({
             ...prev,
             showVictory: true
           }));
         }, 3000);
-        return;
+        return () => clearTimeout(tieTimeout);
       }
       
-      // Longer delay to allow final card to be shown on arena before showing winning card selection
-      setTimeout(() => {
-        // Activate winning card placement phase
-        setWinningCardPhase({
-          active: true,
-          winner: winner,
-          winnerCards: winnerCards,
-          selectedCard: null,
-          explosionTriggered: false,
-          showVictory: false,
-          isPlayerWinner: isPlayerWinner
-        });
-        
-        // If AI won, auto-select the strongest card after a delay
-        if (!isPlayerWinner) {
+      // FIRST: Activate winning card placement phase immediately (no delay)
+      // This ensures the winning card selection shows BEFORE victory screen
+      setWinningCardPhase({
+        active: true,
+        winner: winner,
+        winnerCards: winnerCards,
+        selectedCard: null,
+        explosionTriggered: false,
+        showVictory: false,
+        isPlayerWinner: isPlayerWinner
+      });
+      
+      // If AI won, auto-select the strongest card after a delay
+      if (!isPlayerWinner) {
+        const aiSelectTimeout = setTimeout(() => {
+          const strongestCard = winnerCards.reduce((best, card, index) => {
+            const str = card.modifiedStrength || card.strength || 0;
+            const bestStr = best.card?.modifiedStrength || best.card?.strength || 0;
+            return str > bestStr ? { card, index } : best;
+          }, { card: winnerCards[0], index: 0 });
+          
+          // Directly set state for AI auto-select
+          setWinningCardPhase(prev => {
+            // Skip if already triggered or not active
+            if (!prev.active || prev.explosionTriggered || prev.showVictory) return prev;
+            
+            console.log('💥 AI winning card auto-selected:', strongestCard.card?.name || strongestCard.card?.element);
+            
+            // Play explosion sound
+            if (soundManager) {
+              soundManager.playSound('explosion');
+            }
+            
+            return {
+              ...prev,
+              selectedCard: strongestCard.card,
+              explosionTriggered: true
+            };
+          });
+          
+          // After explosion animation completes, show victory screen
           setTimeout(() => {
-            const strongestCard = winnerCards.reduce((best, card, index) => {
-              const str = card.modifiedStrength || card.strength || 0;
-              const bestStr = best.card?.modifiedStrength || best.card?.strength || 0;
-              return str > bestStr ? { card, index } : best;
-            }, { card: winnerCards[0], index: 0 });
-            
-            // Directly set state for AI auto-select
-            setWinningCardPhase(prev => {
-              // Skip if already triggered or not active
-              if (!prev.active || prev.explosionTriggered || prev.showVictory) return prev;
-              
-              console.log('💥 AI winning card auto-selected:', strongestCard.card?.name || strongestCard.card?.element);
-              
-              // Play explosion sound
-              if (soundManager) {
-                soundManager.playSound('explosion');
-              }
-              
-              return {
-                ...prev,
-                selectedCard: strongestCard.card,
-                explosionTriggered: true
-              };
-            });
-            
-            // After explosion animation completes, show victory screen
-            setTimeout(() => {
-              setWinningCardPhase(prev => ({
-                ...prev,
-                active: false,
-                showVictory: true
-              }));
-            }, 3000);
-          }, 2000); // Give more time to show the "choosing" message
-        }
-      }, 3000); // Wait 3s for final card to appear on arena before showing winning card selection
+            setWinningCardPhase(prev => ({
+              ...prev,
+              active: false,
+              showVictory: true
+            }));
+          }, 3000);
+        }, 2000); // Give more time to show the "choosing" message
+        
+        return () => clearTimeout(aiSelectTimeout);
+      }
     }
   }, [gameState?.gameOver, gameState?.winner, humanPlayer?.name, humanPlayer?.playedCards, aiPlayer?.playedCards]);
 
@@ -2708,27 +2725,7 @@ const GameBoard = ({
         </div>
       )}
       
-      {/* Turn Timer - Enhanced Burning Rope Style */}
-      {gameState.gameStarted && !gameState.gameOver && settings?.timerEnabled && (
-        <TurnTimer 
-          timeRemaining={turnTimer}
-          maxTime={20}
-          isVisible={isMyTurn && !gameState.battlePhase}
-          isActive={isMyTurn && !isPaused && !showRoundAnnouncement && !showTurnAnnouncement && !gameState.battlePhase}
-          onTimeWarning={() => {
-            // Set warning urgency state for screen effects
-            setTimerUrgency('warning');
-          }}
-          onTimeCritical={() => {
-            // Set critical urgency state for intense screen effects
-            setTimerUrgency('critical');
-          }}
-          onTimeNormal={() => {
-            // Reset urgency state when timer is normal
-            setTimerUrgency(null);
-          }}
-        />
-      )}
+      {/* Turn Timer now rendered inline above Battle Arena title - see arena-title-wrapper */}
       
       {/* Equipment Stats Display */}
       {gameState.gameStarted && !gameState.gameOver && (() => {
@@ -3498,9 +3495,25 @@ const GameBoard = ({
             ))}
           </div>
           
-          {/* Floating Turn Timer - Hidden (removed from display) */}
-          
-          <h3 className="arena-title">⚔️ Battle Arena ⚔️</h3>
+          {/* Arena Title with Turn Timer Above */}
+          <div className="arena-title-wrapper">
+            {/* Inline Turn Timer - Positioned directly above arena title */}
+            {gameState.gameStarted && !gameState.gameOver && settings?.timerEnabled && isMyTurn && !gameState.battlePhase && (
+              <div className="arena-turn-timer">
+                <TurnTimer 
+                  timeRemaining={turnTimer}
+                  maxTime={20}
+                  isVisible={true}
+                  isActive={!isPaused && !showRoundAnnouncement && !showTurnAnnouncement}
+                  onTimeWarning={() => setTimerUrgency('warning')}
+                  onTimeCritical={() => setTimerUrgency('critical')}
+                  onTimeNormal={() => setTimerUrgency(null)}
+                  inline={true}
+                />
+              </div>
+            )}
+            <h3 className="arena-title">⚔️ Battle Arena ⚔️</h3>
+          </div>
           
           {/* Strategic Systems Displays */}
           {(strategicSettings.manaEnabled || strategicSettings.weatherEnabled || strategicSettings.terrainEnabled) && (
@@ -3535,6 +3548,17 @@ const GameBoard = ({
             {/* Player 2 Turn Announcement - Hovers over AI cards */}
             {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && !isMyTurn && (
               <div className="turn-announcement-inline">
+                <div className="turn-announcement-avatar ai-avatar">
+                  {aiPlayer?.avatarImage ? (
+                    <img 
+                      src={`${process.env.PUBLIC_URL}/${aiPlayer.avatarImage}`} 
+                      alt={aiPlayer?.name || 'AI'}
+                      className="turn-avatar-img"
+                    />
+                  ) : (
+                    <span className="turn-avatar-icon">{aiPlayer?.avatar || '🤖'}</span>
+                  )}
+                </div>
                 <h1 className="turn-text opponent-turn-text">PLAYER 2 TURN</h1>
                 <div className="ai-thinking">
                   {aiPlayer?.hand?.length === 0 && (!aiPlayer?.deck || aiPlayer.deck.length === 0) 
@@ -3578,6 +3602,17 @@ const GameBoard = ({
             {/* Your Turn Announcement - Above player's arena cards */}
             {gameState.gameStarted && !gameState.gameOver && showTurnAnnouncement && isMyTurn && (
               <div className="turn-announcement-inline your-turn-inline">
+                <div className="turn-announcement-avatar player-avatar">
+                  {selectedCharacter?.image ? (
+                    <img 
+                      src={`${process.env.PUBLIC_URL}/${selectedCharacter.image}`} 
+                      alt={selectedCharacter?.name || 'Player'}
+                      className="turn-avatar-img"
+                    />
+                  ) : (
+                    <span className="turn-avatar-icon">{selectedCharacter?.icon || '👤'}</span>
+                  )}
+                </div>
                 <h1 className="turn-text your-turn-text">YOUR TURN!</h1>
               </div>
             )}

@@ -838,3 +838,405 @@
     height: 180px;
   }
 }
+
+/* ============================================
+   ENHANCED VICTORY CELEBRATION EFFECTS
+   ============================================ */
+
+/* Golden rays burst from center on victory */
+.victory-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.victory-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 150vh;
+  background: linear-gradient(180deg, 
+    transparent 0%,
+    rgba(255, 215, 0, 0.8) 30%,
+    rgba(255, 215, 0, 0.2) 70%,
+    transparent 100%
+  );
+  transform-origin: 50% 0;
+  animation: rayBurst 2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes rayBurst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle, 0deg)) scaleY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(var(--ray-angle, 0deg)) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle, 0deg)) scaleY(1);
+  }
+}
+
+/* Sparkle stars that appear around the screen */
+.victory-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sparkle-star {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  animation: sparkleTwinkle 2s ease-in-out infinite;
+}
+
+.sparkle-star::before,
+.sparkle-star::after {
+  content: '';
+  position: absolute;
+  background: #ffd700;
+  border-radius: 50%;
+}
+
+.sparkle-star::before {
+  width: 100%;
+  height: 30%;
+  top: 35%;
+  left: 0;
+  box-shadow: 0 0 10px #ffd700, 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.sparkle-star::after {
+  width: 30%;
+  height: 100%;
+  top: 0;
+  left: 35%;
+  box-shadow: 0 0 10px #ffd700, 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+/* Trophy animation for victory */
+.trophy-animation {
+  position: relative;
+  display: inline-block;
+}
+
+.trophy-animation::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, 
+    rgba(255, 215, 0, 0.6) 0%,
+    rgba(255, 215, 0, 0.2) 40%,
+    transparent 70%
+  );
+  animation: trophyGlowPulse 2s ease-in-out infinite;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+@keyframes trophyGlowPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+/* Floating gold coins for victory */
+.victory-coins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gold-coin {
+  position: absolute;
+  font-size: 24px;
+  animation: coinFloat 3s ease-out forwards;
+}
+
+@keyframes coinFloat {
+  0% {
+    transform: translateY(100vh) rotate(0deg) scale(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(70vh) rotate(90deg) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20vh) rotate(360deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Score counter animation */
+.score-counter-animated {
+  animation: scoreCountUp 0.8s ease-out;
+}
+
+@keyframes scoreCountUp {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Rank badge with glow */
+.rank-badge {
+  position: relative;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border-radius: 20px;
+  font-weight: 900;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #1a1a2e;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5);
+  animation: rankBadgeAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.rank-badge::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(45deg, #ffd700, #fff, #ffd700);
+  border-radius: 23px;
+  z-index: -1;
+  animation: rankBadgeGlow 2s linear infinite;
+}
+
+@keyframes rankBadgeAppear {
+  0% {
+    transform: scale(0) rotate(-180deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes rankBadgeGlow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+}
+
+/* XP bar animation */
+.xp-bar-container {
+  width: 100%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a, #cddc39);
+  border-radius: 10px;
+  transition: width 1.5s ease-out;
+  position: relative;
+}
+
+.xp-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: xpBarShine 2s linear infinite;
+}
+
+@keyframes xpBarShine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Defeat skull animation */
+.defeat-skull {
+  position: relative;
+  animation: skullFloat 3s ease-in-out infinite, skullFlicker 0.1s ease-in-out infinite;
+}
+
+@keyframes skullFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes skullFlicker {
+  0%, 90%, 100% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.8;
+  }
+}
+
+/* Tie balance scales animation */
+.tie-scales {
+  position: relative;
+  animation: scalesBalance 2s ease-in-out infinite;
+}
+
+@keyframes scalesBalance {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Celebration banner */
+.celebration-banner {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 50px;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.95),
+    rgba(255, 152, 0, 0.95)
+  );
+  color: #1a1a2e;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  border-radius: 5px;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 50px rgba(255, 215, 0, 0.5);
+  animation: bannerDrop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  z-index: 10;
+}
+
+.celebration-banner::before,
+.celebration-banner::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 100%;
+  top: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 200, 0, 0.95),
+    rgba(255, 140, 0, 0.95)
+  );
+}
+
+.celebration-banner::before {
+  left: -15px;
+  transform: skewY(-5deg);
+  border-radius: 5px 0 0 5px;
+}
+
+.celebration-banner::after {
+  right: -15px;
+  transform: skewY(5deg);
+  border-radius: 0 5px 5px 0;
+}
+
+@keyframes bannerDrop {
+  0% {
+    transform: translateX(-50%) translateY(-200px) rotate(-10deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) translateY(20px) rotate(3deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Firework bursts */
+.firework-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.firework {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+}
+
+.firework-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: fireworkBurst 1s ease-out forwards;
+}
+
+@keyframes fireworkBurst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--spark-x, 50px), var(--spark-y, 50px)) scale(0);
+    opacity: 0;
+  }
+}
