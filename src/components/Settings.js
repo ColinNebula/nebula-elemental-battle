@@ -446,6 +446,17 @@ const Settings = ({ isOpen, onClose, settings, onSettingsChange }) => {
         </div>
 
         <div className="settings-footer">
+          {/* Refresh App button - especially useful for iOS PWA */}
+          <button 
+            className="refresh-app-button"
+            onClick={() => {
+              if (window.confirm('Refresh the app? This will reload the game.')) {
+                window.location.reload();
+              }
+            }}
+          >
+            🔄 Refresh App
+          </button>
           <button 
             className="reset-settings-button"
             onClick={() => {

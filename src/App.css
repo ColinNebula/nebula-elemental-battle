@@ -529,3 +529,56 @@
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* PWA Refresh Button - Floating button for iOS PWA users */
+.pwa-refresh-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 30, 50, 0.9);
+  border: 2px solid rgba(78, 205, 196, 0.6);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(78, 205, 196, 0.3);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.pwa-refresh-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(78, 205, 196, 0.5);
+  border-color: rgba(78, 205, 196, 0.9);
+}
+
+.pwa-refresh-btn:active {
+  transform: scale(0.95);
+  animation: spin 0.5s linear;
+}
+
+/* Adjust position on smaller screens */
+@media (max-width: 480px) {
+  .pwa-refresh-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* Add safe area inset for iPhone notch */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pwa-refresh-btn {
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+  }
+}

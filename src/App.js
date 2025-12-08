@@ -233,6 +233,12 @@ function App() {
   const [isReturningToSplash, setIsReturningToSplash] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showStoryMode, setShowStoryMode] = useState(false);
+  
+  // Detect if running as PWA (standalone mode) - especially for iOS
+  const [isPWA] = useState(() => {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           window.navigator.standalone === true;
+  });
   const [storyModeStage, setStoryModeStage] = useState(null);
   const [completedStoryStages, setCompletedStoryStages] = useState(() => {
     // Try gameProgress first (unified storage), fall back to legacy recovery
@@ -1597,6 +1603,18 @@ function App() {
             <Suspense fallback={null}>
               <InstallPrompt />
             </Suspense>
+          )}
+          
+          {/* PWA Refresh Button - Only show when running as standalone PWA */}
+          {isPWA && !inGame && !showSplash && (
+            <button 
+              className="pwa-refresh-btn"
+              onClick={() => window.location.reload()}
+              title="Refresh App"
+              aria-label="Refresh App"
+            >
+              🔄
+            </button>
           )}
           
           {/* Network Status Banner - Always visible when offline */}
