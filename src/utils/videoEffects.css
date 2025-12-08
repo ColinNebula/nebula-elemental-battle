@@ -6,7 +6,8 @@
   pointer-events: none;
   z-index: 500;
   overflow: visible;
-  background: transparent;
+  background: transparent !important;
+  isolation: isolate;
 }
 
 .video-effect {
@@ -14,32 +15,46 @@
   width: 200px;
   height: 200px;
   object-fit: contain;
-  background: transparent;
+  background: transparent !important;
   /* Apply blend mode directly to video to make black background transparent */
   mix-blend-mode: screen;
+  /* Ensure no background color */
+  background-color: transparent !important;
+}
+
+/* Additional wrapper to ensure blend mode works */
+.video-effect-container::before {
+  content: none;
 }
 
 /* Fire effect specific styling */
 .video-effect-fire {
-  filter: brightness(1.2) contrast(1.1);
+  filter: brightness(1.3) contrast(1.15) saturate(1.2);
+  background: transparent !important;
 }
 
 .video-effect-fire .video-effect {
   /* Screen blend mode makes black transparent, perfect for fire effects */
-  mix-blend-mode: screen;
-  background: transparent;
+  mix-blend-mode: screen !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  /* Add slight glow for better integration */
+  filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.5));
 }
 
 /* Smoke effect specific styling */
 .video-effect-smoke {
-  filter: brightness(0.9) contrast(1.2);
-  opacity: 0.8;
+  filter: brightness(0.95) contrast(1.15);
+  opacity: 0.85;
+  background: transparent !important;
 }
 
 .video-effect-smoke .video-effect {
-  /* Lighten or screen blend for smoke */
-  mix-blend-mode: lighten;
-  background: transparent;
+  /* Lighten blend for smoke - also makes black transparent */
+  mix-blend-mode: screen !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  filter: grayscale(0.3) drop-shadow(0 0 5px rgba(100, 100, 100, 0.3));
 }
 
 /* ===== ENTRANCE/EXIT ANIMATIONS ===== */

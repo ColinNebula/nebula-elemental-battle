@@ -391,19 +391,236 @@
 
 @media (max-width: 768px) {
   .deck-builder-container {
-    width: 95%;
-    height: 95vh;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+  
+  .deck-builder-header {
+    padding: 15px 20px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   
   .deck-name-input {
-    font-size: 20px;
+    font-size: 18px;
+    max-width: 100%;
+    min-width: 150px;
+  }
+  
+  .deck-builder-content {
+    padding: 10px;
+    gap: 15px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+  
+  .deck-stats {
+    max-height: 150px;
+    padding: 15px;
+  }
+  
+  .deck-stats h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .stat-row {
+    padding: 6px 0;
+    font-size: 14px;
+  }
+  
+  .element-distribution h4 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .element-bar {
+    padding: 4px 0;
+  }
+  
+  .element-label {
+    font-size: 11px;
+    min-width: 60px;
+  }
+  
+  .selected-cards-section,
+  .available-cards-section {
+    min-height: 0;
+  }
+  
+  .selected-cards-section h3,
+  .available-cards-section h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .selected-cards-grid,
+  .available-cards-grid {
+    gap: 8px;
+  }
+  
+  .mini-card {
+    width: 50px;
+    height: 70px;
+    min-width: 50px;
   }
   
   .mini-card-element {
-    font-size: 8px;
+    font-size: 7px;
   }
   
   .mini-card-strength {
-    font-size: 18px;
+    font-size: 16px;
+  }
+  
+  .element-filters {
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .available-cards-section .element-filter-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+    min-width: auto;
+  }
+  
+  .deck-builder-footer {
+    padding: 12px 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .validation-message {
+    font-size: 14px;
+  }
+  
+  .builder-actions {
+    width: 100%;
+    gap: 10px;
+  }
+  
+  .cancel-btn,
+  .save-deck-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .deck-builder-header {
+    padding: 12px 15px;
+  }
+  
+  .deck-name-input {
+    font-size: 16px;
+  }
+  
+  .close-builder {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+  
+  .deck-builder-content {
+    padding: 8px;
+    gap: 10px;
+  }
+  
+  .deck-stats {
+    max-height: 120px;
+    padding: 10px;
+  }
+  
+  .deck-stats h3,
+  .deck-stats h4 {
+    font-size: 14px;
+  }
+  
+  .stat-row {
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  
+  .mini-card {
+    width: 45px;
+    height: 62px;
+    min-width: 45px;
+  }
+  
+  .mini-card-element {
+    font-size: 6px;
+  }
+  
+  .mini-card-strength {
+    font-size: 14px;
+  }
+  
+  .available-cards-section .element-filter-btn {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+  
+  .deck-builder-footer {
+    padding: 10px 12px;
+  }
+  
+  .cancel-btn,
+  .save-deck-btn {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Mobile touch devices */
+  .mini-card {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .mini-card:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  
+  .mini-card.available:active {
+    transform: scale(0.95);
+    box-shadow: 0 3px 10px rgba(233, 69, 96, 0.5);
+  }
+  
+  .mini-card.selected:active {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  
+  .available-cards-section .element-filter-btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .available-cards-section .element-filter-btn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .cancel-btn:active,
+  .save-deck-btn:active {
+    transform: scale(0.98);
+  }
+  
+  /* Improve scroll behavior on touch */
+  .selected-cards-grid,
+  .available-cards-grid {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  
+  .mini-card {
+    scroll-snap-align: start;
   }
 }

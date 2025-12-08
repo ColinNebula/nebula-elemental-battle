@@ -3076,11 +3076,19 @@ const GameBoard = ({
           <h3>Player 2 (AI)</h3>
           {aiPlayer && (
             <div className="sidebar-player-info">
-              <div className="player-avatar">
-                {aiPlayer.avatarImage ? (
-                  <img src={`${process.env.PUBLIC_URL}/${aiPlayer.avatarImage}`} alt={aiPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                ) : (
-                  aiPlayer.avatar || '🤖'
+              <div className="avatar-emote-wrapper">
+                <div className="player-avatar">
+                  {aiPlayer.avatarImage ? (
+                    <img src={`${process.env.PUBLIC_URL}/${aiPlayer.avatarImage}`} alt={aiPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  ) : (
+                    aiPlayer.avatar || '🤖'
+                  )}
+                </div>
+                {lastAIEmote && (
+                  <div className="sidebar-emote-bubble ai-sidebar-emote">
+                    <span className="sidebar-emote-icon">{lastAIEmote.icon}</span>
+                    <span className="sidebar-emote-text">{lastAIEmote.text}</span>
+                  </div>
                 )}
               </div>
               <p><strong>{aiPlayer.name}</strong></p>
@@ -3134,17 +3142,25 @@ const GameBoard = ({
           <h3>Player 1 (You)</h3>
           {humanPlayer && (
             <div className="sidebar-player-info">
-              <div className="player-avatar">
-                {selectedCharacter?.image ? (
-                  <img 
-                    src={`${process.env.PUBLIC_URL}/${selectedCharacter?.image}`} 
-                    alt={selectedCharacter?.name || 'Player'}
-                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                  />
-                ) : null}
-                <span style={{ display: selectedCharacter?.image ? 'none' : 'block' }}>
-                  {selectedCharacter?.icon || '👤'}
-                </span>
+              <div className="avatar-emote-wrapper">
+                <div className="player-avatar">
+                  {selectedCharacter?.image ? (
+                    <img 
+                      src={`${process.env.PUBLIC_URL}/${selectedCharacter?.image}`} 
+                      alt={selectedCharacter?.name || 'Player'}
+                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                    />
+                  ) : null}
+                  <span style={{ display: selectedCharacter?.image ? 'none' : 'block' }}>
+                    {selectedCharacter?.icon || '👤'}
+                  </span>
+                </div>
+                {lastPlayerEmote && (
+                  <div className="sidebar-emote-bubble player-sidebar-emote">
+                    <span className="sidebar-emote-icon">{lastPlayerEmote.icon}</span>
+                    <span className="sidebar-emote-text">{lastPlayerEmote.text}</span>
+                  </div>
+                )}
               </div>
               <p><strong>{humanPlayer.name}</strong></p>
               <p>Score: {humanPlayer.score}</p>

@@ -219,41 +219,60 @@ export const EMOTES = {
     { id: 'hello', text: 'Hello!', icon: '👋', sound: 'greeting' },
     { id: 'hi_there', text: 'Hi there!', icon: '🙋', sound: 'greeting' },
     { id: 'well_met', text: 'Well met!', icon: '⚔️', sound: 'greeting' },
-    { id: 'greetings', text: 'Greetings, traveler!', icon: '🎭', sound: 'greeting' }
+    { id: 'greetings', text: 'Greetings, traveler!', icon: '🎭', sound: 'greeting' },
+    { id: 'ready', text: 'Ready for battle!', icon: '🛡️', sound: 'greeting' },
+    { id: 'lets_go', text: "Let's go!", icon: '🚀', sound: 'greeting' }
   ],
   COMPLIMENTS: [
     { id: 'well_played', text: 'Well played!', icon: '👏', sound: 'compliment' },
     { id: 'impressive', text: 'Impressive!', icon: '🌟', sound: 'compliment' },
     { id: 'nice_move', text: 'Nice move!', icon: '👍', sound: 'compliment' },
-    { id: 'brilliant', text: 'Brilliant!', icon: '💡', sound: 'compliment' }
+    { id: 'brilliant', text: 'Brilliant!', icon: '💡', sound: 'compliment' },
+    { id: 'amazing', text: 'Amazing play!', icon: '✨', sound: 'compliment' },
+    { id: 'genius', text: 'Genius!', icon: '🧠', sound: 'compliment' }
   ],
   REACTIONS: [
     { id: 'wow', text: 'Wow!', icon: '😮', sound: 'surprised' },
     { id: 'oops', text: 'Oops!', icon: '😅', sound: 'mistake' },
     { id: 'thanks', text: 'Thank you!', icon: '🙏', sound: 'thanks' },
-    { id: 'sorry', text: 'Sorry about that!', icon: '😔', sound: 'sorry' }
+    { id: 'sorry', text: 'Sorry about that!', icon: '😔', sound: 'sorry' },
+    { id: 'lucky', text: 'Lucky!', icon: '🍀', sound: 'surprised' },
+    { id: 'thinking', text: 'Hmm...', icon: '🤔', sound: 'thinking' }
   ],
   TAUNTS: [
     { id: 'bring_it', text: 'Bring it on!', icon: '💪', sound: 'taunt' },
     { id: 'not_bad', text: 'Not bad... for a beginner.', icon: '😏', sound: 'taunt' },
     { id: 'is_that_all', text: 'Is that all you got?', icon: '🤨', sound: 'taunt' },
-    { id: 'too_easy', text: 'Too easy!', icon: '😎', sound: 'taunt' }
+    { id: 'too_easy', text: 'Too easy!', icon: '😎', sound: 'taunt' },
+    { id: 'fear_me', text: 'Fear my power!', icon: '👑', sound: 'taunt' },
+    { id: 'no_chance', text: "You don't stand a chance!", icon: '🔥', sound: 'taunt' }
   ],
   ENDING: [
     { id: 'gg', text: 'Good game!', icon: '🤝', sound: 'gg' },
     { id: 'well_fought', text: 'Well fought!', icon: '⚔️', sound: 'gg' },
     { id: 'rematch', text: 'Rematch?', icon: '🔄', sound: 'rematch' },
-    { id: 'next_time', text: 'I\'ll get you next time!', icon: '🎯', sound: 'determined' }
+    { id: 'next_time', text: 'I\'ll get you next time!', icon: '🎯', sound: 'determined' },
+    { id: 'honor', text: 'It was an honor!', icon: '🏆', sound: 'gg' },
+    { id: 'close_game', text: 'That was close!', icon: '😰', sound: 'gg' }
+  ],
+  EMOTIONS: [
+    { id: 'happy', text: 'Feeling great!', icon: '😄', sound: 'happy' },
+    { id: 'nervous', text: 'Getting nervous...', icon: '😬', sound: 'nervous' },
+    { id: 'confident', text: 'Victory is mine!', icon: '😤', sound: 'confident' },
+    { id: 'frustrated', text: 'Argh!', icon: '😣', sound: 'frustrated' },
+    { id: 'excited', text: "Let's goooo!", icon: '🎉', sound: 'excited' },
+    { id: 'respect', text: 'Respect!', icon: '🫡', sound: 'respect' }
   ]
 };
 
 // AI responses to player emotes
 export const AI_EMOTE_RESPONSES = {
-  GREETINGS: ['hello', 'hi_there', 'well_met'],
-  COMPLIMENTS: ['thanks', 'well_played'],
-  REACTIONS: ['wow', 'impressive'],
-  TAUNTS: ['bring_it', 'not_bad', 'is_that_all'],
-  ENDING: ['gg', 'well_fought']
+  GREETINGS: ['hello', 'hi_there', 'well_met', 'ready', 'lets_go'],
+  COMPLIMENTS: ['thanks', 'well_played', 'impressive'],
+  REACTIONS: ['wow', 'impressive', 'thinking'],
+  TAUNTS: ['bring_it', 'not_bad', 'is_that_all', 'fear_me'],
+  ENDING: ['gg', 'well_fought', 'rematch'],
+  EMOTIONS: ['happy', 'confident', 'respect']
 };
 
 // Get an AI emote response based on player's emote

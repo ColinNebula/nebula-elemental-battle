@@ -146,7 +146,9 @@ export const createVideoEffect = (effectType, targetElement, container, options 
     pointer-events: none;
     z-index: 500;
     opacity: ${opacity};
-    background: transparent;
+    background: transparent !important;
+    background-color: transparent !important;
+    isolation: isolate;
   `;
 
   // Create video element
@@ -164,8 +166,9 @@ export const createVideoEffect = (effectType, targetElement, container, options 
     width: 200px;
     height: 200px;
     object-fit: contain;
-    background: transparent;
-    mix-blend-mode: ${blendMode};
+    background: transparent !important;
+    background-color: transparent !important;
+    mix-blend-mode: screen !important;
   `;
 
   videoContainer.appendChild(video);
@@ -287,7 +290,7 @@ export const createFireAura = (targetElement, container, options = {}) => {
 export const createSmokePuff = (targetElement, container, options = {}) => {
   return createVideoEffect('SMOKE', targetElement, container, {
     scale: 1.5,
-    blendMode: 'multiply',
+    blendMode: 'screen',
     duration: 2000,
     playbackRate: 0.8,
     ...options
